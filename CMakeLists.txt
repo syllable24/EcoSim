@@ -10,6 +10,7 @@ PRIVATE
     src/Main.c    
     src/Population.c
     src/Util.c
+    src/Display.c
 )
 
 target_include_directories(EcoSim

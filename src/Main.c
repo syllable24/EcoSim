@@ -8,11 +8,11 @@
 
 #include "../include/Population.h"
 #include "../include/Util.h"
+#include "../include/Display.h"
 
 #define WINDOW_WIDTH 1920
 #define WINDOW_HEIGHT 1080
 #define HEX_RADIUS 20.0f  // Radius (center to vertex)
-#define HEX_MASK_SIZE (2.0f * HEX_RADIUS)  // Hex mask texture size
 #define HEX_COUNT_X 50
 #define HEX_COUNT_Y 25
 
@@ -25,64 +25,6 @@ static SDL_Texture* desert_texture = NULL;
 
 PopulationUnit p;
 char* message = "Hello EcoSim!";
-
-// Calculate the six vertices of a flat-top hexagon
-void get_hexagon_vertices(SDL_FPoint* points, float center_x, float center_y, float radius) {
-    for (int i = 0; i < 6; i++) {
-        float angle = (float)(M_PI / 3.0 * i);
-        points[i].x = center_x + radius * cosf(angle);
-        points[i].y = center_y + radius * sinf(angle);
-    }
-}
-
-// Draw a hexagon outline by connecting vertices
-void draw_hexagon_outline(SDL_Renderer* renderer, SDL_FPoint* vertices) {
-    for (int i = 0; i < 6; i++) {
-        int next = (i + 1) % 6;
-        SDL_RenderLine(
-            renderer, 
-            vertices[i].x, vertices[i].y,
-            vertices[next].x, vertices[next].y
-        );
-    }
-}
-
-int draw_hexagon_texture(SDL_Texture* texture, SDL_FPoint points[6], float center_x, float center_y){
-    // Define hexagon vertices and texture coordinates
-    SDL_Vertex vertices[7];     
-
-    // Center vertex
-    vertices[0].position.x = center_x;
-    vertices[0].position.y = center_y;
-    vertices[0].tex_coord.x = 0.5f; // Center of texture
-    vertices[0].tex_coord.y = 0.5f;
-    vertices[0].color.r = 1.0f;
-    vertices[0].color.g = 1.0f;
-    vertices[0].color.b = 1.0f;
-    vertices[0].color.a = 1.0f;
-
-    // Outer vertices
-    for (int i = 0; i < 6; i++) {
-        vertices[i + 1].position = points[i];
-        // Map texture coordinates to fit hexagon
-        float tex_angle = (float)(M_PI / 3.0 * i);
-        vertices[i + 1].tex_coord.x = 0.5f + 0.4f * cosf(tex_angle);
-        vertices[i + 1].tex_coord.y = 0.5f + 0.4f * sinf(tex_angle);
-        vertices[i + 1].color.r = 1.0f;
-        vertices[i + 1].color.g = 1.0f;
-        vertices[i + 1].color.b = 1.0f;
-        vertices[i + 1].color.a = 1.0f;
-    }
-
-    // Define triangle indices for fan
-    int indices[] = { 0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 1 };
-
-    if (SDL_RenderGeometry(renderer, texture, vertices, 7, indices, 18) < 0) {
-        printf("RenderGeometry failed: %s", SDL_GetError());
-        return SDL_APP_FAILURE;
-    }
-    return SDL_APP_CONTINUE;
-}
 
 int load_textures(){
     SDL_Surface* grass_bmp = SDL_LoadBMP("img/green-grass-texture.bmp");
@@ -193,7 +135,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
             SDL_FPoint points[6];
             get_hexagon_vertices(points, center_x, center_y, HEX_RADIUS);
 
-            if (draw_hexagon_texture(texture, points, center_x, center_y) != SDL_APP_CONTINUE){
+            if (draw_hexagon_texture(renderer, texture, points, center_x, center_y) != SDL_APP_CONTINUE){
                 SDL_Log("Error during draw_hexagon_texture: %s.\n", SDL_GetError());
                 return SDL_APP_FAILURE;
             }
@@ -230,6 +172,8 @@ SDL_AppResult SDL_AppIterate(void *appstate){
 void SDL_AppQuit(void *appstate, SDL_AppResult result){    
     if (grass_texture) SDL_DestroyTexture(grass_texture);
     if (ice_texture) SDL_DestroyTexture(ice_texture);
+    if (stone_texture) SDL_DestroyTexture(stone_texture);
+    if (desert_texture) SDL_DestroyTexture(desert_texture);
     if (renderer) SDL_DestroyRenderer(renderer);
     if (window) SDL_DestroyWindow(window);
     free(p.base_needs);
