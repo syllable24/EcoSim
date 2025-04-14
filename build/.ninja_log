@@ -1,6 +1,0 @@
-# ninja log v6
-175	252	7663675076022793	EcoSim.exe	22aac29c4f1ea150
-21	174	7663675074514577	CMakeFiles/EcoSim.dir/src/Main.c.obj	64f725b203714096
-15	95	7662809736601897	CMakeFiles/EcoSim.dir/src/Util.c.obj	8ad8ac578129362
-32	645	7663534588735810	CMakeFiles/EcoSim.dir/src/Population.c.obj	a1a291e0ba8f0607
-23	99	7663679015066024	EcoSim.exe	22aac29c4f1ea150

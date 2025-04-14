@@ -192,56 +192,61 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
 
     // Setup and Clear screen
     SDL_RenderClear(renderer);
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);  // White outlines
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
     for (int index_x = 0; index_x < HEX_COUNT_X; index_x++) {
         for (int index_y = 0; index_y < HEX_COUNT_Y; index_y++) {
             float center_x = HEX_RADIUS * 1.5f * index_x + WINDOW_WIDTH / 4.0f;
             float center_y = HEX_RADIUS * sqrtf(3.0f) * (index_y + 0.5f * (index_x % 2)) + WINDOW_HEIGHT / 4.0f;
-            
-            // Set to render target
-            SDL_SetRenderTarget(renderer, render_target);
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-            SDL_RenderClear(renderer);
 
-            // Render texture to target
-            SDL_FRect tex_rect = { 
-                0, 
-                0, 
-                HEX_MASK_SIZE, 
-                HEX_MASK_SIZE 
-            };
-
-            static SDL_Texture* texture = NULL;
-            uint32_t result = determine_rand_val(0,3);
-            switch(result){                
+            // Select texture randomly
+            SDL_Texture* texture = NULL;
+            uint32_t result = determine_rand_val(0, 3);
+            switch (result) {
                 case 1: texture = ice_texture; break;
                 case 2: texture = desert_texture; break;
                 case 3: texture = stone_texture; break;
                 default: texture = grass_texture; break;
             }
-            SDL_RenderTexture(renderer, texture, NULL, &tex_rect);
-            
-            // Apply hexagonal mask
-            SDL_SetTextureBlendMode(hex_mask, SDL_BLENDMODE_MOD); // Modulate to mask
-            SDL_RenderTexture(renderer, hex_mask, NULL, &tex_rect);
-            SDL_SetTextureBlendMode(hex_mask, SDL_BLENDMODE_BLEND); // Restore default
-            
-            // Set render target to screen again
-            SDL_SetRenderTarget(renderer, NULL);
-            SDL_FRect screen_rect = {
-                center_x - HEX_RADIUS,
-                center_y - HEX_RADIUS,
-                HEX_MASK_SIZE,
-                HEX_MASK_SIZE
-            };
-            SDL_RenderTexture(renderer, render_target, NULL, &screen_rect);
 
+            // Define hexagon vertices and texture coordinates
+            SDL_Vertex vertices[7];
             SDL_FPoint points[6];
-            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-            get_hexagon_vertices(points, center_x, center_y, HEX_RADIUS);            
+            get_hexagon_vertices(points, center_x, center_y, HEX_RADIUS);
+
+            // Center vertex
+            vertices[0].position.x = center_x;
+            vertices[0].position.y = center_y;
+            vertices[0].tex_coord.x = 0.5f; // Center of texture
+            vertices[0].tex_coord.y = 0.5f;
+            vertices[0].color.r = 1.0f;
+            vertices[0].color.g = 1.0f;
+            vertices[0].color.b = 1.0f;
+            vertices[0].color.a = 1.0f;
+
+            // Outer vertices
+            for (int i = 0; i < 6; i++) {
+                vertices[i + 1].position = points[i];
+                // Map texture coordinates to fit hexagon
+                float tex_angle = (float)(M_PI / 3.0 * i);
+                vertices[i + 1].tex_coord.x = 0.5f + 0.4f * cosf(tex_angle);
+                vertices[i + 1].tex_coord.y = 0.5f + 0.4f * sinf(tex_angle);
+                vertices[i + 1].color.r = 1.0f;
+                vertices[i + 1].color.g = 1.0f;
+                vertices[i + 1].color.b = 1.0f;
+                vertices[i + 1].color.a = 1.0f;
+            }
+
+            // Define triangle indices for fan
+            int indices[] = { 0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 1 };
+
+            if (SDL_RenderGeometry(renderer, texture, vertices, 7, indices, 18) < 0) {
+                printf("RenderGeometry failed: %s", SDL_GetError());
+            }
+
+            // Draw hexagon outline
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
             draw_hexagon(renderer, points);
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
         }
     }
 
@@ -263,9 +268,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event){
 }
 
 /* This function runs once per frame, and is the heart of the program. */
-SDL_AppResult SDL_AppIterate(void *appstate){        
-    SDL_RenderClear(renderer);    
-
+SDL_AppResult SDL_AppIterate(void *appstate){   
 	return SDL_APP_CONTINUE;
 }
 
