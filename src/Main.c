@@ -191,8 +191,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
     }
 
     // Setup and Clear screen
-    SDL_RenderClear(renderer);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
 
     for (int index_x = 0; index_x < HEX_COUNT_X; index_x++) {
         for (int index_y = 0; index_y < HEX_COUNT_Y; index_y++) {
