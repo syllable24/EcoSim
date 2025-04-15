@@ -1,12 +1,19 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <SDL3/SDL.h>
+
 #include "../include/Util.h"
 #include "../include/cJSON.h"
 
-#define RESOURCE_FILE_COUNT 1
-#define BUFFER_SIZE 1024
+// Custom log categories
+#define LOG_CAT_UTIL SDL_LOG_CATEGORY_CUSTOM
+#define LOG_CAT_DISPLAY SDL_LOG_CATEGORY_CUSTOM + 1
+#define LOG_CAT_POPULATION SDL_LOG_CATEGORY_CUSTOM + 2
+#define LOG_CAT_MAIN SDL_LOG_CATEGORY_CUSTOM + 3
 
+// Resource File paths
+#define RESOURCE_FILE_COUNT 1
 static const char* resource_file_names[RESOURCE_FILE_COUNT] = {
 	"./res/NeedDefinition.json"
 };
@@ -26,7 +33,7 @@ uint8_t determine_rand_percent(){
 }
 
 int read_definition_from_res_file(ResourceFiles file, char*** target, uint8_t* target_size){
-	printf("Start read_definition_from_res_file.\n");
+	SDL_LogTrace(LOG_CAT_UTIL, "Start read_definition_from_res_file.");
 	int exit_status = 1;
 
 	char* raw_file_content = NULL;
@@ -41,51 +48,51 @@ int read_definition_from_res_file(ResourceFiles file, char*** target, uint8_t* t
 	const char* filename = get_resource_file_name(file);
 
 	if (!filename || !*filename){
-		printf("Error received invalid filename (NULL or empty).\n");		
+		SDL_LogError(LOG_CAT_UTIL, "Error received invalid filename (NULL or empty).");
 		goto cleanup;
 	}
 
 	if (!target || !target_size){
-		printf("Error received invalid target or target_size (NULL).\n");
+		SDL_LogError(LOG_CAT_UTIL, "Error received invalid target or target_size (NULL).");		
 		goto cleanup;
 	}	
 	
 	if (read_file_content(filename, &raw_file_content, &raw_file_content_size) != 0){
-		printf("Error during raw file content read.\n");		
+		SDL_LogError(LOG_CAT_UTIL, "Error while reading raw file content.");
 		goto cleanup;
 	}
 
-	printf("Raw file content: \n%s\n", raw_file_content);
+	SDL_LogDebug(LOG_CAT_UTIL, "Raw %s content: \n%s\n", filename, raw_file_content);
 
 	// Parse JSON content		
 	need_config = cJSON_Parse(raw_file_content);
 	if (!need_config){
 		const char* error_ptr = cJSON_GetErrorPtr();
-		printf("Error failed to parse JSON in '%s': %s\n", filename, error_ptr ? error_ptr : "Unknown error");
+		SDL_LogError(LOG_CAT_UTIL, "Failed to parse JSON in '%s': %s\n", filename, error_ptr ? error_ptr : "Unknown error");		
 		goto cleanup;
 	}
 	
 	const cJSON* all_base_needs = cJSON_GetObjectItemCaseSensitive(need_config, "BASE_NEEDS");
 	if(!all_base_needs || !cJSON_IsArray(all_base_needs)){
-		fprintf(stderr, "Error: Invalid need configuration structure.");		
+		SDL_LogError(LOG_CAT_UTIL, "Invalid need configuration content structure: Could not find element 'BASE_NEEDS'.");
 		goto cleanup;
 	}
 	
 	need_array_size = cJSON_GetArraySize(all_base_needs);
-	if (need_array_size <= 0){
-		fprintf(stderr, "Error: Base needs array is empty.\n");
+	if (need_array_size <= 0){		
+		SDL_LogError(LOG_CAT_UTIL, "BASE_NEEDS array is empty.");
 		goto cleanup;
 	}
 
 	if (need_array_size > UINT8_MAX){
-		fprintf(stderr, "Error: Base needs array larger than UINT8_MAX.\n");
+		SDL_LogError(LOG_CAT_UTIL, "BASE_NEEDS array larger than UINT8_MAX.");
 		goto cleanup;
 	}
 
 	// Setup target array
 	*target = (char**) malloc(need_array_size * sizeof(char*));
-	if (!*target){		
-		fprintf(stderr, "Malloc error.");
+	if (!*target){
+		SDL_LogError(LOG_CAT_UTIL, "Memory allocation failed for target array (%d entries, %zu bytes).", need_array_size, need_array_size * sizeof(char*));
 		goto cleanup;
 	}
 	
@@ -98,13 +105,13 @@ int read_definition_from_res_file(ResourceFiles file, char*** target, uint8_t* t
 		cJSON* array_item = cJSON_GetArrayItem(all_base_needs, i);
 		char* string_value = cJSON_GetStringValue(array_item);
 		if (!string_value || !cJSON_IsString(array_item)){
-			fprintf(stderr, "Invalid item in need_array.");
+			SDL_LogError(LOG_CAT_UTIL, "Invalid value in BASE_NEEDS array.");
 			goto cleanup;
 		}
 		
 		(*target)[i] = strdup(string_value);
 		if (!(*target)[i]) {
-			fprintf(stderr, "Failed to duplicate string into target array.\n");
+			SDL_LogError(LOG_CAT_UTIL, "Failed to duplicate string into target array.");			
 			goto cleanup;
 		}
 	}
@@ -122,68 +129,68 @@ cleanup:
     }
     free(raw_file_content);
     cJSON_Delete(need_config);
-	printf("End read_definition_from_res_file()\n");
+	SDL_LogTrace(LOG_CAT_UTIL, "End read_definition_from_res_file()");
     return exit_status;
 }
 
 int read_file_content(const char* filename, char** target_buffer, size_t* target_size){
-	printf("Start read_file_content()\n");
+	SDL_LogTrace(LOG_CAT_UTIL, "Start read_file_content()");	
 	
 	int exit_status = 1;
 	FILE* resFile = NULL;
 	*target_buffer = NULL;
 
 	if(!filename || !*filename){
-		printf("Error received invalid filename.\n");		
+		SDL_LogError(LOG_CAT_UTIL, "Received invalid filename (NULL or empty).");		
 		goto cleanup;
 	}
 
-	if(!target_buffer || !target_size){
-		printf("Error received invalid target_buffer or target_size.\n");		
-		goto cleanup;	
+	if(!target_buffer || !target_size){		
+		SDL_LogError(LOG_CAT_UTIL, "Received invalid target_buffer or target_size.\n");
+		goto cleanup;
 	}
 
-	printf("Try opening file %s.\n", filename);
+	SDL_LogDebug(LOG_CAT_UTIL, "Try opening file %s.\n", filename);
 	resFile = fopen(filename, "rb"); // Open in read binary mode for fread()
 	if (resFile == NULL){
-		printf("Error opening file.\n");		
+		SDL_LogError(LOG_CAT_UTIL, "Error opening file %s.", filename);
 		goto cleanup;
 	}
 	
-	printf("Reading from file %s.\n", filename);
+	SDL_LogDebug(LOG_CAT_UTIL, "Reading from file %s.\n", filename);
 
 	// Read file size 
 	if (fseek(resFile, 0, SEEK_END) != 0){
-		printf("Error could not seek end of file: %s", filename);				
+		SDL_LogError(LOG_CAT_UTIL, "Could not seek end of file: %s", filename);				
 		goto cleanup;
 	}
 
 	// Get filesize value
 	long size = ftell(resFile);
 	if (size < 0){
-		printf("Error could not determine resource file size.\n");		
+		SDL_LogError(LOG_CAT_UTIL, "Could not determine file size.\n");		
 		goto cleanup;
 	}
 
 	// Rewind File
 	if (fseek(resFile, 0, SEEK_SET) != 0){
-		printf("Error could rewind file: %s", filename);
+		SDL_LogError(LOG_CAT_UTIL, "Error could rewind file: %s", filename);
 		goto cleanup;
 	}
 	
 	// Allocate file content buffer.
 	*target_buffer = (char*) malloc(size + 1);
 	if (!*target_buffer){
-		printf("Malloc error.\n");		
+		SDL_LogError(LOG_CAT_UTIL, "Memory allocation failed for target_buffer (%d entries, %zu bytes).", size, size * sizeof(char*));
 		goto cleanup;
 	}
 
 	// Read file content into target_buffer
 	size_t bytes_read = fread(*target_buffer, 1, size, resFile);
 	if (bytes_read != (size_t)size){
-		printf("Could not read entire resource file.\n");		
+		SDL_LogError(LOG_CAT_UTIL, "Could not read entire resource file. Read %d bytes, expected %d bytes.", bytes_read, (size_t)size);
 		goto cleanup;
-	}	
+	}
 
 	(*target_buffer)[size] = '\0';
 	*target_size = size;	
@@ -196,7 +203,7 @@ cleanup:
 		*target_buffer = NULL;
 	}
 	fclose(resFile);
-	printf("End read_file_content()\n");
+	SDL_LogTrace(LOG_CAT_UTIL, "End read_file_content()");
 	return exit_status;
 }
 
