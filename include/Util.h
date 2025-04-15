@@ -23,7 +23,7 @@ typedef struct {
     uint8_t base_light_quality;
     uint8_t base_air_quality;
     uint8_t base_soil_quality;
-    uint8_t temperature_mod;
+    uint8_t base_temperature_mod;
 } TileDefinition;
 
 uint32_t determine_rand_val(int min, int max);

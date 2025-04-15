@@ -232,7 +232,7 @@ int read_tile_definition(TileDefinition** target, uint8_t* target_size){
 			.base_light_quality = raw_base_light_quality,
 			.base_air_quality = raw_base_air_quality,
 			.base_soil_quality = raw_base_soil_quality,
-			.temperature_mod = raw_base_temperature_mod,
+			.base_temperature_mod = raw_base_temperature_mod,
 		};
 
 		(*target)[tile_index] = currentDef;		

@@ -29,6 +29,7 @@ static SDL_Texture* desert_texture = NULL;
 
 PopulationUnit p;
 TileDefinition* tile_definitions = NULL;
+uint8_t tile_definition_size = 0;
 
 char* message = "Hello EcoSim!";
 
@@ -105,13 +106,10 @@ int load_textures(){
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
 	
-    setup_logging();
-    
     srand(time(NULL));
 
-    TileDefinition* tile_definitions = NULL;
-    uint8_t tile_definition_size = 0;
-
+    setup_logging();
+    
     if (read_tile_definition(&tile_definitions, &tile_definition_size) != SDL_APP_CONTINUE){
 		SDL_LogError(LOG_CAT_MAIN, "Error during read tile definition.");
 		return SDL_APP_FAILURE;
