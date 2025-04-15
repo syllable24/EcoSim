@@ -4,12 +4,6 @@
 		"Water",
 		"Shelter",
 		"Bottom Clothes",
-		"Top Clothes",
-		"Shoes"
-	],
-	"LUXURY_NEEDS": [
-		"Coffee",
-		"Tea",
-		"Cherries"
+		"Top Clothes"
 	]
 }
