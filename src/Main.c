@@ -6,6 +6,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
+#include "../include/cJSON.h"
 #include "../include/Population.h"
 #include "../include/Util.h"
 #include "../include/Display.h"

@@ -11,6 +11,7 @@ PRIVATE
     src/Population.c
     src/Util.c
     src/Display.c
+    src/cJson.c
 )
 
 target_include_directories(EcoSim
