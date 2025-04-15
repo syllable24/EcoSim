@@ -30,53 +30,53 @@ char* message = "Hello EcoSim!";
 int load_textures(){
     SDL_Surface* grass_bmp = SDL_LoadBMP("img/green-grass-texture.bmp");
     if (grass_bmp == NULL){
-        SDL_Log("Could not load green-grass-texture.bmp.");
+        SDL_LogError(LOG_CAT_MAIN, "Could not load green-grass-texture.bmp.");
         return SDL_APP_FAILURE;
     }
     
     grass_texture = SDL_CreateTextureFromSurface(renderer, grass_bmp);
     SDL_DestroySurface(grass_bmp);
     if (grass_texture == NULL){
-        SDL_Log("Could not load texture green-grass-texture.png.");
+        SDL_LogError(LOG_CAT_MAIN, "Could not load texture green-grass-texture.png.");
         return SDL_APP_FAILURE;
     }
     
     SDL_Surface* ice_bmp = SDL_LoadBMP("img/Ice.bmp");
     if (ice_bmp == NULL){
-        SDL_Log("Could not load ice.bmp.");
+        SDL_LogError(LOG_CAT_MAIN, "Could not load ice.bmp.");
         return SDL_APP_FAILURE;
     }
     
     ice_texture = SDL_CreateTextureFromSurface(renderer, ice_bmp);
     SDL_DestroySurface(ice_bmp);
     if (ice_texture == NULL){
-        SDL_Log("Could not load texture ice.bmp.");
+        SDL_LogError(LOG_CAT_MAIN, "Could not load texture ice.bmp.");
         return SDL_APP_FAILURE;
     }
 
     SDL_Surface* stone_bmp = SDL_LoadBMP("img/Stone.bmp");
     if (stone_bmp == NULL){
-        SDL_Log("Could not load stone.bmp.");
+        SDL_LogError(LOG_CAT_MAIN, "Could not load stone.bmp.");
         return SDL_APP_FAILURE;
     }
     
     stone_texture = SDL_CreateTextureFromSurface(renderer, stone_bmp);
     SDL_DestroySurface(stone_bmp);
     if (stone_texture == NULL){
-        SDL_Log("Could not load texture ice.bmp.");
+        SDL_LogError(LOG_CAT_MAIN, "Could not load texture ice.bmp.");
         return SDL_APP_FAILURE;
     }
 
     SDL_Surface* desert_bmp = SDL_LoadBMP("img/Desert.bmp");
     if (desert_bmp == NULL){
-        SDL_Log("Could not load desert.bmp.");
+        SDL_LogError(LOG_CAT_MAIN, "Could not load desert.bmp.");
         return SDL_APP_FAILURE;
     }
     
     desert_texture = SDL_CreateTextureFromSurface(renderer, desert_bmp);
     SDL_DestroySurface(desert_bmp);
     if (desert_texture == NULL){
-        SDL_Log("Could not load texture ice.bmp.");
+        SDL_LogError(LOG_CAT_MAIN, "Could not load texture ice.bmp.");
         return SDL_APP_FAILURE;
     }
 
@@ -89,28 +89,28 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
 
     /* Create Population Unit */
 	if (create_population_unit(&p) != 0){
-		printf("Error during create population.\n");
+		SDL_LogError(LOG_CAT_MAIN, "Error during create population.");
 		return 1;
 	}
 
-	printf("POP Count: %d \n", p.pop_count);
-	printf("Need Count: %d \n", p.need_count);
+	SDL_LogDebug(LOG_CAT_MAIN, "POP Count: %d", p.pop_count);
+	SDL_LogDebug(LOG_CAT_MAIN, "Need Count: %d", p.need_count);
 	
 	for (int i = 0; i < p.need_count; i++){
-		printf("Base Need %d Name: %s\n", i, p.base_needs[i].name);
-		printf("Base Need %d affinity: %d\n", i, p.base_needs[i].affinity);
-		printf("Base Need %d satisfaction: %d\n", i, p.base_needs[i].satisfaction);	
+		SDL_LogDebug(LOG_CAT_MAIN, "Base Need %d Name: %s", i, p.base_needs[i].name);
+		SDL_LogDebug(LOG_CAT_MAIN, "Base Need %d affinity: %d", i, p.base_needs[i].affinity);
+		SDL_LogDebug(LOG_CAT_MAIN, "Base Need %d satisfaction: %d", i, p.base_needs[i].satisfaction);	
 	}
     
     /* Create the window */
     if (!SDL_CreateWindowAndRenderer("Eco Sim", WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_FULLSCREEN, &window, &renderer)) {
-        SDL_Log("Couldn't create window and renderer: %s", SDL_GetError());
+        SDL_LogError(LOG_CAT_MAIN, "Couldn't create window and renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
 
     /* Load Textures */
     if (load_textures() != SDL_APP_CONTINUE){
-        SDL_Log("Couldn't create window and renderer: %s", SDL_GetError());
+        SDL_LogError(LOG_CAT_MAIN, "Couldn't create window and renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
 
@@ -137,7 +137,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
             get_hexagon_vertices(points, center_x, center_y, HEX_RADIUS);
 
             if (draw_hexagon_texture(renderer, texture, points, center_x, center_y) != SDL_APP_CONTINUE){
-                SDL_Log("Error during draw_hexagon_texture: %s.\n", SDL_GetError());
+                SDL_LogError(LOG_CAT_MAIN, "Error during draw_hexagon_texture: %s.", SDL_GetError());
                 return SDL_APP_FAILURE;
             }
 
