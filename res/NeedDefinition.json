@@ -1,0 +1,15 @@
+{
+	"BASE_NEEDS": [
+		"Food",
+		"Water",
+		"Shelter",
+		"Bottom Clothes",
+		"Top Clothes",
+		"Shoes"
+	],
+	"LUXURY_NEEDS": [
+		"Coffee",
+		"Tea",
+		"Cherries"
+	]
+}
