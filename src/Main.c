@@ -9,6 +9,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
+#include "../include/Hashmap.h"
 #include "../include/cJSON.h"
 #include "../include/Population.h"
 #include "../include/Util.h"
@@ -28,7 +29,7 @@ static SDL_Texture* stone_texture = NULL;
 static SDL_Texture* desert_texture = NULL;
 
 PopulationUnit p;
-TileDefinition* tile_definitions = NULL;
+TileDefinition** tile_definitions = NULL;
 uint8_t tile_definition_size = 0;
 
 char* message = "Hello EcoSim!";
@@ -44,63 +45,46 @@ void setup_logging(){
     SDL_SetLogOutputFunction(log_with_timestamp, NULL);
 }
 
-int load_textures(){
+int load_textures(TileDefinition** tile_definitions, uint8_t tile_definition_size, SDL_Texture*** textures_out){
     SDL_LogTrace(LOG_CAT_DISPLAY, "Start load_textures()");
-    
-    SDL_Surface* grass_bmp = SDL_LoadBMP("img/green-grass-texture.bmp");
-    if (grass_bmp == NULL){
-        SDL_LogError(LOG_CAT_DISPLAY, "Could not load green-grass-texture.bmp.");
-        return SDL_APP_FAILURE;
-    }
-    
-    grass_texture = SDL_CreateTextureFromSurface(renderer, grass_bmp);
-    SDL_DestroySurface(grass_bmp);
-    if (grass_texture == NULL){
-        SDL_LogError(LOG_CAT_DISPLAY, "Could not load texture green-grass-texture.png.");
-        return SDL_APP_FAILURE;
-    }
-    
-    SDL_Surface* ice_bmp = SDL_LoadBMP("img/Ice.bmp");
-    if (ice_bmp == NULL){
-        SDL_LogError(LOG_CAT_DISPLAY, "Could not load ice.bmp.");
-        return SDL_APP_FAILURE;
-    }
-    
-    ice_texture = SDL_CreateTextureFromSurface(renderer, ice_bmp);
-    SDL_DestroySurface(ice_bmp);
-    if (ice_texture == NULL){
-        SDL_LogError(LOG_CAT_DISPLAY, "Could not load texture ice.bmp.");
-        return SDL_APP_FAILURE;
+    int exit_status = SDL_APP_FAILURE;
+
+    SDL_Texture** textures = malloc(tile_definition_size * sizeof(SDL_Texture*));
+    if (!textures){
+        SDL_LogError(LOG_CAT_DISPLAY, "Memory allocation failed for texture array (%d entries, %zu bytes)", tile_definition_size, tile_definition_size * sizeof(SDL_Texture*));
+        goto cleanup;
     }
 
-    SDL_Surface* stone_bmp = SDL_LoadBMP("img/Stone.bmp");
-    if (stone_bmp == NULL){
-        SDL_LogError(LOG_CAT_DISPLAY, "Could not load stone.bmp.");
-        return SDL_APP_FAILURE;
+    uint8_t tile_definition_index = 0;
+    for (tile_definition_index = 0; tile_definition_index < tile_definition_size; tile_definition_index++){
+        SDL_Surface* bmp = SDL_LoadBMP(tile_definitions[tile_definition_index]->texture);
+        if (!bmp){
+            SDL_LogError(LOG_CAT_DISPLAY, "Could not load %s.", tile_definitions[tile_definition_index]->texture);
+            goto cleanup;
+        }
+        
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, bmp);
+        SDL_DestroySurface(bmp);
+        if (!texture){
+            SDL_LogError(LOG_CAT_DISPLAY, "Could not create texture for %s.", tile_definitions[tile_definition_index]->texture);
+            goto cleanup;            
+        } 
+        textures[tile_definition_index] = texture;
     }
     
-    stone_texture = SDL_CreateTextureFromSurface(renderer, stone_bmp);
-    SDL_DestroySurface(stone_bmp);
-    if (stone_texture == NULL){
-        SDL_LogError(LOG_CAT_DISPLAY, "Could not load texture ice.bmp.");
-        return SDL_APP_FAILURE;
-    }
+    *textures_out = textures;    
+    exit_status = SDL_APP_CONTINUE;
 
-    SDL_Surface* desert_bmp = SDL_LoadBMP("img/Desert.bmp");
-    if (desert_bmp == NULL){
-        SDL_LogError(LOG_CAT_DISPLAY, "Could not load desert.bmp.");
-        return SDL_APP_FAILURE;
+cleanup: 
+    if (exit_status != SDL_APP_CONTINUE){
+        for (int i = 0; i < tile_definition_index; i++){
+            SDL_DestroyTexture(textures[i]);
+            textures[i] = NULL;
+        }
+        free(textures);
     }
-    
-    desert_texture = SDL_CreateTextureFromSurface(renderer, desert_bmp);
-    SDL_DestroySurface(desert_bmp);
-    if (desert_texture == NULL){
-        SDL_LogError(LOG_CAT_DISPLAY, "Could not load texture ice.bmp.");
-        return SDL_APP_FAILURE;
-    }
-
     SDL_LogTrace(LOG_CAT_DISPLAY, "End load_textures()");
-    return SDL_APP_CONTINUE;
+    return exit_status;
 }
 
 /* This function runs once at startup. */
@@ -110,9 +94,24 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
 
     setup_logging();
     
+    /* Create the window */
+    if (!SDL_CreateWindowAndRenderer("Eco Sim", WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_FULLSCREEN, &window, &renderer)) {
+        SDL_LogError(LOG_CAT_MAIN, "Couldn't create window and renderer: %s", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+    
+    SDL_LogDebug(LOG_CAT_MAIN, "Reading Tile Definiitons.");
     if (read_tile_definition(&tile_definitions, &tile_definition_size) != SDL_APP_CONTINUE){
 		SDL_LogError(LOG_CAT_MAIN, "Error during read tile definition.");
 		return SDL_APP_FAILURE;
+    }
+
+    /* Load Textures */
+    SDL_LogDebug(LOG_CAT_MAIN, "Loading Textures.");
+    SDL_Texture** textures_out = NULL;
+    if (load_textures(tile_definitions, tile_definition_size, &textures_out) != SDL_APP_CONTINUE){
+        SDL_LogError(LOG_CAT_MAIN, "Couldn't load textures: %s", SDL_GetError());
+        return SDL_APP_FAILURE;
     }
 
     /* Create Population Unit */
@@ -129,18 +128,6 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
 		SDL_LogDebug(LOG_CAT_MAIN, "Base Need %d affinity: %d", i, p.base_needs[i].affinity);
 		SDL_LogDebug(LOG_CAT_MAIN, "Base Need %d satisfaction: %d", i, p.base_needs[i].satisfaction);	
 	}
-    
-    /* Create the window */
-    if (!SDL_CreateWindowAndRenderer("Eco Sim", WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_FULLSCREEN, &window, &renderer)) {
-        SDL_LogError(LOG_CAT_MAIN, "Couldn't create window and renderer: %s", SDL_GetError());
-        return SDL_APP_FAILURE;
-    }
-
-    /* Load Textures */
-    if (load_textures() != SDL_APP_CONTINUE){
-        SDL_LogError(LOG_CAT_MAIN, "Couldn't create window and renderer: %s", SDL_GetError());
-        return SDL_APP_FAILURE;
-    }
 
     // Setup and Clear screen     
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
@@ -155,10 +142,10 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
             SDL_Texture* texture = NULL;
             uint32_t result = determine_rand_val(0, 3);
             switch (result) {
-                case 1: texture = ice_texture; break;
-                case 2: texture = desert_texture; break;
-                case 3: texture = stone_texture; break;
-                default: texture = grass_texture; break;
+                case 1: texture = textures_out[0]; break;
+                case 2: texture = textures_out[1]; break;
+                case 3: texture = textures_out[2]; break;
+                default: texture = textures_out[3]; break;
             }
 
             SDL_FPoint points[6];

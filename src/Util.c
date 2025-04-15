@@ -135,7 +135,7 @@ cleanup:
     return exit_status;
 }
 
-int read_tile_definition(TileDefinition** target, uint8_t* target_size){
+int read_tile_definition(TileDefinition*** target, uint8_t* target_size){
 	SDL_LogTrace(LOG_CAT_UTIL, "Start read_tile_definition().");
 	int exit_status = SDL_APP_FAILURE;
 
@@ -194,7 +194,7 @@ int read_tile_definition(TileDefinition** target, uint8_t* target_size){
 
 	// Setup target array
 	SDL_LogDebug(LOG_CAT_UTIL, "Setup tile_definition target array.");
-	*target = (TileDefinition*) malloc(tile_defs_array_size * sizeof(TileDefinition*));
+	*target = malloc(tile_defs_array_size * sizeof(TileDefinition*));
 	if (!*target){
 		SDL_LogError(LOG_CAT_UTIL, "Memory allocation failed for target array (%d entries, %zu bytes).", tile_defs_array_size, tile_defs_array_size * sizeof(TileDefinition*));
 		goto cleanup;
@@ -204,8 +204,15 @@ int read_tile_definition(TileDefinition** target, uint8_t* target_size){
 	int tile_index = 0;
 	cJSON_ArrayForEach(tile_def, all_tile_defs){
 		SDL_LogDebug(LOG_CAT_UTIL, "Parsing json array index %u.", tile_index);
-		char* raw_name = "\0";
-		char* raw_texture = "\0";
+		
+		(*target)[tile_index] = malloc(sizeof(TileDefinition));
+		if(!(*target)[tile_index]){
+			SDL_LogError(LOG_CAT_UTIL, "Memory allocation failed for target TileDefinition (%zu bytes).", sizeof(TileDefinition));
+			goto cleanup;
+		}
+		
+		char* raw_name = NULL;
+		char* raw_texture = NULL;
 		uint8_t raw_base_water_quality = 0;
 		uint8_t raw_base_light_quality = 0;
 		uint8_t raw_base_air_quality = 0;
@@ -225,27 +232,30 @@ int read_tile_definition(TileDefinition** target, uint8_t* target_size){
 			goto cleanup;
 		}
 
-		TileDefinition currentDef = {
-			.name = raw_name,
-			.texture = raw_texture,
-			.base_water_quality = raw_base_water_quality,
-			.base_light_quality = raw_base_light_quality,
-			.base_air_quality = raw_base_air_quality,
-			.base_soil_quality = raw_base_soil_quality,
-			.base_temperature_mod = raw_base_temperature_mod,
-		};
-
-		(*target)[tile_index] = currentDef;		
+		(*target)[tile_index]->name = raw_name;					
+		(*target)[tile_index]->texture = raw_texture;
+		(*target)[tile_index]->base_water_quality = raw_base_water_quality;
+		(*target)[tile_index]->base_light_quality = raw_base_light_quality;
+		(*target)[tile_index]->base_air_quality = raw_base_air_quality;
+		(*target)[tile_index]->base_soil_quality = raw_base_soil_quality;
+		(*target)[tile_index]->base_temperature_mod = raw_base_temperature_mod;
+		
 		tile_index++;
 	}
+
+	SDL_LogDebug(LOG_CAT_UTIL, "Finished Parsing json array.");
 
 	*target_size = (uint8_t) tile_defs_array_size;
 	exit_status = SDL_APP_CONTINUE;
 
 cleanup:
     if (exit_status != SDL_APP_CONTINUE && *target) {
-        for (int i = 0; i < tile_defs_array_size; i++) {
-            free((target)[i]);
+        for (int i = 0; i < tile_index; i++) {
+			if ((*target)[i]){
+				free((*target)[i]->name);
+				free((*target)[i]->texture);
+				free((*target)[i]);
+			}
         }
         free(*target);
         *target = NULL;

@@ -12,6 +12,7 @@ PRIVATE
     src/Util.c
     src/Display.c
     src/cJson.c
+    src/Hashmap.c
 )
 
 target_include_directories(EcoSim

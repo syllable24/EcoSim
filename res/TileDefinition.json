@@ -2,7 +2,7 @@
 	"Tiles": [
 		{
 			"name": "Plains",
-			"texture": "img/green-grass-texture.bmp",
+			"texture": "./img/green-grass-texture.bmp",
 			"base_water_quality": 60,
 			"base_light_quality": 100,
 			"base_air_quality": 80,
@@ -11,7 +11,7 @@
 		},
 		{
 			"name": "Desert",
-			"texture": "img/Desert.bmp",
+			"texture": "./img/Desert.bmp",
 			"base_water_quality": 10,
 			"base_light_quality": 100,
 			"base_air_quality": 50,
@@ -20,7 +20,7 @@
 		},
 		{
 			"name": "Ice",
-			"texture": "img/Ice.bmp",
+			"texture": "./img/Ice.bmp",
 			"base_water_quality": 0,
 			"base_light_quality": 20,
 			"base_air_quality": 20,
@@ -29,7 +29,7 @@
 		},
 		{
 			"name": "Mountains",
-			"texture": "img/Stone.bmp",
+			"texture": "./img/Stone.bmp",
 			"base_water_quality": 80,
 			"base_light_quality": 40,
 			"base_air_quality": 100,
