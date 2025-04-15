@@ -5,6 +5,8 @@
 #include <SDL3/SDL.h>
 
 #include "../include/Util.h"
+#include "../include/Display.h"
+#include "../include/Hashmap.h"
 
 // Calculate the six vertices of a flat-top hexagon
 void get_hexagon_vertices(SDL_FPoint* points, float center_x, float center_y, float radius) {
@@ -27,7 +29,9 @@ void draw_hexagon_outline(SDL_Renderer* renderer, SDL_FPoint* vertices) {
     }
 }
 
-int draw_hexagon_texture(SDL_Renderer* renderer, SDL_Texture* texture, SDL_FPoint points[6], float center_x, float center_y){
+int draw_hexagon_texture(SDL_Renderer* renderer, SDL_Texture* texture, SDL_FPoint points[6], float center_x, float center_y){    
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+
     // Define hexagon vertices and texture coordinates
     SDL_Vertex vertices[7];     
 
@@ -55,7 +59,14 @@ int draw_hexagon_texture(SDL_Renderer* renderer, SDL_Texture* texture, SDL_FPoin
     }
 
     // Define triangle indices for fan
-    int indices[] = { 0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 1 };
+    int indices[] = { 
+        0, 1, 2, 
+        0, 2, 3, 
+        0, 3, 4, 
+        0, 4, 5, 
+        0, 5, 6, 
+        0, 6, 1 
+    };
 
     if (SDL_RenderGeometry(renderer, texture, vertices, 7, indices, 18) < 0) {
         SDL_LogError(LOG_CAT_DISPLAY, "RenderGeometry failed: %s", SDL_GetError());
@@ -64,63 +75,105 @@ int draw_hexagon_texture(SDL_Renderer* renderer, SDL_Texture* texture, SDL_FPoin
     return SDL_APP_CONTINUE;
 }
 
-/*
-int load_textures(SDL_Texture** textures){
-    SDL_LogTrace(LOG_CAT_DISPLAY, "Start load_textures()");
+int draw_tile_map(
+    SDL_Renderer* renderer, 
+    TileState** g_game_board,
+    struct hashmap* texture_map,
+    uint8_t arr_textures_size, 
+    uint8_t map_size_x, 
+    uint8_t map_size_y
+){
+    SDL_LogTrace(LOG_CAT_DISPLAY, "Start draw_tile_map().");
+
+    // Setup and Clear screen
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+    SDL_RenderClear(renderer);
     
-    SDL_Surface* grass_bmp = SDL_LoadBMP("img/green-grass-texture.bmp");
-    if (grass_bmp == NULL){
-        SDL_LogError(LOG_CAT_DISPLAY, "Could not load green-grass-texture.bmp.");
-        return SDL_APP_FAILURE;
-    }
+    // Draw White Box around grid
+    SDL_LogTrace(LOG_CAT_DISPLAY, "Draw Board Borders.");
+    SDL_FPoint top_left_border = {
+        .x = WINDOW_WIDTH / 8.0f,
+        .y = WINDOW_HEIGHT / 8.0f
+    };
+
+    SDL_FRect border = {
+        .x = top_left_border.x,
+        .y = top_left_border.y,
+        .w = WINDOW_WIDTH - (WINDOW_WIDTH / 16.0f),
+        .h = WINDOW_HEIGHT - (WINDOW_HEIGHT / 16.0f)
+    };
     
-    grass_texture = SDL_CreateTextureFromSurface(renderer, grass_bmp);
-    SDL_DestroySurface(grass_bmp);
-    if (grass_texture == NULL){
-        SDL_LogError(LOG_CAT_DISPLAY, "Could not load texture green-grass-texture.png.");
-        return SDL_APP_FAILURE;
-    }
-    
-    SDL_Surface* ice_bmp = SDL_LoadBMP("img/Ice.bmp");
-    if (ice_bmp == NULL){
-        SDL_LogError(LOG_CAT_DISPLAY, "Could not load ice.bmp.");
-        return SDL_APP_FAILURE;
-    }
-    
-    ice_texture = SDL_CreateTextureFromSurface(renderer, ice_bmp);
-    SDL_DestroySurface(ice_bmp);
-    if (ice_texture == NULL){
-        SDL_LogError(LOG_CAT_DISPLAY, "Could not load texture ice.bmp.");
-        return SDL_APP_FAILURE;
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);    
+    SDL_RenderRect(renderer, &border);
+
+    SDL_FPoint top_left_grid = {
+        .x = WINDOW_WIDTH / 6.0f,
+        .y = WINDOW_HEIGHT / 6.0f
+    };
+   
+    SDL_LogTrace(LOG_CAT_DISPLAY, "Start Draw Hexes.");
+
+    for (uint8_t index_x = 0; index_x < HEX_COUNT_X; index_x++) {
+        for (uint8_t index_y = 0; index_y < HEX_COUNT_Y; index_y++) {
+            
+            // Validate game_board entry
+            if (!g_game_board[index_x] || !g_game_board[index_x][index_y].tile_def || !g_game_board[index_x][index_y].tile_def->name) {
+                SDL_LogError(LOG_CAT_DISPLAY, "Invalid tile at [%u][%u]: NULL tile_def or name", index_x, index_y);
+                SDL_RenderPresent(renderer);
+                return SDL_APP_FAILURE;
+            }
+
+            // Calculate Hex Texture center
+            float center_x = HEX_RADIUS * 1.5f * index_x + top_left_grid.x;
+            float center_y = HEX_RADIUS * sqrtf(3.0f) * (index_y + 0.5f * (index_x % 2)) + top_left_grid.y;
+            SDL_LogTrace(LOG_CAT_DISPLAY, "Hex Center X: %05.02f Y: %05.02f.", center_x, center_y);
+
+            // Get Hex Texture by name
+            char* hex_def_name = g_game_board[index_x][index_y].tile_def->name;
+            SDL_LogTrace(LOG_CAT_DISPLAY, "Hex def name: %s.", hex_def_name);
+            TextureHashMapRecord* rec = hashmap_get(texture_map, &(TextureHashMapRecord){.name=hex_def_name});
+            if (!rec || !rec->texture) {
+                SDL_LogError(LOG_CAT_DISPLAY, "No texture found for name '%s' at [%u][%u]", hex_def_name, index_x, index_y);
+                SDL_RenderPresent(renderer);
+                return SDL_APP_FAILURE;
+            }            
+            SDL_Texture* texture = rec->texture;
+
+            // Calc Hex vertices
+            SDL_FPoint points[6];
+            get_hexagon_vertices(points, center_x, center_y, HEX_RADIUS);
+
+            // Draw Hex Texture to screen
+            if (draw_hexagon_texture(renderer, texture, points, center_x, center_y) != SDL_APP_CONTINUE){
+                SDL_LogError(LOG_CAT_MAIN, "Error during draw_hexagon_texture: %s.", SDL_GetError());
+                return SDL_APP_FAILURE;
+            }
+
+            // Draw hex outline
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+            draw_hexagon_outline(renderer, points);
+        }
     }
 
-    SDL_Surface* stone_bmp = SDL_LoadBMP("img/Stone.bmp");
-    if (stone_bmp == NULL){
-        SDL_LogError(LOG_CAT_DISPLAY, "Could not load stone.bmp.");
-        return SDL_APP_FAILURE;
-    }
-    
-    stone_texture = SDL_CreateTextureFromSurface(renderer, stone_bmp);
-    SDL_DestroySurface(stone_bmp);
-    if (stone_texture == NULL){
-        SDL_LogError(LOG_CAT_DISPLAY, "Could not load texture ice.bmp.");
-        return SDL_APP_FAILURE;
-    }
+    // Present
+    SDL_RenderPresent(renderer);
 
-    SDL_Surface* desert_bmp = SDL_LoadBMP("img/Desert.bmp");
-    if (desert_bmp == NULL){
-        SDL_LogError(LOG_CAT_DISPLAY, "Could not load desert.bmp.");
-        return SDL_APP_FAILURE;
-    }
-    
-    desert_texture = SDL_CreateTextureFromSurface(renderer, desert_bmp);
-    SDL_DestroySurface(desert_bmp);
-    if (desert_texture == NULL){
-        SDL_LogError(LOG_CAT_DISPLAY, "Could not load texture ice.bmp.");
-        return SDL_APP_FAILURE;
-    }
-
-    SDL_LogTrace(LOG_CAT_DISPLAY, "End load_textures()");
+    SDL_LogTrace(LOG_CAT_DISPLAY, "End draw_tile_map().");
     return SDL_APP_CONTINUE;
 }
-*/
+
+int texture_hash_map_compare(const void *a, const void *b, void *udata){
+    const TextureHashMapRecord* ua = a;
+    const TextureHashMapRecord* ub = b;
+    return strcmp(ua->name, ub->name);
+}
+
+bool texture_hash_map_iter(const void *item, void *udata){
+    const TextureHashMapRecord* rec = item;    
+    return true;
+}
+
+uint64_t texture_hash_map_hash(const void *item, uint64_t seed0, uint64_t seed1) {
+    const TextureHashMapRecord* rec = item;
+    return hashmap_sip(rec->name, strlen(rec->name), seed0, seed1);
+}

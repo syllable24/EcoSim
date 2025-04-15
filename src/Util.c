@@ -302,7 +302,6 @@ bool validate_json_percent_number(const cJSON* json, const char *key, uint8_t* t
     return true;
 }
 
-
 int read_file_content(const char* filename, char** target_buffer, size_t* target_size){
 	SDL_LogTrace(LOG_CAT_UTIL, "Start read_file_content()");	
 	
@@ -413,6 +412,9 @@ void log_with_timestamp(void* userdata, int category, SDL_LogPriority priority, 
         case LOG_CAT_UTIL:
             category_str = "UTIL";
             break;
+		case LOG_CAT_MAPGEN:
+			category_str = "MAPGEN";
+			break;
         default:
             category_str = "DEFAULT";
             break;

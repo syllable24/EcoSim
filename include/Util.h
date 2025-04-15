@@ -10,6 +10,7 @@
 #define LOG_CAT_DISPLAY SDL_LOG_CATEGORY_CUSTOM + 1
 #define LOG_CAT_POPULATION SDL_LOG_CATEGORY_CUSTOM + 2
 #define LOG_CAT_MAIN SDL_LOG_CATEGORY_CUSTOM + 3
+#define LOG_CAT_MAPGEN SDL_LOG_CATEGORY_CUSTOM + 4
 
 typedef enum {
     NEED_DEFINITION,
@@ -25,6 +26,11 @@ typedef struct {
     uint8_t base_soil_quality;
     uint8_t base_temperature_mod;
 } TileDefinition;
+
+typedef struct {
+    const TileDefinition* tile_def;
+} TileState;
+
 
 uint32_t determine_rand_val(int min, int max);
 

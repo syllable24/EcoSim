@@ -48,5 +48,6 @@ int add_need(PopulationUnit* p, Need* n);
 
 int create_need(Need* n, char* name);
 
-#endif
+void log_pop_unit(PopulationUnit* p);
 
+#endif

@@ -121,3 +121,13 @@ int create_need(Need* n, char* name){
 	return 0;
 }
 
+void log_pop_unit(PopulationUnit* p){
+	SDL_LogDebug(LOG_CAT_MAIN, "POP Count: %d", p->pop_count);
+	SDL_LogDebug(LOG_CAT_MAIN, "Need Count: %d", p->need_count);
+	
+	for (int i = 0; i < p->need_count; i++){
+		SDL_LogDebug(LOG_CAT_MAIN, "Base Need %d Name: %s", i, p->base_needs[i].name);
+		SDL_LogDebug(LOG_CAT_MAIN, "Base Need %d affinity: %d", i, p->base_needs[i].affinity);
+		SDL_LogDebug(LOG_CAT_MAIN, "Base Need %d satisfaction: %d", i, p->base_needs[i].satisfaction);	
+	}
+}
