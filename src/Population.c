@@ -2,6 +2,7 @@
 #include <stdlib.h> 
 #include <stdint.h>
 #include <stdio.h> 
+#include <SDL3/SDL.h>
 
 #include "../include/Population.h"
 #include "../include/Util.h"
@@ -13,16 +14,16 @@ uint32_t g_next_pop_id = 0;
 int add_base_needs(PopulationUnit* p);
 
 int create_population_unit(PopulationUnit* p){
-	printf("Start create_population_unit.\n");
+	SDL_LogTrace(LOG_CAT_POPULATION, "Start create_population_unit.");
 	
 	if (p == NULL){
-		printf("ERR: Received null pointer.\n");
+		SDL_LogError(LOG_CAT_POPULATION, "Received null PopulationUnit pointer.");		
 		return 1;
 	}
 	
 	Need* needs = (Need*) malloc(MAX_NEEDS * sizeof(Need));
 	if (needs == NULL){
-		printf("malloc failed.\n");
+		SDL_LogError(LOG_CAT_POPULATION, "Memory allocation for needs array failed (%d entries, %zu bytes).", MAX_NEEDS, MAX_NEEDS * sizeof(Need));
 		return 1;
 	}
 
@@ -33,7 +34,7 @@ int create_population_unit(PopulationUnit* p){
         needs[i].satisfaction = 0;
     }
 
-	printf("Init pop.\n");
+	SDL_LogDebug(LOG_CAT_POPULATION, "Init pop.");
 	p->pop_id = g_next_pop_id++;
     p->pop_count = determine_rand_val(MIN_START_POP_COUNT, MAX_START_POP_COUNT);
     p->need_count = 0;
@@ -42,22 +43,22 @@ int create_population_unit(PopulationUnit* p){
 	
 	/* ADD BASE NEEDS */
 	if (add_base_needs(p) != 0){
-		printf("ERR during add_base_needs().\n");
+		SDL_LogError(LOG_CAT_POPULATION, "Error during add_base_needs().");
 		return 1;
 	}
 	
-	printf("End create_population_unit.\n");
+	SDL_LogTrace(LOG_CAT_POPULATION, "End create_population_unit()");
 	return 0;
 }
  
 int add_base_needs(PopulationUnit* p){
-	printf("Start add_base_needs().\n");
+	SDL_LogTrace(LOG_CAT_POPULATION, "Start add_base_needs().");
 	
 	uint8_t base_need_count = 0;
 
 	if (g_pop_base_needs == NULL){
 		if (read_definition_from_res_file(NEED_DEFINITION, &g_pop_base_needs, &base_need_count) != 0){
-			printf("Error during read need definition.\n");
+			SDL_LogError(LOG_CAT_POPULATION, "Error during read need definition.");
 			return 1;
 		}
 	}
@@ -65,58 +66,58 @@ int add_base_needs(PopulationUnit* p){
 	for (uint8_t i = 0; i < base_need_count; i++){
 		Need n;
 		if (create_need(&n, g_pop_base_needs[i]) != 0){
-			printf("Error during create need.\n");
+			SDL_LogError(LOG_CAT_POPULATION, "Error during create_need().");
 			return 1;
 		}
 
 		if(add_need(p, &n) != 0){
-			printf("Error during add need.\n");
+			SDL_LogError(LOG_CAT_POPULATION, "Error during add_need().");
 			free(p->base_needs);
 			return 1;
 		}
 	}
 
-	printf("End add_base_needs().\n");
+	SDL_LogTrace(LOG_CAT_POPULATION, "End add_base_needs().");
 	return 0;
 }
 
 int add_need(PopulationUnit* p, Need* n) {
-    printf("Start add_need().\n");
+    SDL_LogTrace(LOG_CAT_POPULATION, "Start add_need().");
     
     // Check for NULL pointers
     if (p == NULL || p->base_needs == NULL || n == NULL) {
-        printf("Error: NULL pointer in add_need().\n");
-        return 1; // Error code
+        SDL_LogError(LOG_CAT_POPULATION, "Received NULL pointer in add_need().");
+        return 1;
     }
     
     // Check if there's space for a new need
     if (p->need_count >= MAX_NEEDS) {
-        printf("Error: Cannot add need, array is full.\n");
-        return 1; // Error code
+        SDL_LogError(LOG_CAT_POPULATION, "Cannot add need, maximum size of %d needs reached.", MAX_NEEDS);
+        return 1;
     }
     
     // Add the new need
     p->base_needs[p->need_count] = *n;
     p->need_count++;
     
-    printf("End add_need().\n");
+    SDL_LogTrace(LOG_CAT_POPULATION, "End add_need().");
     return 0; // Success
 }
 
 int create_need(Need* n, char* name){
-	printf("Start create_need().\n");
+	SDL_LogTrace(LOG_CAT_POPULATION, "Start create_need().");
 	
 	if (n == NULL || name == NULL){
-		printf("ERR: Received null pointer.\n");
+		SDL_LogError(LOG_CAT_POPULATION, "Received null pointer.");
 		return 1;
 	}
 	
-	printf("Init Need: %s.\n", name);
+	SDL_LogDebug(LOG_CAT_POPULATION, "Init Need: %s.", name);
 	strcpy(n->name, name);
 	n->affinity = determine_rand_percent();
 	n->satisfaction = determine_rand_percent();
 		
-	printf("End create_need().\n");
+	SDL_LogTrace(LOG_CAT_POPULATION, "End create_need().");
 	return 0;
 }
 

@@ -6,12 +6,6 @@
 #include "../include/Util.h"
 #include "../include/cJSON.h"
 
-// Custom log categories
-#define LOG_CAT_UTIL SDL_LOG_CATEGORY_CUSTOM
-#define LOG_CAT_DISPLAY SDL_LOG_CATEGORY_CUSTOM + 1
-#define LOG_CAT_POPULATION SDL_LOG_CATEGORY_CUSTOM + 2
-#define LOG_CAT_MAIN SDL_LOG_CATEGORY_CUSTOM + 3
-
 // Resource File paths
 #define RESOURCE_FILE_COUNT 1
 static const char* resource_file_names[RESOURCE_FILE_COUNT] = {
