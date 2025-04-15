@@ -28,6 +28,8 @@ static SDL_Texture* stone_texture = NULL;
 static SDL_Texture* desert_texture = NULL;
 
 PopulationUnit p;
+TileDefinition* tile_definitions = NULL;
+
 char* message = "Hello EcoSim!";
 
 void setup_logging(){
@@ -35,7 +37,7 @@ void setup_logging(){
     SDL_SetLogPriority(LOG_CAT_MAIN, SDL_LOG_PRIORITY_DEBUG);
     SDL_SetLogPriority(LOG_CAT_DISPLAY, SDL_LOG_PRIORITY_DEBUG);
     SDL_SetLogPriority(LOG_CAT_POPULATION, SDL_LOG_PRIORITY_DEBUG);
-    SDL_SetLogPriority(LOG_CAT_MAIN, SDL_LOG_PRIORITY_DEBUG);
+    SDL_SetLogPriority(LOG_CAT_UTIL, SDL_LOG_PRIORITY_DEBUG);
 
     // Add timestamp to log lines
     SDL_SetLogOutputFunction(log_with_timestamp, NULL);
@@ -107,10 +109,18 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
     
     srand(time(NULL));
 
+    TileDefinition* tile_definitions = NULL;
+    uint8_t tile_definition_size = 0;
+
+    if (read_tile_definition(&tile_definitions, &tile_definition_size) != SDL_APP_CONTINUE){
+		SDL_LogError(LOG_CAT_MAIN, "Error during read tile definition.");
+		return SDL_APP_FAILURE;
+    }
+
     /* Create Population Unit */
 	if (create_population_unit(&p) != 0){
 		SDL_LogError(LOG_CAT_MAIN, "Error during create population.");
-		return 1;
+		return SDL_APP_FAILURE;
 	}
 
 	SDL_LogDebug(LOG_CAT_MAIN, "POP Count: %d", p.pop_count);
@@ -198,4 +208,5 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result){
     if (renderer) SDL_DestroyRenderer(renderer);
     if (window) SDL_DestroyWindow(window);
     free(p.base_needs);
+    free(tile_definitions);
 }

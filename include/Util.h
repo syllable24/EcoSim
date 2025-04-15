@@ -32,6 +32,8 @@ uint8_t determine_rand_percent();
 
 int read_definition_from_res_file(ResourceFiles file, char*** target, uint8_t* target_size);
 
+int read_tile_definition(TileDefinition** target, uint8_t* target_size);
+
 void log_with_timestamp(void* userdata, int category, SDL_LogPriority priority, const char* message);
 
 #endif

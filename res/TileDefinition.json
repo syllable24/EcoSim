@@ -7,7 +7,7 @@
 			"base_light_quality": 100,
 			"base_air_quality": 80,
 			"base_soil_quality": 50,
-			"temperature_mod": 50
+			"base_temperature_mod": 50
 		},
 		{
 			"name": "Desert",
@@ -16,7 +16,7 @@
 			"base_light_quality": 100,
 			"base_air_quality": 50,
 			"base_soil_quality": 5,
-			"temperature_mod": 100
+			"base_temperature_mod": 100
 		},
 		{
 			"name": "Ice",
@@ -25,7 +25,7 @@
 			"base_light_quality": 20,
 			"base_air_quality": 20,
 			"base_soil_quality": 0,
-			"temperature_mod": 0
+			"base_temperature_mod": 0
 		},
 		{
 			"name": "Mountains",
@@ -34,7 +34,7 @@
 			"base_light_quality": 40,
 			"base_air_quality": 100,
 			"base_soil_quality": 20,
-			"temperature_mod": 50
+			"base_temperature_mod": 50
 		}
 	]
 }

@@ -135,9 +135,9 @@ cleanup:
     return exit_status;
 }
 
-int read_tile_definition(TileDefinition* target[], uint8_t* target_size){
+int read_tile_definition(TileDefinition** target, uint8_t* target_size){
 	SDL_LogTrace(LOG_CAT_UTIL, "Start read_tile_definition().");
-	int exit_status = 1;
+	int exit_status = SDL_APP_FAILURE;
 
 	char* raw_file_content = NULL;
 	size_t raw_file_content_size = 0;
@@ -147,7 +147,7 @@ int read_tile_definition(TileDefinition* target[], uint8_t* target_size){
 
 	*target = NULL;
 	*target_size = 0;	
-
+	
 	const char* filename = get_resource_file_name(TILE_DEFINITION);
 
 	if (!filename || !*filename){
@@ -193,6 +193,7 @@ int read_tile_definition(TileDefinition* target[], uint8_t* target_size){
 	}
 
 	// Setup target array
+	SDL_LogDebug(LOG_CAT_UTIL, "Setup tile_definition target array.");
 	*target = (TileDefinition*) malloc(tile_defs_array_size * sizeof(TileDefinition*));
 	if (!*target){
 		SDL_LogError(LOG_CAT_UTIL, "Memory allocation failed for target array (%d entries, %zu bytes).", tile_defs_array_size, tile_defs_array_size * sizeof(TileDefinition*));
@@ -201,7 +202,8 @@ int read_tile_definition(TileDefinition* target[], uint8_t* target_size){
 	
 	const cJSON* tile_def = NULL;
 	int tile_index = 0;
-	cJSON_ArrayForEach(tile_def, all_tile_defs){		
+	cJSON_ArrayForEach(tile_def, all_tile_defs){
+		SDL_LogDebug(LOG_CAT_UTIL, "Parsing json array index %u.", tile_index);
 		char* raw_name = "\0";
 		char* raw_texture = "\0";
 		uint8_t raw_base_water_quality = 0;
@@ -238,10 +240,10 @@ int read_tile_definition(TileDefinition* target[], uint8_t* target_size){
 	}
 
 	*target_size = (uint8_t) tile_defs_array_size;
-	exit_status = 0;
+	exit_status = SDL_APP_CONTINUE;
 
 cleanup:
-    if (exit_status != 0 && *target) {
+    if (exit_status != SDL_APP_CONTINUE && *target) {
         for (int i = 0; i < tile_defs_array_size; i++) {
             free((target)[i]);
         }
@@ -255,27 +257,38 @@ cleanup:
 }
 
 bool validate_json_non_empty_string(const cJSON* json, const char *key, char** target_value) {
+	SDL_LogTrace(LOG_CAT_UTIL, "Start validate_json_non_empty_string()");
     cJSON *item = cJSON_GetObjectItemCaseSensitive(json, key);
-	*target_value = "\0";
+	
     char* value = cJSON_GetStringValue(item);
 	if (!value || strlen(value) == 0){
         SDL_LogError(LOG_CAT_UTIL, "Invalid tile definition in '%s': Empty or Null string.", key);
         return false;
     }
 
-	strcpy(*target_value, value);	
+	*target_value = (char*) malloc(strlen(value) + 1);	
+    if (!*target_value) {
+        SDL_LogError(LOG_CAT_UTIL, "Memory allocation failed for '%s' string (%zu bytes).", key, strlen(value) + 1);
+        return false;
+    }
+
+	strcpy(*target_value, value);
+	SDL_LogTrace(LOG_CAT_UTIL, "End validate_json_non_empty_string()");
     return true;
 }
 
 bool validate_json_percent_number(const cJSON* json, const char *key, uint8_t* target_value) {
+	SDL_LogTrace(LOG_CAT_UTIL, "Start validate_json_percent_number()");
     cJSON *item = cJSON_GetObjectItemCaseSensitive(json, key);
 	*target_value = 0;
     double value = cJSON_GetNumberValue(item);
+	SDL_LogTrace(LOG_CAT_UTIL, "Raw Value: %3.0f", value);
     if (isnan(value) || value < 0 || value > 100) {
         SDL_LogError(LOG_CAT_UTIL, "Invalid tile definition in '%s': Out of range (0 - 100).", key);
         return false;
     }
 	*target_value = (uint8_t) value;
+	SDL_LogTrace(LOG_CAT_UTIL, "End validate_json_percent_number()");
     return true;
 }
 
