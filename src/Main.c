@@ -31,7 +31,6 @@ PopulationUnit p;
 char* message = "Hello EcoSim!";
 
 void setup_logging(){
-
     // Set Log Priorities
     SDL_SetLogPriority(LOG_CAT_MAIN, SDL_LOG_PRIORITY_DEBUG);
     SDL_SetLogPriority(LOG_CAT_DISPLAY, SDL_LOG_PRIORITY_DEBUG);
@@ -40,62 +39,64 @@ void setup_logging(){
 
     // Add timestamp to log lines
     SDL_SetLogOutputFunction(log_with_timestamp, NULL);
-
 }
 
 int load_textures(){
+    SDL_LogTrace(LOG_CAT_DISPLAY, "Start load_textures()");
+    
     SDL_Surface* grass_bmp = SDL_LoadBMP("img/green-grass-texture.bmp");
     if (grass_bmp == NULL){
-        SDL_LogError(LOG_CAT_MAIN, "Could not load green-grass-texture.bmp.");
+        SDL_LogError(LOG_CAT_DISPLAY, "Could not load green-grass-texture.bmp.");
         return SDL_APP_FAILURE;
     }
     
     grass_texture = SDL_CreateTextureFromSurface(renderer, grass_bmp);
     SDL_DestroySurface(grass_bmp);
     if (grass_texture == NULL){
-        SDL_LogError(LOG_CAT_MAIN, "Could not load texture green-grass-texture.png.");
+        SDL_LogError(LOG_CAT_DISPLAY, "Could not load texture green-grass-texture.png.");
         return SDL_APP_FAILURE;
     }
     
     SDL_Surface* ice_bmp = SDL_LoadBMP("img/Ice.bmp");
     if (ice_bmp == NULL){
-        SDL_LogError(LOG_CAT_MAIN, "Could not load ice.bmp.");
+        SDL_LogError(LOG_CAT_DISPLAY, "Could not load ice.bmp.");
         return SDL_APP_FAILURE;
     }
     
     ice_texture = SDL_CreateTextureFromSurface(renderer, ice_bmp);
     SDL_DestroySurface(ice_bmp);
     if (ice_texture == NULL){
-        SDL_LogError(LOG_CAT_MAIN, "Could not load texture ice.bmp.");
+        SDL_LogError(LOG_CAT_DISPLAY, "Could not load texture ice.bmp.");
         return SDL_APP_FAILURE;
     }
 
     SDL_Surface* stone_bmp = SDL_LoadBMP("img/Stone.bmp");
     if (stone_bmp == NULL){
-        SDL_LogError(LOG_CAT_MAIN, "Could not load stone.bmp.");
+        SDL_LogError(LOG_CAT_DISPLAY, "Could not load stone.bmp.");
         return SDL_APP_FAILURE;
     }
     
     stone_texture = SDL_CreateTextureFromSurface(renderer, stone_bmp);
     SDL_DestroySurface(stone_bmp);
     if (stone_texture == NULL){
-        SDL_LogError(LOG_CAT_MAIN, "Could not load texture ice.bmp.");
+        SDL_LogError(LOG_CAT_DISPLAY, "Could not load texture ice.bmp.");
         return SDL_APP_FAILURE;
     }
 
     SDL_Surface* desert_bmp = SDL_LoadBMP("img/Desert.bmp");
     if (desert_bmp == NULL){
-        SDL_LogError(LOG_CAT_MAIN, "Could not load desert.bmp.");
+        SDL_LogError(LOG_CAT_DISPLAY, "Could not load desert.bmp.");
         return SDL_APP_FAILURE;
     }
     
     desert_texture = SDL_CreateTextureFromSurface(renderer, desert_bmp);
     SDL_DestroySurface(desert_bmp);
     if (desert_texture == NULL){
-        SDL_LogError(LOG_CAT_MAIN, "Could not load texture ice.bmp.");
+        SDL_LogError(LOG_CAT_DISPLAY, "Could not load texture ice.bmp.");
         return SDL_APP_FAILURE;
     }
 
+    SDL_LogTrace(LOG_CAT_DISPLAY, "End load_textures()");
     return SDL_APP_CONTINUE;
 }
 

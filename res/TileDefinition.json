@@ -1,0 +1,40 @@
+{
+	"Tiles": [
+		{
+			"name": "Plains",
+			"texture": "img/green-grass-texture.bmp",
+			"base_water_quality": 60,
+			"base_light_quality": 100,
+			"base_air_quality": 80,
+			"base_soil_quality": 50,
+			"temperature_mod": 50
+		},
+		{
+			"name": "Desert",
+			"texture": "img/Desert.bmp",
+			"base_water_quality": 10,
+			"base_light_quality": 100,
+			"base_air_quality": 50,
+			"base_soil_quality": 5,
+			"temperature_mod": 100
+		},
+		{
+			"name": "Ice",
+			"texture": "img/Ice.bmp",
+			"base_water_quality": 0,
+			"base_light_quality": 20,
+			"base_air_quality": 20,
+			"base_soil_quality": 0,
+			"temperature_mod": 0
+		},
+		{
+			"name": "Mountains",
+			"texture": "img/Stone.bmp",
+			"base_water_quality": 80,
+			"base_light_quality": 40,
+			"base_air_quality": 100,
+			"base_soil_quality": 20,
+			"temperature_mod": 50
+		}
+	]
+}

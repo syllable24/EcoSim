@@ -10,4 +10,6 @@ void draw_hexagon_outline(SDL_Renderer* renderer, SDL_FPoint* vertices);
 
 int draw_hexagon_texture(SDL_Renderer* renderer, SDL_Texture* texture, SDL_FPoint points[6], float center_x, float center_y);
 
+//int load_textures(SDL_Texture** textures);
+
 #endif

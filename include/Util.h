@@ -12,8 +12,19 @@
 #define LOG_CAT_MAIN SDL_LOG_CATEGORY_CUSTOM + 3
 
 typedef enum {
-    NEED_DEFINITION
+    NEED_DEFINITION,
+    TILE_DEFINITION
 } ResourceFiles;
+
+typedef struct {
+    char* name;
+    char* texture;
+    uint8_t base_water_quality;
+    uint8_t base_light_quality;
+    uint8_t base_air_quality;
+    uint8_t base_soil_quality;
+    uint8_t temperature_mod;
+} TileDefinition;
 
 uint32_t determine_rand_val(int min, int max);
 
