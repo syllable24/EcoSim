@@ -25,7 +25,6 @@ static SDL_Renderer* renderer = NULL;
 PopulationUnit p;
 TileDefinition** tile_definitions = NULL;
 TileState** g_game_board = NULL;
-struct hashmap* g_texture_map = NULL;
 uint8_t tile_definition_size = 0;
 
 char* message = "Hello EcoSim!";
@@ -65,7 +64,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
 
     /* Load Textures */
     SDL_LogDebug(LOG_CAT_MAIN, "Loading Textures.");    
-    if (load_textures(renderer, tile_definitions, tile_definition_size, &g_texture_map) != SDL_APP_CONTINUE){
+    if (load_textures(renderer, tile_definitions, tile_definition_size) != SDL_APP_CONTINUE){
         SDL_LogError(LOG_CAT_MAIN, "Couldn't load textures: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
@@ -85,7 +84,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
     log_pop_unit(&p);
 
     /* Draw Initial Map*/
-    if(draw_tile_map(renderer, g_game_board, g_texture_map, tile_definition_size, HEX_COUNT_X, HEX_COUNT_Y) != SDL_APP_CONTINUE){
+    if(draw_tile_map(renderer, g_game_board, HEX_COUNT_X, HEX_COUNT_Y) != SDL_APP_CONTINUE){
         SDL_LogError(LOG_CAT_MAIN, "Error while drawing tile map: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
@@ -113,8 +112,9 @@ SDL_AppResult SDL_AppIterate(void *appstate){
 void SDL_AppQuit(void *appstate, SDL_AppResult result){    
     if (renderer) SDL_DestroyRenderer(renderer);
     if (window) SDL_DestroyWindow(window);
+    
+    clear_display_state();
 
-    hashmap_free(g_texture_map);
     free(p.base_needs);
     free(tile_definitions);
 }

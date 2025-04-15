@@ -8,6 +8,8 @@
 #include "../include/Display.h"
 #include "../include/Hashmap.h"
 
+struct hashmap* g_texture_map = NULL;
+
 // Calculate the six vertices of a flat-top hexagon
 void get_hexagon_vertices(SDL_FPoint* points, float center_x, float center_y, float radius) {
     for (int i = 0; i < 6; i++) {
@@ -78,8 +80,6 @@ int draw_hexagon_texture(SDL_Renderer* renderer, SDL_Texture* texture, SDL_FPoin
 int draw_tile_map(
     SDL_Renderer* renderer, 
     TileState** g_game_board,
-    struct hashmap* texture_map,
-    uint8_t arr_textures_size, 
     uint8_t map_size_x, 
     uint8_t map_size_y
 ){
@@ -131,7 +131,7 @@ int draw_tile_map(
             // Get Hex Texture by name
             char* hex_def_name = g_game_board[index_x][index_y].tile_def->name;
             SDL_LogTrace(LOG_CAT_DISPLAY, "Hex def name: %s.", hex_def_name);
-            const TextureHashMapRecord* rec = hashmap_get(texture_map, &(TextureHashMapRecord){.name=hex_def_name});
+            const TextureHashMapRecord* rec = hashmap_get(g_texture_map, &(TextureHashMapRecord){.name=hex_def_name});
             if (!rec || !rec->texture) {
                 SDL_LogError(LOG_CAT_DISPLAY, "No texture found for name '%s' at [%u][%u]", hex_def_name, index_x, index_y);
                 SDL_RenderPresent(renderer);
@@ -162,11 +162,11 @@ int draw_tile_map(
     return SDL_APP_CONTINUE;
 }
 
-int load_textures(SDL_Renderer* renderer, TileDefinition** tile_definitions, uint8_t tile_definition_size, struct hashmap** texture_map){
+int load_textures(SDL_Renderer* renderer, TileDefinition** tile_definitions, uint8_t tile_definition_size){
     SDL_LogTrace(LOG_CAT_DISPLAY, "Start load_textures()");
     int exit_status = SDL_APP_FAILURE;
 
-    (*texture_map) = hashmap_new(sizeof(TextureHashMapRecord), tile_definition_size, 0, 0, texture_hash_map_hash, texture_hash_map_compare, NULL, NULL);    
+    g_texture_map = hashmap_new(sizeof(TextureHashMapRecord), tile_definition_size, 0, 0, texture_hash_map_hash, texture_hash_map_compare, NULL, NULL);    
 
     uint8_t tile_definition_index = 0;
     for (tile_definition_index = 0; tile_definition_index < tile_definition_size; tile_definition_index++){
@@ -183,7 +183,7 @@ int load_textures(SDL_Renderer* renderer, TileDefinition** tile_definitions, uin
             goto cleanup;            
         }
         
-        hashmap_set((*texture_map), &(TextureHashMapRecord){ 
+        hashmap_set(g_texture_map, &(TextureHashMapRecord){ 
             .name = tile_definitions[tile_definition_index]->name,
             .texture = texture
         });        
@@ -193,7 +193,7 @@ int load_textures(SDL_Renderer* renderer, TileDefinition** tile_definitions, uin
 
 cleanup: 
     if (exit_status != SDL_APP_CONTINUE){
-        hashmap_free(*texture_map);
+        hashmap_free(g_texture_map);
     }
     SDL_LogTrace(LOG_CAT_DISPLAY, "End load_textures()");
     return exit_status;
@@ -213,4 +213,8 @@ bool texture_hash_map_iter(const void *item, void *udata){
 uint64_t texture_hash_map_hash(const void *item, uint64_t seed0, uint64_t seed1) {
     const TextureHashMapRecord* rec = item;
     return hashmap_sip(rec->name, strlen(rec->name), seed0, seed1);
+}
+
+void clear_display_state(){
+    hashmap_free(g_texture_map);
 }
