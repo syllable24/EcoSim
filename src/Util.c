@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
+#include <sys/time.h>
 #include <SDL3/SDL.h>
 
 #include "../include/Util.h"
@@ -219,4 +221,76 @@ void trim(char* line){
     while (end > start && (*end == ' ' || *end == '\t')) end--;
     *(end + 1) = '\0';
     memmove(line, start, end - start + 2);
+}
+
+void log_with_timestamp(void* userdata, int category, SDL_LogPriority priority, const char* message) {
+    // Get category name
+    const char* category_str;
+    switch (category) {
+        case LOG_CAT_DISPLAY:
+            category_str = "DISPLAY";
+            break;
+        case LOG_CAT_MAIN:
+            category_str = "MAIN";
+            break;
+        case LOG_CAT_POPULATION:
+            category_str = "POPULATION";
+            break;
+        case LOG_CAT_UTIL:
+            category_str = "UTIL";
+            break;
+        default:
+            category_str = "DEFAULT";
+            break;
+    }
+
+	const char* prio_str;
+    switch (priority) {
+        case SDL_LOG_PRIORITY_INVALID:
+			prio_str = "INVALID";
+            break;
+        case SDL_LOG_PRIORITY_TRACE:
+			prio_str = "TRACE";
+            break;
+        case SDL_LOG_PRIORITY_VERBOSE:
+			prio_str = "VERBOSE";
+            break;
+        case SDL_LOG_PRIORITY_DEBUG:
+			prio_str = "DEBUG";
+            break;
+		case SDL_LOG_PRIORITY_INFO:
+			prio_str = "INFO";
+            break;
+		case SDL_LOG_PRIORITY_WARN:
+			prio_str = "WARNING";
+            break;
+		case SDL_LOG_PRIORITY_ERROR:
+			prio_str = "ERROR";
+            break;
+		case SDL_LOG_PRIORITY_CRITICAL:
+			prio_str = "CRITICAL";
+            break;
+		case SDL_LOG_PRIORITY_COUNT:
+			prio_str = "COUNT";
+            break;			
+        default:
+			prio_str = "DEFAULT";
+            break;
+    }
+
+    // Format log message
+    char log_message[1024];
+    snprintf(log_message, sizeof(log_message), "[%s] [%s] %s\n",
+			category_str, prio_str, message);
+
+    // Output to console (stderr)
+    fputs(log_message, stderr);
+    fflush(stderr);
+
+    // Output to file if open
+    if (userdata) {
+        FILE* file = (FILE*)userdata;
+        fputs(log_message, file);
+        fflush(file);
+    }
 }

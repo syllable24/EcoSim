@@ -3,6 +3,9 @@
 #include <time.h> 
 #include <stdio.h> 
 #include <math.h> 
+#include <time.h>
+#include <sys/time.h>
+
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
@@ -26,6 +29,19 @@ static SDL_Texture* desert_texture = NULL;
 
 PopulationUnit p;
 char* message = "Hello EcoSim!";
+
+void setup_logging(){
+
+    // Set Log Priorities
+    SDL_SetLogPriority(LOG_CAT_MAIN, SDL_LOG_PRIORITY_DEBUG);
+    SDL_SetLogPriority(LOG_CAT_DISPLAY, SDL_LOG_PRIORITY_DEBUG);
+    SDL_SetLogPriority(LOG_CAT_POPULATION, SDL_LOG_PRIORITY_DEBUG);
+    SDL_SetLogPriority(LOG_CAT_MAIN, SDL_LOG_PRIORITY_DEBUG);
+
+    // Add timestamp to log lines
+    SDL_SetLogOutputFunction(log_with_timestamp, NULL);
+
+}
 
 int load_textures(){
     SDL_Surface* grass_bmp = SDL_LoadBMP("img/green-grass-texture.bmp");
@@ -85,7 +101,10 @@ int load_textures(){
 
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
-	srand(time(NULL));
+	
+    setup_logging();
+    
+    srand(time(NULL));
 
     /* Create Population Unit */
 	if (create_population_unit(&p) != 0){
