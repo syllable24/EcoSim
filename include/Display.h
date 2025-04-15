@@ -17,6 +17,8 @@ typedef struct {
     SDL_Texture* texture;
 } TextureHashMapRecord;
 
+int load_textures(SDL_Renderer* renderer, TileDefinition** tile_definitions, uint8_t tile_definition_size, struct hashmap** texture_map);
+
 void get_hexagon_vertices(SDL_FPoint* points, float center_x, float center_y, float radius);
 
 void draw_hexagon_outline(SDL_Renderer* renderer, SDL_FPoint* vertices);

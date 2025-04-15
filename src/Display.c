@@ -131,7 +131,7 @@ int draw_tile_map(
             // Get Hex Texture by name
             char* hex_def_name = g_game_board[index_x][index_y].tile_def->name;
             SDL_LogTrace(LOG_CAT_DISPLAY, "Hex def name: %s.", hex_def_name);
-            TextureHashMapRecord* rec = hashmap_get(texture_map, &(TextureHashMapRecord){.name=hex_def_name});
+            const TextureHashMapRecord* rec = hashmap_get(texture_map, &(TextureHashMapRecord){.name=hex_def_name});
             if (!rec || !rec->texture) {
                 SDL_LogError(LOG_CAT_DISPLAY, "No texture found for name '%s' at [%u][%u]", hex_def_name, index_x, index_y);
                 SDL_RenderPresent(renderer);
@@ -160,6 +160,43 @@ int draw_tile_map(
 
     SDL_LogTrace(LOG_CAT_DISPLAY, "End draw_tile_map().");
     return SDL_APP_CONTINUE;
+}
+
+int load_textures(SDL_Renderer* renderer, TileDefinition** tile_definitions, uint8_t tile_definition_size, struct hashmap** texture_map){
+    SDL_LogTrace(LOG_CAT_DISPLAY, "Start load_textures()");
+    int exit_status = SDL_APP_FAILURE;
+
+    (*texture_map) = hashmap_new(sizeof(TextureHashMapRecord), tile_definition_size, 0, 0, texture_hash_map_hash, texture_hash_map_compare, NULL, NULL);    
+
+    uint8_t tile_definition_index = 0;
+    for (tile_definition_index = 0; tile_definition_index < tile_definition_size; tile_definition_index++){
+        SDL_Surface* bmp = SDL_LoadBMP(tile_definitions[tile_definition_index]->texture);
+        if (!bmp){
+            SDL_LogError(LOG_CAT_DISPLAY, "Could not load %s.", tile_definitions[tile_definition_index]->texture);
+            goto cleanup;
+        }
+        
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, bmp);
+        SDL_DestroySurface(bmp);
+        if (!texture){
+            SDL_LogError(LOG_CAT_DISPLAY, "Could not create texture for %s.", tile_definitions[tile_definition_index]->texture);
+            goto cleanup;            
+        }
+        
+        hashmap_set((*texture_map), &(TextureHashMapRecord){ 
+            .name = tile_definitions[tile_definition_index]->name,
+            .texture = texture
+        });        
+    }
+    
+    exit_status = SDL_APP_CONTINUE;
+
+cleanup: 
+    if (exit_status != SDL_APP_CONTINUE){
+        hashmap_free(*texture_map);
+    }
+    SDL_LogTrace(LOG_CAT_DISPLAY, "End load_textures()");
+    return exit_status;
 }
 
 int texture_hash_map_compare(const void *a, const void *b, void *udata){

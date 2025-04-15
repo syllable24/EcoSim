@@ -42,43 +42,6 @@ void setup_logging(){
     SDL_SetLogOutputFunction(log_with_timestamp, NULL);
 }
 
-int load_textures(TileDefinition** tile_definitions, uint8_t tile_definition_size, struct hashmap** texture_map){
-    SDL_LogTrace(LOG_CAT_DISPLAY, "Start load_textures()");
-    int exit_status = SDL_APP_FAILURE;
-
-    (*texture_map) = hashmap_new(sizeof(TextureHashMapRecord), tile_definition_size, 0, 0, texture_hash_map_hash, texture_hash_map_compare, NULL, NULL);    
-
-    uint8_t tile_definition_index = 0;
-    for (tile_definition_index = 0; tile_definition_index < tile_definition_size; tile_definition_index++){
-        SDL_Surface* bmp = SDL_LoadBMP(tile_definitions[tile_definition_index]->texture);
-        if (!bmp){
-            SDL_LogError(LOG_CAT_DISPLAY, "Could not load %s.", tile_definitions[tile_definition_index]->texture);
-            goto cleanup;
-        }
-        
-        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, bmp);
-        SDL_DestroySurface(bmp);
-        if (!texture){
-            SDL_LogError(LOG_CAT_DISPLAY, "Could not create texture for %s.", tile_definitions[tile_definition_index]->texture);
-            goto cleanup;            
-        }
-        
-        hashmap_set((*texture_map), &(TextureHashMapRecord){ 
-            .name = tile_definitions[tile_definition_index]->name,
-            .texture = texture
-        });        
-    }
-    
-    exit_status = SDL_APP_CONTINUE;
-
-cleanup: 
-    if (exit_status != SDL_APP_CONTINUE){
-        hashmap_free(g_texture_map);
-    }
-    SDL_LogTrace(LOG_CAT_DISPLAY, "End load_textures()");
-    return exit_status;
-}
-
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
 	
@@ -102,7 +65,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
 
     /* Load Textures */
     SDL_LogDebug(LOG_CAT_MAIN, "Loading Textures.");    
-    if (load_textures(tile_definitions, tile_definition_size, &g_texture_map) != SDL_APP_CONTINUE){
+    if (load_textures(renderer, tile_definitions, tile_definition_size, &g_texture_map) != SDL_APP_CONTINUE){
         SDL_LogError(LOG_CAT_MAIN, "Couldn't load textures: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
