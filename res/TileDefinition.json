@@ -2,7 +2,7 @@
 	"Tiles": [
 		{
 			"name": "Plains",
-			"texture": "./img/green-grass-texture.bmp",
+			"texture": "./img/Plains.bmp",
 			"base_water_quality": 60,
 			"base_light_quality": 100,
 			"base_air_quality": 80,
@@ -30,6 +30,132 @@
 		{
 			"name": "Mountains",
 			"texture": "./img/Stone.bmp",
+			"base_water_quality": 80,
+			"base_light_quality": 40,
+			"base_air_quality": 100,
+			"base_soil_quality": 20,
+			"base_temperature_mod": 50
+		},
+		{
+			"name": "Canyon",
+			"texture": "./img/Canyon.bmp",
+			"base_water_quality": 80,
+			"base_light_quality": 40,
+			"base_air_quality": 100,
+			"base_soil_quality": 20,
+			"base_temperature_mod": 50		
+		},
+		{
+			"name": "Savanna",
+			"texture": "./img/Savanna.bmp",
+			"base_water_quality": 80,
+			"base_light_quality": 40,
+			"base_air_quality": 100,
+			"base_soil_quality": 20,
+			"base_temperature_mod": 50		
+		},
+		{
+			"name": "Swamp",
+			"texture": "./img/Swamp.bmp",
+			"base_water_quality": 80,
+			"base_light_quality": 40,
+			"base_air_quality": 100,
+			"base_soil_quality": 20,
+			"base_temperature_mod": 50		
+		},
+		{
+			"name": "Tundra",
+			"texture": "./img/Tundra.bmp",
+			"base_water_quality": 80,
+			"base_light_quality": 40,
+			"base_air_quality": 100,
+			"base_soil_quality": 20,
+			"base_temperature_mod": 50		
+		},		
+		{
+			"name": "Ocean Coast",
+			"texture": "./img/Ocean_Coast.bmp",
+			"base_water_quality": 80,
+			"base_light_quality": 40,
+			"base_air_quality": 100,
+			"base_soil_quality": 20,
+			"base_temperature_mod": 50		
+		},
+		{
+			"name": "Shallow Ocean",
+			"texture": "./img/Shallow_Ocean.bmp",
+			"base_water_quality": 80,
+			"base_light_quality": 40,
+			"base_air_quality": 100,
+			"base_soil_quality": 20,
+			"base_temperature_mod": 50		
+		},
+		{
+			"name": "Deep Ocean",
+			"texture": "./img/Deep_Ocean.bmp",
+			"base_water_quality": 80,
+			"base_light_quality": 40,
+			"base_air_quality": 100,
+			"base_soil_quality": 20,
+			"base_temperature_mod": 50
+		},
+		{
+			"name": "Abyss Ocean",
+			"texture": "./img/Abyss_Ocean.bmp",
+			"base_water_quality": 80,
+			"base_light_quality": 40,
+			"base_air_quality": 100,
+			"base_soil_quality": 20,
+			"base_temperature_mod": 5		
+		},
+		{
+			"name": "Coral Reef",
+			"texture": "./img/Coral_Reef.bmp",
+			"base_water_quality": 80,
+			"base_light_quality": 40,
+			"base_air_quality": 100,
+			"base_soil_quality": 20,
+			"base_temperature_mod": 50
+		},
+		{
+			"name": "Algea Forest",
+			"texture": "./img/Algea_Forest.bmp",
+			"base_water_quality": 80,
+			"base_light_quality": 40,
+			"base_air_quality": 100,
+			"base_soil_quality": 20,
+			"base_temperature_mod": 50
+		},
+		{
+			"name": "Needle Forest",
+			"texture": "./img/Needle_Forest.bmp",
+			"base_water_quality": 80,
+			"base_light_quality": 40,
+			"base_air_quality": 100,
+			"base_soil_quality": 20,
+			"base_temperature_mod": 50
+		},
+		{
+			"name": "Leaf Forest",
+			"texture": "./img/Leaf_Forest.bmp",
+			"base_water_quality": 80,
+			"base_light_quality": 40,
+			"base_air_quality": 100,
+			"base_soil_quality": 20,
+			"base_temperature_mod": 50
+		},
+		{
+			"name": "Mixed Forest",
+			"texture": "./img/Mixed_Forest.bmp",
+			"base_water_quality": 80,
+			"base_light_quality": 40,
+			"base_air_quality": 100,
+			"base_soil_quality": 20,
+			"base_temperature_mod": 50
+		},
+		{
+			"name": "Bamboo Forest",
+			"texture": "./img/Bamboo_Forest.bmp",
 			"base_water_quality": 80,
 			"base_light_quality": 40,
 			"base_air_quality": 100,

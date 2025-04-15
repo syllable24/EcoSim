@@ -140,13 +140,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
 
             // Select texture randomly
             SDL_Texture* texture = NULL;
-            uint32_t result = determine_rand_val(0, 3);
-            switch (result) {
-                case 1: texture = textures_out[0]; break;
-                case 2: texture = textures_out[1]; break;
-                case 3: texture = textures_out[2]; break;
-                default: texture = textures_out[3]; break;
-            }
+            uint32_t result = determine_rand_val(0, tile_definition_size);
+            texture = textures_out[result];            
 
             SDL_FPoint points[6];
             get_hexagon_vertices(points, center_x, center_y, HEX_RADIUS);
