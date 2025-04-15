@@ -17,19 +17,16 @@
 
 #define WINDOW_WIDTH 1920
 #define WINDOW_HEIGHT 1080
-#define HEX_RADIUS 20.0f  // Radius (center to vertex)
+#define HEX_RADIUS 60.0f  // Radius (center to vertex)
 #define HEX_COUNT_X 50
 #define HEX_COUNT_Y 25
 
 static SDL_Window* window = NULL;
 static SDL_Renderer* renderer = NULL;
-static SDL_Texture* grass_texture = NULL;
-static SDL_Texture* ice_texture = NULL;
-static SDL_Texture* stone_texture = NULL;
-static SDL_Texture* desert_texture = NULL;
 
 PopulationUnit p;
 TileDefinition** tile_definitions = NULL;
+SDL_Texture** g_textures = NULL;
 uint8_t tile_definition_size = 0;
 
 char* message = "Hello EcoSim!";
@@ -107,9 +104,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
     }
 
     /* Load Textures */
-    SDL_LogDebug(LOG_CAT_MAIN, "Loading Textures.");
-    SDL_Texture** textures_out = NULL;
-    if (load_textures(tile_definitions, tile_definition_size, &textures_out) != SDL_APP_CONTINUE){
+    SDL_LogDebug(LOG_CAT_MAIN, "Loading Textures.");    
+    if (load_textures(tile_definitions, tile_definition_size, &g_textures) != SDL_APP_CONTINUE){
         SDL_LogError(LOG_CAT_MAIN, "Couldn't load textures: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
@@ -129,7 +125,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
 		SDL_LogDebug(LOG_CAT_MAIN, "Base Need %d satisfaction: %d", i, p.base_needs[i].satisfaction);	
 	}
 
-    // Setup and Clear screen     
+    // Setup and Clear screen
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
     SDL_RenderClear(renderer);
 
@@ -138,10 +134,10 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
             float center_x = HEX_RADIUS * 1.5f * index_x + WINDOW_WIDTH / 8.0f;
             float center_y = HEX_RADIUS * sqrtf(3.0f) * (index_y + 0.5f * (index_x % 2)) + WINDOW_HEIGHT / 8.0f;
 
-            // Select texture randomly
+            // Select tile texture randomly
             SDL_Texture* texture = NULL;
             uint32_t result = determine_rand_val(0, tile_definition_size);
-            texture = textures_out[result];            
+            texture = g_textures[result];            
 
             SDL_FPoint points[6];
             get_hexagon_vertices(points, center_x, center_y, HEX_RADIUS);
@@ -181,12 +177,17 @@ SDL_AppResult SDL_AppIterate(void *appstate){
 
 /* This function runs once at shutdown. */
 void SDL_AppQuit(void *appstate, SDL_AppResult result){    
-    if (grass_texture) SDL_DestroyTexture(grass_texture);
-    if (ice_texture) SDL_DestroyTexture(ice_texture);
-    if (stone_texture) SDL_DestroyTexture(stone_texture);
-    if (desert_texture) SDL_DestroyTexture(desert_texture);
+    if(g_textures){
+        for (int i = 0; i < tile_definition_size; i++){
+            SDL_DestroyTexture(g_textures[i]);            
+        }
+        free(g_textures);
+        g_textures = NULL;
+    }
+
     if (renderer) SDL_DestroyRenderer(renderer);
     if (window) SDL_DestroyWindow(window);
+
     free(p.base_needs);
     free(tile_definitions);
 }
