@@ -11,6 +11,8 @@
 
 struct hashmap* g_texture_map = NULL;
 
+int init_and_add_texture(SDL_Renderer* renderer, char* texture_id, char* texture_filename);
+
 // Calculate the six vertices of a flat-top hexagon
 void get_hexagon_vertices(SDL_FPoint* points, float center_x, float center_y, float radius) {
     for (int i = 0; i < 6; i++) {
@@ -101,9 +103,9 @@ int draw_tile_map(
         .w = WINDOW_WIDTH - (WINDOW_WIDTH / 16.0f),
         .h = WINDOW_HEIGHT - (WINDOW_HEIGHT / 16.0f)
     };
-    
-    const TextureHashMapRecord* background_rec = hashmap_get(g_texture_map, &(TextureHashMapRecord){.name="Hex Grid Background"});
-    SDL_RenderTextureTiled(renderer, background_rec->texture, NULL, 1.0f, &border);    
+      
+    const TextureHashMapRecord* hex_grid_background_rec = hashmap_get(g_texture_map, &(TextureHashMapRecord){.name="Hex Grid Background"});    
+    SDL_RenderTextureTiled(renderer, hex_grid_background_rec->texture, NULL, 1.0f, &border);
 
     // Draw Hex Grid
     SDL_FPoint top_left_hex_grid = {
@@ -123,15 +125,13 @@ int draw_tile_map(
                 return SDL_APP_FAILURE;
             }
 
-            // Calculate Hex Texture center (staggered grid)
+            // Calculate Hex Texture center (flat-top hex grid)
             float base_center_x = HEX_RADIUS * 1.5f * index_x + top_left_hex_grid.x;
             float base_center_y = HEX_RADIUS * sqrtf(3.0f) * (index_y + 0.5f * (index_x % 2)) + top_left_hex_grid.y;
 
             // Add camera offset
             float center_x = base_center_x + camera_offset_x;
             float center_y = base_center_y + camera_offset_y;
-
-            SDL_LogTrace(LOG_CAT_DISPLAY, "Hex Center X: %05.02f Y: %05.02f.", center_x, center_y);
 
             // Skip off-screen hexagons
             float min_render_x = HEX_RADIUS + ((WINDOW_WIDTH / 8.0f) * 0.6f);
@@ -175,8 +175,32 @@ int draw_tile_map(
     // Draw Box around grid    
     SDL_LogTrace(LOG_CAT_DISPLAY, "Draw Board Borders.");
 
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    // Draw Menu
+    SDL_FRect horizontal_menu = {
+        .x = 0,
+        .y = 0,
+        .w = WINDOW_WIDTH,
+        .h = WINDOW_HEIGHT / 8.0f
+    };
+
+    SDL_FRect vertical_menu = {
+        .x = 0,
+        .y = WINDOW_HEIGHT / 8.0f,
+        .w = WINDOW_WIDTH / 8.0f,
+        .h = WINDOW_HEIGHT - (WINDOW_HEIGHT / 8.0f)
+    };
+
+    const TextureHashMapRecord* menu_background_rec = hashmap_get(g_texture_map, &(TextureHashMapRecord){.name="Menu Background"});    
+    
+    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); // GREEN
+    SDL_RenderTexture(renderer, menu_background_rec->texture, NULL, &horizontal_menu);
+
+    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255); // BLUE
+    SDL_RenderTexture(renderer, menu_background_rec->texture, NULL, &vertical_menu);
+
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); // RED
     SDL_RenderRect(renderer, &border);
+
 
     // DEBUG
     SDL_RenderDebugTextFormat(renderer, 0, 0, "Camera Offset: X: %04.02f, Y: %04.02f", camera_offset_x, camera_offset_y);
@@ -196,44 +220,20 @@ int load_textures(SDL_Renderer* renderer, TileDefinition** tile_definitions, uin
 
     uint8_t tile_definition_index = 0;
     for (tile_definition_index = 0; tile_definition_index < tile_definition_size; tile_definition_index++){
-        SDL_Surface* bmp = SDL_LoadBMP(tile_definitions[tile_definition_index]->texture);
-        if (!bmp){
-            SDL_LogError(LOG_CAT_DISPLAY, "Could not load %s.", tile_definitions[tile_definition_index]->texture);
+        if(init_and_add_texture(renderer, tile_definitions[tile_definition_index]->name, tile_definitions[tile_definition_index]->texture) != SDL_APP_CONTINUE){
             goto cleanup;
         }
-        
-        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, bmp);
-        SDL_DestroySurface(bmp);
-        if (!texture){
-            SDL_LogError(LOG_CAT_DISPLAY, "Could not create texture for %s.", tile_definitions[tile_definition_index]->texture);
-            goto cleanup;            
-        }
-        
-        hashmap_set(g_texture_map, &(TextureHashMapRecord){ 
-            .name = tile_definitions[tile_definition_index]->name,
-            .texture = texture
-        });
     }
 
     // Load additional textures
-    SDL_Surface* bmp = SDL_LoadBMP("./img/Wood_Background.bmp");
-    if (!bmp){
-        SDL_LogError(LOG_CAT_DISPLAY, "Could not load %s.", "./img/Wood_Background.bmp");
+    if(init_and_add_texture(renderer, "Hex Grid Background", "./img/Texturelabs_Paper_251L.bmp") != SDL_APP_CONTINUE){
         goto cleanup;
     }
     
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, bmp);
-    SDL_DestroySurface(bmp);
-    if (!texture){
-        SDL_LogError(LOG_CAT_DISPLAY, "Could not create texture for %s.", "./img/Wood_Background.bmp");
-        goto cleanup;            
+    if(init_and_add_texture(renderer, "Menu Background", "./img/Texturelabs_Paper_319M.bmp") != SDL_APP_CONTINUE){
+        goto cleanup;
     }
-    
-    hashmap_set(g_texture_map, &(TextureHashMapRecord){ 
-        .name = "Hex Grid Background",
-        .texture = texture
-    });
-    
+
     exit_status = SDL_APP_CONTINUE;
 
 cleanup: 
@@ -242,6 +242,28 @@ cleanup:
     }
     SDL_LogTrace(LOG_CAT_DISPLAY, "End load_textures()");
     return exit_status;
+}
+
+int init_and_add_texture(SDL_Renderer* renderer, char* texture_id, char* texture_filename){
+    SDL_Surface* bmp = SDL_LoadBMP(texture_filename);
+    if (!bmp){
+        SDL_LogError(LOG_CAT_DISPLAY, "Could not load %s.", texture_filename);
+        return SDL_APP_FAILURE;
+    }
+    
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, bmp);
+    SDL_DestroySurface(bmp);
+    if (!texture){
+        SDL_LogError(LOG_CAT_DISPLAY, "Could not create texture for %s.", texture_filename);
+        return SDL_APP_FAILURE;
+    }
+    
+    hashmap_set(g_texture_map, &(TextureHashMapRecord){ 
+        .name = texture_id,
+        .texture = texture
+    });
+
+    return SDL_APP_CONTINUE;
 }
 
 // Update camera offsets
