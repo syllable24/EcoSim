@@ -87,9 +87,7 @@ int draw_tile_map(
 
     // Setup and Clear screen
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-    SDL_RenderClear(renderer);
-    
-    SDL_RenderDebugTextFormat(renderer, 0, 0, "Camera Offset: X: %04.02f, Y: %04.02f", camera_offset_x, camera_offset_y);
+    SDL_RenderClear(renderer);        
 
     SDL_FPoint top_left_hex_grid = {
         .x = WINDOW_WIDTH / 6.0f,
@@ -174,6 +172,9 @@ int draw_tile_map(
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
     SDL_RenderRect(renderer, &border);
 
+    // DEBUG
+    SDL_RenderDebugTextFormat(renderer, 0, 0, "Camera Offset: X: %04.02f, Y: %04.02f", camera_offset_x, camera_offset_y);
+
     // Present
     SDL_RenderPresent(renderer);
 
@@ -220,7 +221,7 @@ cleanup:
 
 // Update camera offsets
 void update_camera() {
-    const float scroll_speed = (HEX_RADIUS * 2) / 60.0f;
+    const float scroll_speed = (HEX_RADIUS * 2) / 30.0f;
     const bool* keys = SDL_GetKeyboardState(NULL);
 
     // Update offsets based on arrow keys
@@ -238,13 +239,13 @@ void update_camera() {
     }
 
     // Calculate map boundaries
-    float total_map_width = HEX_RADIUS * 1.5f * (HEX_COUNT_X - 1);
-    float total_map_heigth = HEX_RADIUS * sqrtf(3.0f) * (HEX_COUNT_Y - 1);
+    float total_map_width = HEX_RADIUS * 2.0f * HEX_COUNT_X;
+    float total_map_heigth = HEX_RADIUS * sqrtf(3.0f) * HEX_COUNT_Y;
 
-    float hex_grid_min_x = -(total_map_width - WINDOW_WIDTH * 0.5f);
-    float hex_grid_max_x = WINDOW_WIDTH * 0.5f;
+    float hex_grid_min_x = -(WINDOW_WIDTH);
+    float hex_grid_max_x = WINDOW_WIDTH / 64.0f;
     
-    float hex_grid_min_y = -(total_map_heigth - WINDOW_HEIGHT * 0.5f);
+    float hex_grid_min_y = -(total_map_heigth - WINDOW_HEIGHT * 0.75f);
     float hex_grid_max_y = WINDOW_HEIGHT * 0.5f;
 
     // Clamp offsets
