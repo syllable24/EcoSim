@@ -267,11 +267,11 @@ void update_camera() {
     float total_map_width = HEX_RADIUS * 2.0f * HEX_COUNT_X;
     float total_map_heigth = HEX_RADIUS * sqrtf(3.0f) * HEX_COUNT_Y;
 
-    float hex_grid_min_x = -(WINDOW_WIDTH);
+    float hex_grid_min_x = -WINDOW_WIDTH;
     float hex_grid_max_x = WINDOW_WIDTH / 64.0f;
     
     float hex_grid_min_y = -(total_map_heigth - WINDOW_HEIGHT * 0.75f);
-    float hex_grid_max_y = WINDOW_HEIGHT * 0.5f;
+    float hex_grid_max_y = WINDOW_HEIGHT / 16.0f;
 
     // Clamp offsets
     camera_offset_x = fminf(fmaxf(camera_offset_x, hex_grid_min_x), hex_grid_max_x);
