@@ -89,26 +89,9 @@ int draw_tile_map(
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
     SDL_RenderClear(renderer);
     
-    // Draw White Box around grid
-    SDL_LogTrace(LOG_CAT_DISPLAY, "Draw Board Borders.");
-    SDL_FPoint top_left_border = {
-        .x = WINDOW_WIDTH / 8.0f,
-        .y = WINDOW_HEIGHT / 8.0f
-    };
+    SDL_RenderDebugTextFormat(renderer, 0, 0, "Camera Offset: X: %04.02f, Y: %04.02f", camera_offset_x, camera_offset_y);
 
-    SDL_FRect border = {
-        .x = top_left_border.x,
-        .y = top_left_border.y,
-        .w = WINDOW_WIDTH - (WINDOW_WIDTH / 16.0f),
-        .h = WINDOW_HEIGHT - (WINDOW_HEIGHT / 16.0f)
-    };
-
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);    
-    SDL_RenderRect(renderer, &border);
-
-    //SDL_RenderDebugTextFormat(renderer, 0, 0, "X: %04.02f, Y: %04.02f", top_left_border.x, top_left_border.y);    
-
-    SDL_FPoint top_left_grid = {
+    SDL_FPoint top_left_hex_grid = {
         .x = WINDOW_WIDTH / 6.0f,
         .y = WINDOW_HEIGHT / 6.0f
     };
@@ -125,9 +108,9 @@ int draw_tile_map(
                 return SDL_APP_FAILURE;
             }
 
-            // Calculate Hex Texture center
-            float base_center_x = HEX_RADIUS * 1.5f * index_x + top_left_grid.x;
-            float base_center_y = HEX_RADIUS * sqrtf(3.0f) * (index_y + 0.5f * (index_x % 2)) + top_left_grid.y;
+            // Calculate Hex Texture center (staggered grid)
+            float base_center_x = HEX_RADIUS * 1.5f * index_x + top_left_hex_grid.x;
+            float base_center_y = HEX_RADIUS * sqrtf(3.0f) * (index_y + 0.5f * (index_x % 2)) + top_left_hex_grid.y;
 
             // Add camera offset
             float center_x = base_center_x + camera_offset_x;
@@ -136,8 +119,14 @@ int draw_tile_map(
             SDL_LogTrace(LOG_CAT_DISPLAY, "Hex Center X: %05.02f Y: %05.02f.", center_x, center_y);
 
             // Skip off-screen hexagons
-            if (center_x < -HEX_RADIUS || center_x > WINDOW_WIDTH + HEX_RADIUS ||
-                center_y < -HEX_RADIUS || center_y > WINDOW_HEIGHT + HEX_RADIUS) {
+            float min_render_x = HEX_RADIUS + ((WINDOW_WIDTH / 8.0f) * 0.6f);
+            float max_render_x = WINDOW_WIDTH + HEX_RADIUS;
+
+            float min_render_y = (-(HEX_RADIUS + (WINDOW_HEIGHT / 8.0f)) * 0.6f);
+            float max_render_y = WINDOW_HEIGHT + HEX_RADIUS;
+
+            if (center_x < min_render_x || center_x > max_render_x ||
+                center_y < -min_render_y || center_y > max_render_y) {
                 continue;
             }
 
@@ -167,6 +156,23 @@ int draw_tile_map(
             draw_hexagon_outline(renderer, points);
         }
     }
+
+    // Draw Box around grid    
+    SDL_LogTrace(LOG_CAT_DISPLAY, "Draw Board Borders.");
+    SDL_FPoint top_left_menu = {
+        .x = WINDOW_WIDTH / 8.0f,
+        .y = WINDOW_HEIGHT / 8.0f
+    };
+
+    SDL_FRect border = {
+        .x = top_left_menu.x,
+        .y = top_left_menu.y,
+        .w = WINDOW_WIDTH - (WINDOW_WIDTH / 16.0f),
+        .h = WINDOW_HEIGHT - (WINDOW_HEIGHT / 16.0f)
+    };
+
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    SDL_RenderRect(renderer, &border);
 
     // Present
     SDL_RenderPresent(renderer);
@@ -214,7 +220,7 @@ cleanup:
 
 // Update camera offsets
 void update_camera() {
-    const float scroll_speed = 1.0f; // Pixel per Second
+    const float scroll_speed = (HEX_RADIUS * 2) / 60.0f;
     const bool* keys = SDL_GetKeyboardState(NULL);
 
     // Update offsets based on arrow keys
@@ -232,17 +238,18 @@ void update_camera() {
     }
 
     // Calculate map boundaries
-    float map_width = HEX_RADIUS * 1.5f * (HEX_COUNT_X - 1);
-    float map_height = HEX_RADIUS * sqrtf(3.0f) * (HEX_COUNT_Y - 1 + 0.5f);
+    float total_map_width = HEX_RADIUS * 1.5f * (HEX_COUNT_X - 1);
+    float total_map_heigth = HEX_RADIUS * sqrtf(3.0f) * (HEX_COUNT_Y - 1);
+
+    float hex_grid_min_x = -(total_map_width - WINDOW_WIDTH * 0.5f);
+    float hex_grid_max_x = WINDOW_WIDTH * 0.5f;
     
-    float min_x = -(map_width - WINDOW_WIDTH * 0.5f);
-    float max_x = WINDOW_WIDTH * 0.5f;
-    float min_y = -(map_height - WINDOW_HEIGHT * 0.5f);
-    float max_y = WINDOW_HEIGHT * 0.5f;
+    float hex_grid_min_y = -(total_map_heigth - WINDOW_HEIGHT * 0.5f);
+    float hex_grid_max_y = WINDOW_HEIGHT * 0.5f;
 
     // Clamp offsets
-    camera_offset_x = fminf(fmaxf(camera_offset_x, min_x), max_x);
-    camera_offset_y = fminf(fmaxf(camera_offset_y, min_y), max_y);
+    camera_offset_x = fminf(fmaxf(camera_offset_x, hex_grid_min_x), hex_grid_max_x);
+    camera_offset_y = fminf(fmaxf(camera_offset_y, hex_grid_min_y), hex_grid_max_y);        
 }
 
 

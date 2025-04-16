@@ -33,8 +33,8 @@ extern uint8_t g_arr_tile_definitions_size;
 
 // Game State
 extern TileState** g_game_board;
-extern int camera_offset_x;
-extern int camera_offset_y;
+extern float camera_offset_x;
+extern float camera_offset_y;
 
 
 void cleanup_globals();
