@@ -1,16 +1,11 @@
 #include <stdbool.h>
 #include <SDL3/SDL.h>
 
+#include "../include/Globals.h"
 #include "../include/Hashmap.h"
 
 #ifndef DISPLAY_H
 #define DISPLAY_H
-
-#define WINDOW_WIDTH 1920
-#define WINDOW_HEIGHT 1080
-#define HEX_RADIUS 45.0f  // Radius (center to vertex)
-#define HEX_COUNT_X 50
-#define HEX_COUNT_Y 25
 
 typedef struct {
     char* name;

@@ -4,11 +4,21 @@
 #include <math.h> 
 #include <SDL3/SDL.h>
 
+#include "../include/Globals.h"
 #include "../include/Util.h"
 #include "../include/Display.h"
 #include "../include/Hashmap.h"
 
 struct hashmap* g_texture_map = NULL;
+
+// Camera struct for scrolling
+typedef struct {
+    float offset_x;
+    float offset_y;
+} Camera;
+
+// Global camera
+static Camera camera = {0.0f, 0.0f};
 
 // Calculate the six vertices of a flat-top hexagon
 void get_hexagon_vertices(SDL_FPoint* points, float center_x, float center_y, float radius) {
@@ -102,9 +112,11 @@ int draw_tile_map(
         .w = WINDOW_WIDTH - (WINDOW_WIDTH / 16.0f),
         .h = WINDOW_HEIGHT - (WINDOW_HEIGHT / 16.0f)
     };
-    
+
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);    
     SDL_RenderRect(renderer, &border);
+
+    //SDL_RenderDebugTextFormat(renderer, 0, 0, "X: %04.02f, Y: %04.02f", top_left_border.x, top_left_border.y);    
 
     SDL_FPoint top_left_grid = {
         .x = WINDOW_WIDTH / 6.0f,
@@ -113,8 +125,8 @@ int draw_tile_map(
    
     SDL_LogTrace(LOG_CAT_DISPLAY, "Start Draw Hexes.");
 
-    for (uint8_t index_x = 0; index_x < HEX_COUNT_X; index_x++) {
-        for (uint8_t index_y = 0; index_y < HEX_COUNT_Y; index_y++) {
+    for (uint8_t index_x = 0; index_x < map_size_x; index_x++) {        
+        for (uint8_t index_y = 0; index_y < map_size_y; index_y++) {
             
             // Validate game_board entry
             if (!g_game_board[index_x] || !g_game_board[index_x][index_y].tile_def || !g_game_board[index_x][index_y].tile_def->name) {
@@ -124,8 +136,13 @@ int draw_tile_map(
             }
 
             // Calculate Hex Texture center
-            float center_x = HEX_RADIUS * 1.5f * index_x + top_left_grid.x;
-            float center_y = HEX_RADIUS * sqrtf(3.0f) * (index_y + 0.5f * (index_x % 2)) + top_left_grid.y;
+            float base_center_x = HEX_RADIUS * 1.5f * index_x + top_left_grid.x;
+            float base_center_y = HEX_RADIUS * sqrtf(3.0f) * (index_y + 0.5f * (index_x % 2)) + top_left_grid.y;
+
+            // Add camera offset
+            float center_x = base_center_x + camera.offset_x;
+            float center_y = base_center_y + camera.offset_y;
+
             SDL_LogTrace(LOG_CAT_DISPLAY, "Hex Center X: %05.02f Y: %05.02f.", center_x, center_y);
 
             // Get Hex Texture by name

@@ -1,5 +1,7 @@
 #include <stdint.h>
 
+#include "../include/Globals.h"
+
 #ifndef UTIL_H
 #define UTIL_H
 
@@ -16,21 +18,6 @@ typedef enum {
     NEED_DEFINITION,
     TILE_DEFINITION
 } ResourceFiles;
-
-typedef struct {
-    char* name;
-    char* texture;
-    uint8_t base_water_quality;
-    uint8_t base_light_quality;
-    uint8_t base_air_quality;
-    uint8_t base_soil_quality;
-    uint8_t base_temperature_mod;
-} TileDefinition;
-
-typedef struct {
-    const TileDefinition* tile_def;
-} TileState;
-
 
 uint32_t determine_rand_val(int min, int max);
 

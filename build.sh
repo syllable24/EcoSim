@@ -1,4 +1,5 @@
 #!/bin/bash
+clear
 cmake -S . -B build
 cmake --build build
 BUILD_SUCCESS=$?;

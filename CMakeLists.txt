@@ -14,6 +14,7 @@ PRIVATE
     src/cJson.c
     src/Hashmap.c
     src/MapGen.c
+    src/Globals.c
 )
 
 target_include_directories(EcoSim

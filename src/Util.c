@@ -6,6 +6,7 @@
 #include <sys/time.h>
 #include <SDL3/SDL.h>
 
+#include "../include/Globals.h"
 #include "../include/Util.h"
 #include "../include/cJSON.h"
 

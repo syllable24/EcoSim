@@ -4,6 +4,7 @@
 #include <stdio.h> 
 #include <SDL3/SDL.h>
 
+#include "../include/Globals.h"
 #include "../include/Population.h"
 #include "../include/Util.h"
 
