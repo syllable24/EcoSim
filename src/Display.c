@@ -89,13 +89,30 @@ int draw_tile_map(
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
     SDL_RenderClear(renderer);        
 
+    // Draw Hex-Grid Background Texture
+    SDL_FPoint top_left_menu = {
+        .x = WINDOW_WIDTH / 8.0f,
+        .y = WINDOW_HEIGHT / 8.0f
+    };
+
+    SDL_FRect border = {
+        .x = top_left_menu.x,
+        .y = top_left_menu.y,
+        .w = WINDOW_WIDTH - (WINDOW_WIDTH / 16.0f),
+        .h = WINDOW_HEIGHT - (WINDOW_HEIGHT / 16.0f)
+    };
+    
+    const TextureHashMapRecord* background_rec = hashmap_get(g_texture_map, &(TextureHashMapRecord){.name="Hex Grid Background"});
+    SDL_RenderTextureTiled(renderer, background_rec->texture, NULL, 1.0f, &border);    
+
+    // Draw Hex Grid
     SDL_FPoint top_left_hex_grid = {
         .x = WINDOW_WIDTH / 6.0f,
         .y = WINDOW_HEIGHT / 6.0f
     };
    
     SDL_LogTrace(LOG_CAT_DISPLAY, "Start Draw Hexes.");
-
+        
     for (uint8_t index_x = 0; index_x < map_size_x; index_x++) {        
         for (uint8_t index_y = 0; index_y < map_size_y; index_y++) {
             
@@ -157,17 +174,6 @@ int draw_tile_map(
 
     // Draw Box around grid    
     SDL_LogTrace(LOG_CAT_DISPLAY, "Draw Board Borders.");
-    SDL_FPoint top_left_menu = {
-        .x = WINDOW_WIDTH / 8.0f,
-        .y = WINDOW_HEIGHT / 8.0f
-    };
-
-    SDL_FRect border = {
-        .x = top_left_menu.x,
-        .y = top_left_menu.y,
-        .w = WINDOW_WIDTH - (WINDOW_WIDTH / 16.0f),
-        .h = WINDOW_HEIGHT - (WINDOW_HEIGHT / 16.0f)
-    };
 
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
     SDL_RenderRect(renderer, &border);
@@ -186,7 +192,7 @@ int load_textures(SDL_Renderer* renderer, TileDefinition** tile_definitions, uin
     SDL_LogTrace(LOG_CAT_DISPLAY, "Start load_textures()");
     int exit_status = SDL_APP_FAILURE;
 
-    g_texture_map = hashmap_new(sizeof(TextureHashMapRecord), tile_definition_size, 0, 0, texture_hash_map_hash, texture_hash_map_compare, NULL, NULL);    
+    g_texture_map = hashmap_new(sizeof(TextureHashMapRecord), tile_definition_size + 1, 0, 0, texture_hash_map_hash, texture_hash_map_compare, NULL, NULL);    
 
     uint8_t tile_definition_index = 0;
     for (tile_definition_index = 0; tile_definition_index < tile_definition_size; tile_definition_index++){
@@ -206,8 +212,27 @@ int load_textures(SDL_Renderer* renderer, TileDefinition** tile_definitions, uin
         hashmap_set(g_texture_map, &(TextureHashMapRecord){ 
             .name = tile_definitions[tile_definition_index]->name,
             .texture = texture
-        });        
+        });
     }
+
+    // Load additional textures
+    SDL_Surface* bmp = SDL_LoadBMP("./img/Wood_Background.bmp");
+    if (!bmp){
+        SDL_LogError(LOG_CAT_DISPLAY, "Could not load %s.", "./img/Wood_Background.bmp");
+        goto cleanup;
+    }
+    
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, bmp);
+    SDL_DestroySurface(bmp);
+    if (!texture){
+        SDL_LogError(LOG_CAT_DISPLAY, "Could not create texture for %s.", "./img/Wood_Background.bmp");
+        goto cleanup;            
+    }
+    
+    hashmap_set(g_texture_map, &(TextureHashMapRecord){ 
+        .name = "Hex Grid Background",
+        .texture = texture
+    });
     
     exit_status = SDL_APP_CONTINUE;
 
