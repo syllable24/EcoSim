@@ -11,15 +11,6 @@
 
 struct hashmap* g_texture_map = NULL;
 
-// Camera struct for scrolling
-typedef struct {
-    float offset_x;
-    float offset_y;
-} Camera;
-
-// Global camera
-static Camera camera = {0.0f, 0.0f};
-
 // Calculate the six vertices of a flat-top hexagon
 void get_hexagon_vertices(SDL_FPoint* points, float center_x, float center_y, float radius) {
     for (int i = 0; i < 6; i++) {
@@ -88,8 +79,7 @@ int draw_hexagon_texture(SDL_Renderer* renderer, SDL_Texture* texture, SDL_FPoin
 }
 
 int draw_tile_map(
-    SDL_Renderer* renderer, 
-    TileState** g_game_board,
+    SDL_Renderer* renderer,    
     uint8_t map_size_x, 
     uint8_t map_size_y
 ){
@@ -140,10 +130,16 @@ int draw_tile_map(
             float base_center_y = HEX_RADIUS * sqrtf(3.0f) * (index_y + 0.5f * (index_x % 2)) + top_left_grid.y;
 
             // Add camera offset
-            float center_x = base_center_x + camera.offset_x;
-            float center_y = base_center_y + camera.offset_y;
+            float center_x = base_center_x + camera_offset_x;
+            float center_y = base_center_y + camera_offset_y;
 
             SDL_LogTrace(LOG_CAT_DISPLAY, "Hex Center X: %05.02f Y: %05.02f.", center_x, center_y);
+
+            // Skip off-screen hexagons
+            if (center_x < -HEX_RADIUS || center_x > WINDOW_WIDTH + HEX_RADIUS ||
+                center_y < -HEX_RADIUS || center_y > WINDOW_HEIGHT + HEX_RADIUS) {
+                continue;
+            }
 
             // Get Hex Texture by name
             char* hex_def_name = g_game_board[index_x][index_y].tile_def->name;
@@ -215,6 +211,40 @@ cleanup:
     SDL_LogTrace(LOG_CAT_DISPLAY, "End load_textures()");
     return exit_status;
 }
+
+// Update camera offsets
+void update_camera() {
+    const float scroll_speed = 1.0f; // Pixel per Second
+    const bool* keys = SDL_GetKeyboardState(NULL);
+
+    // Update offsets based on arrow keys
+    if (keys[SDL_SCANCODE_UP]) {
+        camera_offset_y += scroll_speed;
+    }
+    if (keys[SDL_SCANCODE_DOWN]) {
+        camera_offset_y -= scroll_speed;
+    }
+    if (keys[SDL_SCANCODE_LEFT]) {
+        camera_offset_x += scroll_speed;
+    }
+    if (keys[SDL_SCANCODE_RIGHT]) {
+        camera_offset_x -= scroll_speed;
+    }
+
+    // Calculate map boundaries
+    float map_width = HEX_RADIUS * 1.5f * (HEX_COUNT_X - 1);
+    float map_height = HEX_RADIUS * sqrtf(3.0f) * (HEX_COUNT_Y - 1 + 0.5f);
+    
+    float min_x = -(map_width - WINDOW_WIDTH * 0.5f);
+    float max_x = WINDOW_WIDTH * 0.5f;
+    float min_y = -(map_height - WINDOW_HEIGHT * 0.5f);
+    float max_y = WINDOW_HEIGHT * 0.5f;
+
+    // Clamp offsets
+    camera_offset_x = fminf(fmaxf(camera_offset_x, min_x), max_x);
+    camera_offset_y = fminf(fmaxf(camera_offset_y, min_y), max_y);
+}
+
 
 int texture_hash_map_compare(const void *a, const void *b, void *udata){
     const TextureHashMapRecord* ua = a;

@@ -84,21 +84,30 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
 /* This function runs when a new event (mouse input, keypresses, etc) occurs. */
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event){
         
-    if (event->type == SDL_EVENT_KEY_DOWN || event->type == SDL_EVENT_QUIT) {
-        return SDL_APP_SUCCESS;  /* end the program, reporting success to the OS. */
-    }
+    switch(event->type){
+        case SDL_EVENT_QUIT:
+            return SDL_APP_SUCCESS;
 
-    return SDL_APP_CONTINUE;
+        case SDL_EVENT_KEY_DOWN:
+            switch(event->key.key){
+                case SDLK_ESCAPE:
+                    return SDL_APP_SUCCESS;
+                default:
+                    return SDL_APP_CONTINUE;
+            }
+            break;
+        default:
+            return SDL_APP_CONTINUE;
+    }
 }
 
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate){
 
-    /* Check Camera Input and set offset accordingly */
-
+    update_camera();
 
     /* Draw Map*/
-    if(draw_tile_map(renderer, g_game_board, HEX_COUNT_X, HEX_COUNT_Y) != SDL_APP_CONTINUE){
+    if(draw_tile_map(renderer, HEX_COUNT_X, HEX_COUNT_Y) != SDL_APP_CONTINUE){
         SDL_LogError(LOG_CAT_MAIN, "Error while drawing tile map: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
