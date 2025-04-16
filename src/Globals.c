@@ -14,6 +14,10 @@ TileState** g_game_board = NULL;
 float camera_offset_x = 0.0f;
 float camera_offset_y = 0.0f;
 
+
+float mouse_pos_x = 0.0f;
+float mouse_pos_y = 0.0f;
+
 void cleanup_globals(){
     free(g_arr_tile_definitions);
     free(g_game_board);

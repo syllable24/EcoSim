@@ -22,7 +22,7 @@ int draw_hexagon_texture(SDL_Renderer* renderer, SDL_Texture* texture, SDL_FPoin
 
 int draw_tile_map(SDL_Renderer* renderer, uint8_t map_size_x, uint8_t map_size_y);
 
-void update_camera();
+void frame_update();
 
 int texture_hash_map_compare(const void *a, const void *b, void *udata);
 

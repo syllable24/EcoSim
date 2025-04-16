@@ -96,6 +96,19 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event){
                     return SDL_APP_CONTINUE;
             }
             break;
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+            switch(event->button.button){
+                case 1: // Left-Click
+                    SDL_LogDebug(LOG_CAT_MAIN, "Left-Click");
+                    break;
+                case 2: // Middle-Click
+                    SDL_LogDebug(LOG_CAT_MAIN, "Middle-Click");
+                    break;
+                case 3: // Right-Click
+                    SDL_LogDebug(LOG_CAT_MAIN, "Right-Click");
+                    break;
+            }            
+            return SDL_APP_CONTINUE;
         default:
             return SDL_APP_CONTINUE;
     }
@@ -104,7 +117,10 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event){
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate){
 
-    update_camera();
+    // Update mouse coordinates
+    SDL_GetGlobalMouseState(&mouse_pos_x, &mouse_pos_y);
+
+    frame_update();
 
     /* Draw Map*/
     if(draw_tile_map(renderer, HEX_COUNT_X, HEX_COUNT_Y) != SDL_APP_CONTINUE){

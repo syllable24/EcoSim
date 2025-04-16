@@ -36,6 +36,8 @@ extern TileState** g_game_board;
 extern float camera_offset_x;
 extern float camera_offset_y;
 
+extern float mouse_pos_x;
+extern float mouse_pos_y;
 
 void cleanup_globals();
 

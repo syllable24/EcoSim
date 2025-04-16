@@ -114,7 +114,7 @@ int draw_tile_map(
     };
    
     SDL_LogTrace(LOG_CAT_DISPLAY, "Start Draw Hexes.");
-        
+
     for (uint8_t index_x = 0; index_x < map_size_x; index_x++) {        
         for (uint8_t index_y = 0; index_y < map_size_y; index_y++) {
             
@@ -190,20 +190,16 @@ int draw_tile_map(
         .h = WINDOW_HEIGHT - (WINDOW_HEIGHT / 8.0f)
     };
 
-    const TextureHashMapRecord* menu_background_rec = hashmap_get(g_texture_map, &(TextureHashMapRecord){.name="Menu Background"});    
-    
-    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); // GREEN
-    SDL_RenderTexture(renderer, menu_background_rec->texture, NULL, &horizontal_menu);
-
-    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255); // BLUE
+    const TextureHashMapRecord* menu_background_rec = hashmap_get(g_texture_map, &(TextureHashMapRecord){.name="Menu Background"});       
+    SDL_RenderTexture(renderer, menu_background_rec->texture, NULL, &horizontal_menu);    
     SDL_RenderTexture(renderer, menu_background_rec->texture, NULL, &vertical_menu);
 
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); // RED
+    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); // GREEN
     SDL_RenderRect(renderer, &border);
 
-
-    // DEBUG
+    // DEBUG INFO
     SDL_RenderDebugTextFormat(renderer, 0, 0, "Camera Offset: X: %04.02f, Y: %04.02f", camera_offset_x, camera_offset_y);
+    SDL_RenderDebugTextFormat(renderer, 0, 12, "Mouse Pos: X: %04.02f, Y: %04.02f", mouse_pos_x, mouse_pos_y);
 
     // Present
     SDL_RenderPresent(renderer);
@@ -266,8 +262,8 @@ int init_and_add_texture(SDL_Renderer* renderer, char* texture_id, char* texture
     return SDL_APP_CONTINUE;
 }
 
-// Update camera offsets
-void update_camera() {
+void frame_update() {
+    // Update camera
     const float scroll_speed = (HEX_RADIUS * 2) / 30.0f;
     const bool* keys = SDL_GetKeyboardState(NULL);
 
