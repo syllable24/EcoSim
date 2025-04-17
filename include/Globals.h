@@ -19,7 +19,7 @@ typedef struct {
 } TileDefinition;
 
 typedef struct {
-    const AxialCoord axial_coord;
+    const CubeCoord coord;
     const TileDefinition* tile_def;
 } TileState;
 

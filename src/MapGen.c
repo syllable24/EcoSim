@@ -11,7 +11,9 @@
 int game_map_hash_map_compare(const void *a, const void *b, void *udata){
     const TileState* ua = a;
     const TileState* ub = b;
-    return (ua->axial_coord.pos_q == ub->axial_coord.pos_q && ua->axial_coord.pos_r == ub->axial_coord.pos_r) 
+    return (ua->coord.pos_q == ub->coord.pos_q 
+            && ua->coord.pos_r == ub->coord.pos_r 
+            && ua->coord.pos_s == ub->coord.pos_s) 
            ? 0  // equal 
            : 1; // different
 }
@@ -43,6 +45,30 @@ int generate_board(uint8_t map_size_x, uint8_t map_size_y){
     // Assumes symmetrical hexagonal flat-top hex-grid. (Big hexagon composed of smaller hexagons)
     uint64_t total_hex_count = hex_count_in_sprial(map_size_x);
     g_game_map = hashmap_new(sizeof(TileState), total_hex_count, 0, 0, game_map_hash_map_hash, game_map_hash_map_compare, NULL, NULL);
+    
+    CubeCoord origin = {0,0,0};
+    CubeCoord** spiral_coords = cube_sprial(origin, map_size_x);
+    
+    uint32_t rand_tile_def_id = determine_rand_val(0, g_arr_tile_definitions_size - 1);    
+
+    hashmap_set(g_game_map, &(TileState){
+        .coord = origin,
+        .tile_def = g_arr_tile_definitions[rand_tile_def_id]
+    });
+
+    for (uint64_t curr_radius = 1; curr_radius < map_size_x; curr_radius++){
+        uint64_t hexes_in_ring = hex_count_in_ring(curr_radius);
+
+        for (uint64_t curr_ring_pos = 0; curr_ring_pos < hexes_in_ring; curr_ring_pos++){
+            CubeCoord curr_coord = spiral_coords[curr_radius][curr_ring_pos];
+
+            rand_tile_def_id = determine_rand_val(0, g_arr_tile_definitions_size - 1);    
+            hashmap_set(g_game_map, &(TileState){
+                .coord = curr_coord,
+                .tile_def = g_arr_tile_definitions[rand_tile_def_id]
+            });
+        }        
+    }
 
     // Allocate rows
     g_game_board = malloc(map_size_x * sizeof(TileState*));
@@ -53,7 +79,7 @@ int generate_board(uint8_t map_size_x, uint8_t map_size_y){
 
     // Init rows
     for (uint8_t i = 0; i < map_size_x; i++){
-        // Allocate each columns
+        // Allocate each column
         g_game_board[i] = malloc(map_size_y * sizeof(TileState));
         if(!g_game_board[i]){
             SDL_LogError(LOG_CAT_MAPGEN, "Memory allocation for game board failed (%u entries, %zu bytes).", map_size_y, map_size_y * sizeof(TileState));

@@ -89,6 +89,13 @@ CubeCoord** cube_sprial(CubeCoord orig, uint16_t radius){
     uint64_t spiral_index = 1;
     for (uint16_t i = 0; i < radius; i++){
         CubeCoord* ring = cube_ring(orig, i);
+        if (!ring){
+            for (uint16_t j = 0; j < i; j++){
+                free(spiral[j]);
+                spiral[j] = NULL;
+            }
+            return NULL;
+        }
         spiral[spiral_index] = ring;
         spiral_index++;
     }
