@@ -7,7 +7,7 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
-#define HEX_GRID_RADIUS 4
+#define HEX_GRID_RADIUS 10
 
 // Common structs
 typedef struct {
