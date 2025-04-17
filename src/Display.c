@@ -216,7 +216,7 @@ int load_textures(SDL_Renderer* renderer, TileDefinition** tile_definitions, uin
     SDL_LogTrace(LOG_CAT_DISPLAY, "Start load_textures()");
     int exit_status = SDL_APP_FAILURE;
 
-    g_texture_map = hashmap_new(sizeof(TextureHashMapRecord), tile_definition_size + 1, 0, 0, texture_hash_map_hash, texture_hash_map_compare, NULL, NULL);    
+    g_texture_map = hashmap_new(sizeof(TextureHashMapRecord), tile_definition_size + 1, 0, 0, texture_hash_map_hash, texture_hash_map_compare, NULL, NULL);
 
     uint8_t tile_definition_index = 0;
     for (tile_definition_index = 0; tile_definition_index < tile_definition_size; tile_definition_index++){

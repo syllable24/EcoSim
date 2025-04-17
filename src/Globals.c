@@ -1,6 +1,7 @@
 #include <stdlib.h>
 
 #include "../include/Globals.h"
+#include "../include/Hashmap.h"
 
 // Common Config
 int WINDOW_WIDTH = 1920;
@@ -11,6 +12,7 @@ uint8_t g_arr_tile_definitions_size = 0;
 
 // Game State
 TileState** g_game_board = NULL;
+struct hashmap* g_game_map = NULL;
 float camera_offset_x = 0.0f;
 float camera_offset_y = 0.0f;
 

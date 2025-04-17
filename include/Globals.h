@@ -1,5 +1,7 @@
 #include <stdint.h>
 
+#include "../include/hashmap.h"
+
 // globals.h
 #ifndef GLOBALS_H
 #define GLOBALS_H
@@ -16,6 +18,13 @@ typedef struct {
 } TileDefinition;
 
 typedef struct {
+    // Axial Coordinates
+    const uint32_t pos_q;
+    const uint32_t pos_r;
+} Hex;
+
+typedef struct {
+    const Hex coord;
     const TileDefinition* tile_def;
 } TileState;
 
@@ -33,6 +42,7 @@ extern uint8_t g_arr_tile_definitions_size;
 
 // Game State
 extern TileState** g_game_board;
+extern struct hashmap* g_game_map;
 extern float camera_offset_x;
 extern float camera_offset_y;
 

@@ -7,10 +7,28 @@
 #include "../include/Util.h"
 #include "../include/Globals.h"
 
-int generate_board(
-    uint8_t map_size_x, 
-    uint8_t map_size_y
-){
+int game_map_hash_map_compare(const void *a, const void *b, void *udata){
+    const TileState* ua = a;
+    const TileState* ub = b;
+    return (ua->coord.pos_q == ub->coord.pos_q && ua->coord.pos_r == ub->coord.pos_r) 
+           ? 0  // equal 
+           : 1; // different
+}
+
+bool game_map_hash_map_iter(const void *item, void *udata){
+    const TileState* rec = item;    
+    return true;
+}
+
+uint64_t game_map_hash_map_hash(const void *item, uint64_t seed0, uint64_t seed1) {
+    const TileState* rec = item;
+    // Use fixed seeds for deterministic hashing
+    seed0 = 0x1234567890abcdefULL;
+    seed1 = 0xfedcba0987654321ULL;
+    return hashmap_sip((const Hex*)rec, sizeof(Hex), seed0, seed1);
+}
+
+int generate_board(uint8_t map_size_x, uint8_t map_size_y){
     SDL_LogTrace(LOG_CAT_MAPGEN, "Start generate_board()");
     int exit_status = SDL_APP_FAILURE;
 
@@ -20,6 +38,8 @@ int generate_board(
                      g_game_board, g_arr_tile_definitions, g_arr_tile_definitions_size, map_size_x, map_size_y);
         return SDL_APP_FAILURE;
     }        
+
+    g_game_map = hashmap_new(sizeof(TileState), map_size_x * map_size_y, 0, 0, game_map_hash_map_hash, game_map_hash_map_compare, NULL, NULL);
 
     // Allocate rows
     g_game_board = malloc(map_size_x * sizeof(TileState*));    
@@ -62,3 +82,6 @@ cleanup:
     return exit_status;
 }
 
+void clear_game_map(){
+    hashmap_free(g_game_map);
+}

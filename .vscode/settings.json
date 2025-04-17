@@ -2,6 +2,8 @@
     "C_Cpp.errorSquiggles": "disabled",
     "files.associations": {
         "util.h": "c",
-        "population.h": "c"
+        "population.h": "c",
+        "mapgen.h": "c",
+        "globals.h": "c"
     }
 }
