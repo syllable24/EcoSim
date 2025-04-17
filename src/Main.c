@@ -100,6 +100,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event){
             switch(event->button.button){
                 case 1: // Left-Click
                     SDL_LogDebug(LOG_CAT_MAIN, "Left-Click");
+                    handle_left_click(renderer);
                     break;
                 case 2: // Middle-Click
                     SDL_LogDebug(LOG_CAT_MAIN, "Middle-Click");

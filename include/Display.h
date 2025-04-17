@@ -24,6 +24,8 @@ int draw_tile_map(SDL_Renderer* renderer, uint8_t map_size_x, uint8_t map_size_y
 
 void frame_update();
 
+void handle_left_click();
+
 int texture_hash_map_compare(const void *a, const void *b, void *udata);
 
 bool texture_hash_map_iter(const void *item, void *udata);

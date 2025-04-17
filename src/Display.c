@@ -81,7 +81,7 @@ int draw_hexagon_texture(SDL_Renderer* renderer, SDL_Texture* texture, SDL_FPoin
 }
 
 int draw_tile_map(
-    SDL_Renderer* renderer,    
+    SDL_Renderer* renderer,
     uint8_t map_size_x, 
     uint8_t map_size_y
 ){
@@ -125,7 +125,7 @@ int draw_tile_map(
                 return SDL_APP_FAILURE;
             }
 
-            // Calculate Hex Texture center (flat-top hex grid)
+            // Calculate Hex Texture center (flat-top odd-q hex grid)
             float base_center_x = HEX_RADIUS * 1.5f * index_x + top_left_hex_grid.x;
             float base_center_y = HEX_RADIUS * sqrtf(3.0f) * (index_y + 0.5f * (index_x % 2)) + top_left_hex_grid.y;
 
@@ -161,14 +161,18 @@ int draw_tile_map(
             get_hexagon_vertices(points, center_x, center_y, HEX_RADIUS);
 
             // Draw Hex Texture to screen
-            if (draw_hexagon_texture(renderer, texture, points, center_x, center_y) != SDL_APP_CONTINUE){
-                SDL_LogError(LOG_CAT_MAIN, "Error during draw_hexagon_texture: %s.", SDL_GetError());
-                return SDL_APP_FAILURE;
-            }
+            //if (draw_hexagon_texture(renderer, texture, points, center_x, center_y) != SDL_APP_CONTINUE){
+            //    SDL_LogError(LOG_CAT_MAIN, "Error during draw_hexagon_texture: %s.", SDL_GetError());
+            //    return SDL_APP_FAILURE;
+            //}
+
+            SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); // GREEN
+            // DEBUG INFO
+            SDL_RenderDebugTextFormat(renderer, center_x, center_y, "%u,%u", index_x, index_y);
 
             // Draw hex outline
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-            draw_hexagon_outline(renderer, points);
+            draw_hexagon_outline(renderer, points);            
         }
     }
 
@@ -261,6 +265,14 @@ int init_and_add_texture(SDL_Renderer* renderer, char* texture_id, char* texture
 
     return SDL_APP_CONTINUE;
 }
+
+void handle_left_click(SDL_Renderer* renderer){    
+    int index_x = 0;
+    int index_y = 0;        
+
+    SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked X: %04.02f Y: %04.02f", mouse_pos_x, mouse_pos_y);
+}
+
 
 void frame_update() {
     // Update camera
