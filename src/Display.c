@@ -180,8 +180,8 @@ int draw_hexagon(SDL_Renderer* renderer, CubeCoord cube_coords, char* hex_def_na
     float base_center_y = center.y + top_left_menu.y;
 
     // Add camera offset
-    float center_px_x = base_center_x;// + camera_offset_x;
-    float center_px_y = base_center_y;// + camera_offset_y;
+    float center_px_x = base_center_x - camera_offset_x;
+    float center_px_y = base_center_y - camera_offset_y;
     SDL_LogTrace(LOG_CAT_DISPLAY, "Calculated Hex Center: X: %04.02f Y: %04.02f for [%d][%d][%d].", 
         center_px_x, center_px_y,
         cube_coords.pos_q, cube_coords.pos_r, cube_coords.pos_s
@@ -199,7 +199,7 @@ int draw_hexagon(SDL_Renderer* renderer, CubeCoord cube_coords, char* hex_def_na
         return SDL_APP_CONTINUE;
     }    
 
-    // Get Hex Texture by name        
+    // Get Hex Texture by name
     SDL_LogTrace(LOG_CAT_DISPLAY, "Hex def name: %s.", hex_def_name);
     const TextureHashMapRecord* rec = hashmap_get(g_texture_map, &(TextureHashMapRecord){.name=hex_def_name});
     if (!rec || !rec->texture) {
@@ -285,40 +285,43 @@ int init_and_add_texture(SDL_Renderer* renderer, char* texture_id, char* texture
 }
 
 void handle_left_click(SDL_Renderer* renderer){            
+    SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Screen X: %04.02f Y: %04.02f", g_mouse_pos_x, g_mouse_pos_y);
+
     SDL_FPoint top_left_menu = {
         .x = WINDOW_WIDTH / 8.0f,
         .y = WINDOW_HEIGHT / 8.0f
     };
 
-    SDL_FPoint click = { g_mouse_pos_x - top_left_menu.x, g_mouse_pos_y - top_left_menu.y};
-    if(click.x < 0 || click.y < 0 ){
-        return;
-    }
-    SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Screen X: %04.02f Y: %04.02f", g_mouse_pos_x, g_mouse_pos_y);
-    SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Grid X: %04.02f Y: %04.02f", click.x, click.y);
+    SDL_FPoint click = { 
+        (g_mouse_pos_x - top_left_menu.x) + camera_offset_x,
+        (g_mouse_pos_y - top_left_menu.y) + camera_offset_y
+    };    
+    SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Grid (adjusted by camera offset) X: %04.02f Y: %04.02f", click.x, click.y);
 
     CubeCoord coords = flat_top_pixel_to_hex(click, HEX_RADIUS);
+
+
     SDL_LogDebug(LOG_CAT_DISPLAY, "Converted [%"PRId64"][%"PRId64"][%"PRId64"]", coords.pos_q, coords.pos_r, coords.pos_s);    
 }
 
 
 void frame_update() {
     // Update camera
-    const float scroll_speed = (HEX_RADIUS * 2) / 30.0f;
+    const float scroll_speed = (HEX_RADIUS * 2) / 120.0f;
     const bool* keys = SDL_GetKeyboardState(NULL);
 
     // Update offsets based on arrow keys
     if (keys[SDL_SCANCODE_UP]) {
-        camera_offset_y += scroll_speed;
-    }
-    if (keys[SDL_SCANCODE_DOWN]) {
         camera_offset_y -= scroll_speed;
     }
+    if (keys[SDL_SCANCODE_DOWN]) {
+        camera_offset_y += scroll_speed;
+    }
     if (keys[SDL_SCANCODE_LEFT]) {
-        camera_offset_x += scroll_speed;
+        camera_offset_x -= scroll_speed;
     }
     if (keys[SDL_SCANCODE_RIGHT]) {
-        camera_offset_x -= scroll_speed;
+        camera_offset_x += scroll_speed;
     }
 
     // Calculate map boundaries
