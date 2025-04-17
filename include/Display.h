@@ -20,7 +20,7 @@ void draw_hexagon_outline(SDL_Renderer* renderer, SDL_FPoint* vertices);
 
 int draw_hexagon_texture(SDL_Renderer* renderer, SDL_Texture* texture, SDL_FPoint points[6], float center_x, float center_y);
 
-int draw_tile_map(SDL_Renderer* renderer, uint8_t map_size_x, uint8_t map_size_y);
+int draw_tile_map(SDL_Renderer* renderer, uint8_t map_hex_radius);
 
 void frame_update();
 

@@ -1,4 +1,5 @@
 #include <string.h>
+#include <SDL3/SDL.h>
 
 #ifndef HEXGRIDMATH_H
 #define HEXGRIDMATH_H
@@ -9,9 +10,9 @@ typedef struct {
 } AxialCoord;
 
 typedef struct {
-    uint64_t pos_q;
-    uint64_t pos_r;
-    uint64_t pos_s;
+    int64_t pos_q;
+    int64_t pos_r;
+    int64_t pos_s;
 } CubeCoord;
 
 CubeCoord axial_to_cube(AxialCoord axial_coord);
@@ -27,6 +28,8 @@ CubeCoord* cube_ring(CubeCoord orig, uint16_t radius);
 
 uint64_t hex_count_in_sprial(uint16_t radius);
 CubeCoord** cube_sprial(CubeCoord orig, uint16_t radius);
+
+SDL_FPoint flat_top_hex_to_pixel(CubeCoord coord, uint8_t hex_radius);
 
 #endif
 

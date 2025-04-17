@@ -7,6 +7,8 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
+#define HEX_GRID_RADIUS 4
+
 // Common structs
 typedef struct {
     char* name;
@@ -31,12 +33,8 @@ extern float HEX_RADIUS;
 extern TileDefinition** g_arr_tile_definitions;
 extern uint8_t g_arr_tile_definitions_size;
 
-#define HEX_COUNT_X 50
-#define HEX_COUNT_Y 25
-
 
 // Game State
-extern TileState** g_game_board;
 extern struct hashmap* g_game_map;
 extern float camera_offset_x;
 extern float camera_offset_y;

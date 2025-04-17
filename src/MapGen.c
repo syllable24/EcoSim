@@ -31,38 +31,44 @@ uint64_t game_map_hash_map_hash(const void *item, uint64_t seed0, uint64_t seed1
     return hashmap_sip((const AxialCoord*)rec, sizeof(AxialCoord), seed0, seed1);
 }
 
-int generate_board(uint8_t map_size_x, uint8_t map_size_y){
+int generate_board(uint8_t map_hex_radius){
     SDL_LogTrace(LOG_CAT_MAPGEN, "Start generate_board()");
     int exit_status = SDL_APP_FAILURE;
 
     // Validate inputs
-    if (!g_arr_tile_definitions || g_arr_tile_definitions_size <= 0 || map_size_x <= 0 || map_size_y <= 0) {
-        SDL_LogError(LOG_CAT_MAPGEN, "Invalid input: game_board=%p, tile_defs=%p, tile_defs_size=%u, size=%ux%u",
-                     g_game_board, g_arr_tile_definitions, g_arr_tile_definitions_size, map_size_x, map_size_y);
+    if (!g_arr_tile_definitions || g_arr_tile_definitions_size <= 0 || map_hex_radius <= 0 ) {
+        SDL_LogError(LOG_CAT_MAPGEN, "Invalid input: g_arr_tile_definitions=%p, g_arr_tile_definitions_size=%u, map_hex_radius=%u",
+                     g_arr_tile_definitions, g_arr_tile_definitions_size, map_hex_radius);
         return SDL_APP_FAILURE;
     }        
 
     // Assumes symmetrical hexagonal flat-top hex-grid. (Big hexagon composed of smaller hexagons)
-    uint64_t total_hex_count = hex_count_in_sprial(map_size_x);
+    uint64_t total_hex_count = hex_count_in_sprial(map_hex_radius);
+    SDL_LogDebug(LOG_CAT_MAPGEN, "Calculating Hex Coords for %d hexes.", total_hex_count);
+
     g_game_map = hashmap_new(sizeof(TileState), total_hex_count, 0, 0, game_map_hash_map_hash, game_map_hash_map_compare, NULL, NULL);
     
     CubeCoord origin = {0,0,0};
-    CubeCoord** spiral_coords = cube_sprial(origin, map_size_x);
+    CubeCoord** spiral_coords = cube_sprial(origin, map_hex_radius);
     
     uint32_t rand_tile_def_id = determine_rand_val(0, g_arr_tile_definitions_size - 1);    
 
+    SDL_LogDebug(LOG_CAT_MAPGEN, "Adding origin hex to g_game_map.");
+    // Init center TileState
     hashmap_set(g_game_map, &(TileState){
         .coord = origin,
         .tile_def = g_arr_tile_definitions[rand_tile_def_id]
     });
 
-    for (uint64_t curr_radius = 1; curr_radius < map_size_x; curr_radius++){
+    for (uint64_t curr_radius = 1; curr_radius <= map_hex_radius; curr_radius++){
         uint64_t hexes_in_ring = hex_count_in_ring(curr_radius);
+        SDL_LogDebug(LOG_CAT_MAPGEN, "Adding %d hexes to g_game_map.", hexes_in_ring);
 
         for (uint64_t curr_ring_pos = 0; curr_ring_pos < hexes_in_ring; curr_ring_pos++){
-            CubeCoord curr_coord = spiral_coords[curr_radius][curr_ring_pos];
+            CubeCoord curr_coord = spiral_coords[curr_radius][curr_ring_pos];            
 
             rand_tile_def_id = determine_rand_val(0, g_arr_tile_definitions_size - 1);    
+            // Init each TileState
             hashmap_set(g_game_map, &(TileState){
                 .coord = curr_coord,
                 .tile_def = g_arr_tile_definitions[rand_tile_def_id]
@@ -70,47 +76,9 @@ int generate_board(uint8_t map_size_x, uint8_t map_size_y){
         }        
     }
 
-    // Allocate rows
-    g_game_board = malloc(map_size_x * sizeof(TileState*));
-    if(!g_game_board){
-        SDL_LogError(LOG_CAT_MAPGEN, "Memory allocation for game board failed (%u entries, %zu bytes).", map_size_x, map_size_x * sizeof(TileState*));
-        goto cleanup;
-    }
-
-    // Init rows
-    for (uint8_t i = 0; i < map_size_x; i++){
-        // Allocate each column
-        g_game_board[i] = malloc(map_size_y * sizeof(TileState));
-        if(!g_game_board[i]){
-            SDL_LogError(LOG_CAT_MAPGEN, "Memory allocation for game board failed (%u entries, %zu bytes).", map_size_y, map_size_y * sizeof(TileState));
-            goto cleanup;
-        }
-
-        // Init each TileState
-        for (uint8_t j = 0; j < map_size_y; j++){                        
-            uint32_t tile_def_id = determine_rand_val(0, g_arr_tile_definitions_size - 1);
-            g_game_board[i][j].tile_def = g_arr_tile_definitions[tile_def_id];
-        }
-    }
-
     exit_status = SDL_APP_CONTINUE;
 
 cleanup:
-    if (exit_status != SDL_APP_CONTINUE && g_game_board){
-        for (uint8_t i = 0; i < map_size_x; i++){
-            if((g_game_board)[i]){
-                // Note: Do NOT free tile_def, as it points to g_arr_tile_definitions
-                free(g_game_board[i]);
-            }
-        }
-        free(g_game_board);
-        g_game_board = NULL;
-    }
-
     SDL_LogTrace(LOG_CAT_MAPGEN, "End generate_board()");
     return exit_status;
-}
-
-void clear_game_map(){
-    hashmap_free(g_game_map);
 }

@@ -136,6 +136,12 @@ cleanup:
     return exit_status;
 }
 
+char* print_coord(CubeCoord coord){
+	static char buffer[MAX_NAME_LENGTH];	
+    snprintf(buffer, MAX_NAME_LENGTH, "[%"PRId64"][%"PRId64"][%"PRId64"]", coord.pos_q, coord.pos_r, coord.pos_s);
+	return buffer;
+}
+
 int read_tile_definition(TileDefinition*** target, uint8_t* target_size){
 	SDL_LogTrace(LOG_CAT_UTIL, "Start read_tile_definition().");
 	int exit_status = SDL_APP_FAILURE;

@@ -30,4 +30,6 @@ int read_tile_definition(TileDefinition*** target, uint8_t* target_size);
 
 void log_with_timestamp(void* userdata, int category, SDL_LogPriority priority, const char* message);
 
+char* print_coord(CubeCoord coord);
+
 #endif

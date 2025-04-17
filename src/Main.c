@@ -26,11 +26,12 @@ char* message = "Hello EcoSim!";
 
 void setup_logging(){
     // Set Log Priorities
-    SDL_SetLogPriority(LOG_CAT_MAIN, SDL_LOG_PRIORITY_DEBUG);
+    SDL_SetLogPriority(LOG_CAT_MAIN, SDL_LOG_PRIORITY_INFO);
     SDL_SetLogPriority(LOG_CAT_DISPLAY, SDL_LOG_PRIORITY_DEBUG);
-    SDL_SetLogPriority(LOG_CAT_POPULATION, SDL_LOG_PRIORITY_DEBUG);
-    SDL_SetLogPriority(LOG_CAT_UTIL, SDL_LOG_PRIORITY_DEBUG);
+    SDL_SetLogPriority(LOG_CAT_POPULATION, SDL_LOG_PRIORITY_INFO);
+    SDL_SetLogPriority(LOG_CAT_UTIL, SDL_LOG_PRIORITY_INFO);
     SDL_SetLogPriority(LOG_CAT_MAPGEN, SDL_LOG_PRIORITY_DEBUG);
+    SDL_SetLogPriority(LOG_CAT_HEXMATH, SDL_LOG_PRIORITY_DEBUG);
 
     // TODO: Add timestamp to log lines
     SDL_SetLogOutputFunction(log_with_timestamp, NULL);
@@ -63,9 +64,9 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
         SDL_LogError(LOG_CAT_MAIN, "Couldn't load textures: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
-
+    
     /* Generate Map */
-    if(generate_board(HEX_COUNT_X, HEX_COUNT_Y) != SDL_APP_CONTINUE){
+    if(generate_board(HEX_GRID_RADIUS) != SDL_APP_CONTINUE){
         SDL_LogError(LOG_CAT_MAIN, "Error while generating board: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
@@ -120,12 +121,12 @@ SDL_AppResult SDL_AppIterate(void *appstate){
 
     // Update mouse coordinates
     SDL_GetGlobalMouseState(&mouse_pos_x, &mouse_pos_y);
-
+    
     frame_update();
 
     /* Draw Map*/
-    if(draw_tile_map(renderer, HEX_COUNT_X, HEX_COUNT_Y) != SDL_APP_CONTINUE){
-        SDL_LogError(LOG_CAT_MAIN, "Error while drawing tile map: %s", SDL_GetError());
+    if(draw_tile_map(renderer, HEX_GRID_RADIUS) != SDL_APP_CONTINUE){
+       SDL_LogError(LOG_CAT_MAIN, "Error while drawing tile map: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
 
@@ -137,8 +138,7 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result){
     if (renderer) SDL_DestroyRenderer(renderer);
     if (window) SDL_DestroyWindow(window);
     
-    clear_display_state();
-
+    clear_display_state();    
     free(p.base_needs);
     cleanup_globals();
 }

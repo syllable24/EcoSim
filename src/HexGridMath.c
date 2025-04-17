@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <math.h>
 #include <SDL3/SDL.h>
 
 
@@ -35,7 +36,7 @@ CubeCoord cube_add(CubeCoord orig, CubeCoord vect){
 }
 
 CubeCoord cube_neighbor(CubeCoord orig, uint8_t direction){    
-    return cube_add(orig, cube_direction_vectors[direction]);    
+    return cube_add(orig, cube_direction_vectors[direction]);
 }
 
 CubeCoord cube_scale(CubeCoord orig, uint16_t factor){
@@ -53,18 +54,23 @@ uint64_t hex_count_in_ring(uint16_t radius){
 
 CubeCoord* cube_ring(CubeCoord orig, uint16_t radius){
     uint64_t hex_amount = hex_count_in_ring(radius);
+    SDL_LogTrace(LOG_CAT_HEXMATH, "Calculated Hex Amount in ring radius: %d: %d.", radius, hex_amount);
     CubeCoord* ring = malloc(hex_amount * sizeof(CubeCoord));
     if (!ring){
-        SDL_LogError(LOG_CAT_HEXMATH, "Memory allocation for hex ring failed (%u entries, %zu bytes).", hex_amount, hex_amount * sizeof(CubeCoord));
-        free(ring);
+        SDL_LogError(LOG_CAT_HEXMATH, "Memory allocation for hex ring failed (%u entries, %zu bytes).", hex_amount, hex_amount * sizeof(CubeCoord));        
         ring = NULL;
         return NULL;
     }
     CubeCoord hex = cube_add(orig, cube_scale(cube_direction_vectors[4], radius));
-    uint64_t ring_index = 0;
+
+    uint64_t ring_index = 0;    
     for (uint8_t i = 0; i < 6; i++){
-        for (uint8_t j = 0; j < radius; j++){
-            ring[ring_index] = hex;
+        for (uint8_t j = 0; j < radius; j++){            
+            SDL_LogTrace(LOG_CAT_HEXMATH, "Ring radius %d: Coords: [%d][%d][%d].", 
+                radius,                 
+                hex.pos_q,hex.pos_r,hex.pos_s
+            );
+            ring[ring_index++] = hex;
             hex = cube_neighbor(hex, i);
         }   
     }
@@ -75,8 +81,9 @@ uint64_t hex_count_in_sprial(uint16_t radius){
     return 1 + (3 * radius * (radius + 1));
 }
 
-CubeCoord** cube_sprial(CubeCoord orig, uint16_t radius){
+CubeCoord** cube_sprial(CubeCoord orig, uint16_t radius){    
     uint64_t hex_amount = hex_count_in_sprial(radius);
+    SDL_LogTrace(LOG_CAT_HEXMATH, "Calculated Hex Amount in Spiral: %d.", hex_amount);
     CubeCoord** spiral = malloc((1 + radius) * sizeof(CubeCoord*));
     if (!spiral){
         SDL_LogError(LOG_CAT_HEXMATH, "Memory allocation for hex spiral failed (%u entries, %zu bytes).", (1 + radius), (1 + radius) * sizeof(CubeCoord*));        
@@ -88,7 +95,7 @@ CubeCoord** cube_sprial(CubeCoord orig, uint16_t radius){
     spiral[0] = &orig;
     uint64_t spiral_index = 1;
     for (uint16_t i = 0; i < radius; i++){
-        CubeCoord* ring = cube_ring(orig, i);
+        CubeCoord* ring = cube_ring(orig, spiral_index);                
         if (!ring){
             for (uint16_t j = 0; j < i; j++){
                 free(spiral[j]);
@@ -96,8 +103,32 @@ CubeCoord** cube_sprial(CubeCoord orig, uint16_t radius){
             }
             return NULL;
         }
+        for (int j = 0; j < hex_count_in_ring(radius); j++){
+            SDL_LogTrace(LOG_CAT_HEXMATH, "cube_spiral Ring radius %d: Hex Coords: [%d][%d][%d].", 
+                radius,                 
+                ring[j].pos_q, ring[j].pos_r, ring[j].pos_s
+            );
+        }
+        
+
         spiral[spiral_index] = ring;
         spiral_index++;
     }
     return spiral;
+}
+
+SDL_FPoint flat_top_hex_to_pixel(CubeCoord coord, uint8_t hex_radius){    
+    SDL_LogTrace(LOG_CAT_HEXMATH, "Converting Hex Coords: %s with radius %d.",
+        print_coord(coord), hex_radius
+    );
+
+    float q = (float)coord.pos_q;
+    float r = (float)coord.pos_r;
+
+    float x = hex_radius * (1.5f * q);
+    float y = hex_radius * (sqrtf(3.0f) * (r + q / 2.0f));
+
+    SDL_LogTrace(LOG_CAT_HEXMATH, "Pixel position: x = %.2f, y = %.2f", x, y);
+
+    return (SDL_FPoint){ x, y };
 }

@@ -12,6 +12,7 @@
 struct hashmap* g_texture_map = NULL;
 
 int init_and_add_texture(SDL_Renderer* renderer, char* texture_id, char* texture_filename);
+int draw_hexagon(SDL_Renderer* renderer, CubeCoord cube_coords, char* hex_def_name);
 
 // Calculate the six vertices of a flat-top hexagon
 void get_hexagon_vertices(SDL_FPoint* points, float center_x, float center_y, float radius) {
@@ -82,8 +83,7 @@ int draw_hexagon_texture(SDL_Renderer* renderer, SDL_Texture* texture, SDL_FPoin
 
 int draw_tile_map(
     SDL_Renderer* renderer,
-    uint8_t map_size_x, 
-    uint8_t map_size_y
+    uint8_t map_hex_radius
 ){
     SDL_LogTrace(LOG_CAT_DISPLAY, "Start draw_tile_map().");
 
@@ -107,73 +107,27 @@ int draw_tile_map(
     const TextureHashMapRecord* hex_grid_background_rec = hashmap_get(g_texture_map, &(TextureHashMapRecord){.name="Hex Grid Background"});    
     SDL_RenderTextureTiled(renderer, hex_grid_background_rec->texture, NULL, 1.0f, &border);
 
-    // Draw Hex Grid
-    SDL_FPoint top_left_hex_grid = {
-        .x = WINDOW_WIDTH / 6.0f,
-        .y = WINDOW_HEIGHT / 6.0f
-    };
-   
-    SDL_LogTrace(LOG_CAT_DISPLAY, "Start Draw Hexes.");
+    // Draw Hex Grid   
+    SDL_LogTrace(LOG_CAT_DISPLAY, "Start Draw %d hexes.", hashmap_count(g_game_map));
+    
+    size_t iter = 0;
+    void* item;
+    while (hashmap_iter(g_game_map, &iter, &item)) {
+        const TileState* curr_state = item;
 
-    for (uint8_t index_x = 0; index_x < map_size_x; index_x++) {        
-        for (uint8_t index_y = 0; index_y < map_size_y; index_y++) {
-            
-            // Validate game_board entry
-            if (!g_game_board[index_x] || !g_game_board[index_x][index_y].tile_def || !g_game_board[index_x][index_y].tile_def->name) {
-                SDL_LogError(LOG_CAT_DISPLAY, "Invalid tile at [%u][%u]: NULL tile_def or name", index_x, index_y);
-                SDL_RenderPresent(renderer);
-                return SDL_APP_FAILURE;
-            }
-
-            // Calculate Hex Texture center (flat-top odd-q hex grid)
-            float base_center_x = HEX_RADIUS * 1.5f * index_x + top_left_hex_grid.x;
-            float base_center_y = HEX_RADIUS * sqrtf(3.0f) * (index_y + 0.5f * (index_x % 2)) + top_left_hex_grid.y;
-
-            // Add camera offset
-            float center_x = base_center_x + camera_offset_x;
-            float center_y = base_center_y + camera_offset_y;
-
-            // Skip off-screen hexagons
-            float min_render_x = HEX_RADIUS + ((WINDOW_WIDTH / 8.0f) * 0.6f);
-            float max_render_x = WINDOW_WIDTH + HEX_RADIUS;
-
-            float min_render_y = (-(HEX_RADIUS + (WINDOW_HEIGHT / 8.0f)) * 0.6f);
-            float max_render_y = WINDOW_HEIGHT + HEX_RADIUS;
-
-            if (center_x < min_render_x || center_x > max_render_x ||
-                center_y < -min_render_y || center_y > max_render_y) {
-                continue;
-            }
-
-            // Get Hex Texture by name
-            char* hex_def_name = g_game_board[index_x][index_y].tile_def->name;
-            SDL_LogTrace(LOG_CAT_DISPLAY, "Hex def name: %s.", hex_def_name);
-            const TextureHashMapRecord* rec = hashmap_get(g_texture_map, &(TextureHashMapRecord){.name=hex_def_name});
-            if (!rec || !rec->texture) {
-                SDL_LogError(LOG_CAT_DISPLAY, "No texture found for name '%s' at [%u][%u]", hex_def_name, index_x, index_y);
-                SDL_RenderPresent(renderer);
-                return SDL_APP_FAILURE;
-            }            
-            SDL_Texture* texture = rec->texture;
-
-            // Calc Hex vertices
-            SDL_FPoint points[6];
-            get_hexagon_vertices(points, center_x, center_y, HEX_RADIUS);
-
-            // Draw Hex Texture to screen
-            //if (draw_hexagon_texture(renderer, texture, points, center_x, center_y) != SDL_APP_CONTINUE){
-            //    SDL_LogError(LOG_CAT_MAIN, "Error during draw_hexagon_texture: %s.", SDL_GetError());
-            //    return SDL_APP_FAILURE;
-            //}
-
-            SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); // GREEN
-            // DEBUG INFO
-            SDL_RenderDebugTextFormat(renderer, center_x, center_y, "%u,%u", index_x, index_y);
-
-            // Draw hex outline
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-            draw_hexagon_outline(renderer, points);            
+        // Validate game_map entry
+        if (!curr_state || !curr_state->tile_def || !curr_state->tile_def->name) {
+            SDL_LogError(LOG_CAT_DISPLAY, "Invalid tile at [%"PRId64"][%"PRId64"][%"PRId64"]: NULL tile_def or name", 
+                curr_state->coord.pos_q, curr_state->coord.pos_r, curr_state->coord.pos_s
+            );
+            SDL_RenderPresent(renderer);
+            return SDL_APP_FAILURE;
         }
+
+        // Get Hex Texture by name
+        char* hex_def_name = curr_state->tile_def->name;
+
+        draw_hexagon(renderer, curr_state->coord, hex_def_name);
     }
 
     // Draw Box around grid    
@@ -211,6 +165,69 @@ int draw_tile_map(
     SDL_LogTrace(LOG_CAT_DISPLAY, "End draw_tile_map().");
     return SDL_APP_CONTINUE;
 }
+
+int draw_hexagon(SDL_Renderer* renderer, CubeCoord cube_coords, char* hex_def_name){
+    SDL_FPoint top_left_hex_grid = {
+        .x = WINDOW_WIDTH / 6.0f,
+        .y = WINDOW_HEIGHT / 6.0f
+    };
+    
+    // Calculate Hex Texture center (flat-top odd-q hex grid)
+    SDL_FPoint center = flat_top_hex_to_pixel(cube_coords, HEX_RADIUS);
+
+    float base_center_x = center.x + top_left_hex_grid.x;
+    float base_center_y = center.y + top_left_hex_grid.y;
+
+    // Add camera offset
+    float center_px_x = base_center_x + camera_offset_x;
+    float center_px_y = base_center_y + camera_offset_y;
+    SDL_LogTrace(LOG_CAT_DISPLAY, "Calculated Hex Center: X: %04.02f Y: %04.02f for [%d][%d][%d].", 
+        center_px_x, center_px_y,
+        cube_coords.pos_q, cube_coords.pos_r, cube_coords.pos_s
+    );
+
+    // Skip off-screen hexagons
+    float min_render_px_x = HEX_RADIUS + ((WINDOW_WIDTH / 8.0f) * 0.6f);
+    float max_render_px_x = WINDOW_WIDTH + HEX_RADIUS;
+
+    float min_render_px_y = (-(HEX_RADIUS + (WINDOW_HEIGHT / 8.0f)) * 0.6f);
+    float max_render_px_y = WINDOW_HEIGHT + HEX_RADIUS;
+    
+    if (center_px_x < min_render_px_x || center_px_x > max_render_px_x ||
+        center_px_y < -min_render_px_y || center_px_y > max_render_px_y) {
+        return SDL_APP_CONTINUE;
+    }    
+
+    // Get Hex Texture by name        
+    SDL_LogTrace(LOG_CAT_DISPLAY, "Hex def name: %s.", hex_def_name);
+    const TextureHashMapRecord* rec = hashmap_get(g_texture_map, &(TextureHashMapRecord){.name=hex_def_name});
+    if (!rec || !rec->texture) {
+        SDL_LogError(LOG_CAT_DISPLAY, "No texture found for name '%s'", hex_def_name);
+        SDL_RenderPresent(renderer);
+        return SDL_APP_FAILURE;
+    }            
+    SDL_Texture* texture = rec->texture;
+
+    // Calc Hex vertices
+    SDL_FPoint points[6];
+    get_hexagon_vertices(points, center_px_x, center_px_y, HEX_RADIUS);
+
+    // Draw Hex Texture to screen
+    //if (draw_hexagon_texture(renderer, texture, points, center_px_x, center_px_y) != SDL_APP_CONTINUE){
+    //    SDL_LogError(LOG_CAT_MAIN, "Error during draw_hexagon_texture: %s.", SDL_GetError());
+    //    return SDL_APP_FAILURE;
+    //}
+
+    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); // GREEN
+    // DEBUG INFO
+    SDL_RenderDebugTextFormat(renderer, center_px_x - (HEX_RADIUS/2.0f), center_px_y, "[%d][%d][%d]", cube_coords.pos_q, cube_coords.pos_r, cube_coords.pos_s);
+
+    // Draw hex outline
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    draw_hexagon_outline(renderer, points);
+    return SDL_APP_CONTINUE;
+}
+
 
 int load_textures(SDL_Renderer* renderer, TileDefinition** tile_definitions, uint8_t tile_definition_size){
     SDL_LogTrace(LOG_CAT_DISPLAY, "Start load_textures()");
@@ -294,8 +311,8 @@ void frame_update() {
     }
 
     // Calculate map boundaries
-    float total_map_width = HEX_RADIUS * 2.0f * HEX_COUNT_X;
-    float total_map_heigth = HEX_RADIUS * sqrtf(3.0f) * HEX_COUNT_Y;
+    float total_map_width = HEX_RADIUS * 2.0f * HEX_GRID_RADIUS;
+    float total_map_heigth = HEX_RADIUS * sqrtf(3.0f) * HEX_GRID_RADIUS;
 
     float hex_grid_min_x = -WINDOW_WIDTH;
     float hex_grid_max_x = WINDOW_WIDTH / 64.0f;
@@ -304,8 +321,8 @@ void frame_update() {
     float hex_grid_max_y = WINDOW_HEIGHT / 16.0f;
 
     // Clamp offsets
-    camera_offset_x = fminf(fmaxf(camera_offset_x, hex_grid_min_x), hex_grid_max_x);
-    camera_offset_y = fminf(fmaxf(camera_offset_y, hex_grid_min_y), hex_grid_max_y);        
+    //camera_offset_x = fminf(fmaxf(camera_offset_x, hex_grid_min_x), hex_grid_max_x);
+    //camera_offset_y = fminf(fmaxf(camera_offset_y, hex_grid_min_y), hex_grid_max_y);        
 }
 
 
