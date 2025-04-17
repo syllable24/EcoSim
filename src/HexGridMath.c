@@ -117,7 +117,7 @@ CubeCoord** cube_sprial(CubeCoord orig, uint16_t radius){
     return spiral;
 }
 
-SDL_FPoint flat_top_hex_to_pixel(CubeCoord coord, uint8_t hex_radius){    
+SDL_FPoint flat_top_hex_to_pixel(CubeCoord coord, float hex_radius){    
     SDL_LogTrace(LOG_CAT_HEXMATH, "Converting Hex Coords: %s with radius %d.",
         print_coord(coord), hex_radius
     );
@@ -153,10 +153,14 @@ CubeCoord cube_round(float q, float r, float s) {
     return result;
 }
 
-CubeCoord flat_top_pixel_to_hex(SDL_FPoint point, uint8_t hex_radius){
-    float frac_q = ((2.0f/3.0f) * point.x) / (float)hex_radius;
-    float frac_r = (((-1.0f/3.0f) * point.x) + (sqrtf(3.0f) * point.y)) / (float)hex_radius;    
+CubeCoord flat_top_pixel_to_hex(SDL_FPoint point, float hex_radius){
+    float frac_q = ((2.0f / 3.0f) * point.x) / hex_radius;
+    float frac_r = ((-1.0f / 3.0f) * point.x + (sqrtf(3.0f) / 3.0f) * point.y) / hex_radius;
     float axial_s = -frac_q - frac_r;
+
+    SDL_LogDebug(LOG_CAT_HEXMATH, "Pixel to hex: x = %.2f, y = %.2f", point.x, point.y);
+    SDL_LogDebug(LOG_CAT_HEXMATH, "Pixel to hex: frac_q: (2.0f / 3.0f) * %.2f / %.2f = %.2f", point.x, hex_radius, frac_q);
+    SDL_LogDebug(LOG_CAT_HEXMATH, "Pixel to hex: frac_r: (-1.0f / 3.0f) * %.2f / sqrtf(3.0f) * %.2f / %.2f = %.2f", point.x, point.y, hex_radius, frac_r);
 
     CubeCoord hex = cube_round(frac_q, frac_r, axial_s);
     return hex;

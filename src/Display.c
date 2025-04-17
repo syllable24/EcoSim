@@ -294,8 +294,8 @@ void handle_left_click(SDL_Renderer* renderer){
     if(click.x < 0 || click.y < 0 ){
         return;
     }
-
-    SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked X: %04.02f Y: %04.02f", click.x, click.y);
+    SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Screen X: %04.02f Y: %04.02f", g_mouse_pos_x, g_mouse_pos_y);
+    SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Grid X: %04.02f Y: %04.02f", click.x, click.y);
 
     CubeCoord coords = flat_top_pixel_to_hex(click, HEX_RADIUS);
     SDL_LogDebug(LOG_CAT_DISPLAY, "Converted [%"PRId64"][%"PRId64"][%"PRId64"]", coords.pos_q, coords.pos_r, coords.pos_s);    

@@ -29,9 +29,9 @@ CubeCoord* cube_ring(CubeCoord orig, uint16_t radius);
 uint64_t hex_count_in_sprial(uint16_t radius);
 CubeCoord** cube_sprial(CubeCoord orig, uint16_t radius);
 
-SDL_FPoint flat_top_hex_to_pixel(CubeCoord coord, uint8_t hex_radius);
+SDL_FPoint flat_top_hex_to_pixel(CubeCoord coord, float hex_radius);
 
-CubeCoord flat_top_pixel_to_hex(SDL_FPoint point, uint8_t hex_radius);
+CubeCoord flat_top_pixel_to_hex(SDL_FPoint point, float hex_radius);
 
 #endif
 
