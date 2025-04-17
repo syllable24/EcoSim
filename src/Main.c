@@ -120,7 +120,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event){
 SDL_AppResult SDL_AppIterate(void *appstate){
 
     // Update mouse coordinates
-    SDL_GetGlobalMouseState(&mouse_pos_x, &mouse_pos_y);
+    SDL_GetGlobalMouseState(&g_mouse_pos_x, &g_mouse_pos_y);
     
     frame_update();
 

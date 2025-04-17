@@ -39,8 +39,8 @@ extern struct hashmap* g_game_map;
 extern float camera_offset_x;
 extern float camera_offset_y;
 
-extern float mouse_pos_x;
-extern float mouse_pos_y;
+extern float g_mouse_pos_x;
+extern float g_mouse_pos_y;
 
 void cleanup_globals();
 

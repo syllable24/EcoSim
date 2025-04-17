@@ -157,7 +157,8 @@ int draw_tile_map(
 
     // DEBUG INFO
     SDL_RenderDebugTextFormat(renderer, 0, 0, "Camera Offset: X: %04.02f, Y: %04.02f", camera_offset_x, camera_offset_y);
-    SDL_RenderDebugTextFormat(renderer, 0, 12, "Mouse Pos: X: %04.02f, Y: %04.02f", mouse_pos_x, mouse_pos_y);
+    SDL_RenderDebugTextFormat(renderer, 0, 12, "Screen Mouse Pos: X: %04.02f, Y: %04.02f", g_mouse_pos_x, g_mouse_pos_y);
+    SDL_RenderDebugTextFormat(renderer, 0, 24, "Grid Mouse Pos: X: %04.02f, Y: %04.02f", g_mouse_pos_x - border.x , g_mouse_pos_y - border.y);
 
     // Present
     SDL_RenderPresent(renderer);
@@ -167,20 +168,20 @@ int draw_tile_map(
 }
 
 int draw_hexagon(SDL_Renderer* renderer, CubeCoord cube_coords, char* hex_def_name){
-    SDL_FPoint top_left_hex_grid = {
-        .x = WINDOW_WIDTH / 6.0f,
-        .y = WINDOW_HEIGHT / 6.0f
+    SDL_FPoint top_left_menu = {
+        .x = WINDOW_WIDTH / 8.0f,
+        .y = WINDOW_HEIGHT / 8.0f
     };
     
     // Calculate Hex Texture center (flat-top odd-q hex grid)
     SDL_FPoint center = flat_top_hex_to_pixel(cube_coords, HEX_RADIUS);
 
-    float base_center_x = center.x + top_left_hex_grid.x;
-    float base_center_y = center.y + top_left_hex_grid.y;
+    float base_center_x = center.x + top_left_menu.x;
+    float base_center_y = center.y + top_left_menu.y;
 
     // Add camera offset
-    float center_px_x = base_center_x + camera_offset_x;
-    float center_px_y = base_center_y + camera_offset_y;
+    float center_px_x = base_center_x;// + camera_offset_x;
+    float center_px_y = base_center_y;// + camera_offset_y;
     SDL_LogTrace(LOG_CAT_DISPLAY, "Calculated Hex Center: X: %04.02f Y: %04.02f for [%d][%d][%d].", 
         center_px_x, center_px_y,
         cube_coords.pos_q, cube_coords.pos_r, cube_coords.pos_s
@@ -283,11 +284,21 @@ int init_and_add_texture(SDL_Renderer* renderer, char* texture_id, char* texture
     return SDL_APP_CONTINUE;
 }
 
-void handle_left_click(SDL_Renderer* renderer){    
-    int index_x = 0;
-    int index_y = 0;        
+void handle_left_click(SDL_Renderer* renderer){            
+    SDL_FPoint top_left_menu = {
+        .x = WINDOW_WIDTH / 8.0f,
+        .y = WINDOW_HEIGHT / 8.0f
+    };
 
-    SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked X: %04.02f Y: %04.02f", mouse_pos_x, mouse_pos_y);
+    SDL_FPoint click = { g_mouse_pos_x - top_left_menu.x, g_mouse_pos_y - top_left_menu.y};
+    if(click.x < 0 || click.y < 0 ){
+        return;
+    }
+
+    SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked X: %04.02f Y: %04.02f", click.x, click.y);
+
+    CubeCoord coords = flat_top_pixel_to_hex(click, HEX_RADIUS);
+    SDL_LogDebug(LOG_CAT_DISPLAY, "Converted [%"PRId64"][%"PRId64"][%"PRId64"]", coords.pos_q, coords.pos_r, coords.pos_s);    
 }
 
 

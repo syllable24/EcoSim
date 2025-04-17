@@ -31,5 +31,7 @@ CubeCoord** cube_sprial(CubeCoord orig, uint16_t radius);
 
 SDL_FPoint flat_top_hex_to_pixel(CubeCoord coord, uint8_t hex_radius);
 
+CubeCoord flat_top_pixel_to_hex(SDL_FPoint point, uint8_t hex_radius);
+
 #endif
 

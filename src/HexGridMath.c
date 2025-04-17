@@ -132,3 +132,32 @@ SDL_FPoint flat_top_hex_to_pixel(CubeCoord coord, uint8_t hex_radius){
 
     return (SDL_FPoint){ x, y };
 }
+
+CubeCoord cube_round(float q, float r, float s) {
+    int rq = roundf(q);
+    int rr = roundf(r);
+    int rs = roundf(s);
+
+    float dq = fabsf(rq - q);
+    float dr = fabsf(rr - r);
+    float ds = fabsf(rs - s);
+
+    if (dq > dr && dq > ds)
+        rq = -rr - rs;
+    else if (dr > ds)
+        rr = -rq - rs;
+    else
+        rs = -rq - rr;
+
+    CubeCoord result = { rq, rr, rs };
+    return result;
+}
+
+CubeCoord flat_top_pixel_to_hex(SDL_FPoint point, uint8_t hex_radius){
+    float frac_q = ((2.0f/3.0f) * point.x) / (float)hex_radius;
+    float frac_r = (((-1.0f/3.0f) * point.x) + (sqrtf(3.0f) * point.y)) / (float)hex_radius;    
+    float axial_s = -frac_q - frac_r;
+
+    CubeCoord hex = cube_round(frac_q, frac_r, axial_s);
+    return hex;
+}
