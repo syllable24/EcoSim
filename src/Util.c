@@ -416,6 +416,9 @@ void log_with_timestamp(void* userdata, int category, SDL_LogPriority priority, 
 		case LOG_CAT_MAPGEN:
 			category_str = "MAPGEN";
 			break;
+		case LOG_CAT_HEXMATH:
+			category_str = "HEXMATH";
+			break;
         default:
             category_str = "DEFAULT";
             break;

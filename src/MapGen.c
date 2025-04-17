@@ -10,7 +10,7 @@
 int game_map_hash_map_compare(const void *a, const void *b, void *udata){
     const TileState* ua = a;
     const TileState* ub = b;
-    return (ua->coord.pos_q == ub->coord.pos_q && ua->coord.pos_r == ub->coord.pos_r) 
+    return (ua->axial_coord.pos_q == ub->axial_coord.pos_q && ua->axial_coord.pos_r == ub->axial_coord.pos_r) 
            ? 0  // equal 
            : 1; // different
 }
@@ -25,7 +25,7 @@ uint64_t game_map_hash_map_hash(const void *item, uint64_t seed0, uint64_t seed1
     // Use fixed seeds for deterministic hashing
     seed0 = 0x1234567890abcdefULL;
     seed1 = 0xfedcba0987654321ULL;
-    return hashmap_sip((const Hex*)rec, sizeof(Hex), seed0, seed1);
+    return hashmap_sip((const AxialCoord*)rec, sizeof(AxialCoord), seed0, seed1);
 }
 
 int generate_board(uint8_t map_size_x, uint8_t map_size_y){
@@ -39,10 +39,12 @@ int generate_board(uint8_t map_size_x, uint8_t map_size_y){
         return SDL_APP_FAILURE;
     }        
 
-    g_game_map = hashmap_new(sizeof(TileState), map_size_x * map_size_y, 0, 0, game_map_hash_map_hash, game_map_hash_map_compare, NULL, NULL);
+    // Assumes symmetrical hexagonal flat-top hex-grid. (Big hexagon composed of smaller hexagons)
+    uint64_t total_hex_count = 1 + (3 * map_size_x * (map_size_x - 1));
+    g_game_map = hashmap_new(sizeof(TileState), total_hex_count, 0, 0, game_map_hash_map_hash, game_map_hash_map_compare, NULL, NULL);
 
     // Allocate rows
-    g_game_board = malloc(map_size_x * sizeof(TileState*));    
+    g_game_board = malloc(map_size_x * sizeof(TileState*));
     if(!g_game_board){
         SDL_LogError(LOG_CAT_MAPGEN, "Memory allocation for game board failed (%u entries, %zu bytes).", map_size_x, map_size_x * sizeof(TileState*));
         goto cleanup;

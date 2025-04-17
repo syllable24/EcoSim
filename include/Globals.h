@@ -1,6 +1,7 @@
 #include <stdint.h>
 
 #include "../include/hashmap.h"
+#include "../include/HexGridMath.h"
 
 // globals.h
 #ifndef GLOBALS_H
@@ -18,13 +19,7 @@ typedef struct {
 } TileDefinition;
 
 typedef struct {
-    // Axial Coordinates
-    const uint32_t pos_q;
-    const uint32_t pos_r;
-} Hex;
-
-typedef struct {
-    const Hex coord;
+    const AxialCoord axial_coord;
     const TileDefinition* tile_def;
 } TileState;
 
