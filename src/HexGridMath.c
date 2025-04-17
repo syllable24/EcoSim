@@ -1,4 +1,6 @@
+#include <stdlib.h>
 #include <SDL3/SDL.h>
+
 
 #include "../include/HexGridMath.h"
 #include "../include/Util.h"
@@ -33,7 +35,7 @@ CubeCoord cube_add(CubeCoord orig, CubeCoord vect){
 }
 
 CubeCoord cube_neighbor(CubeCoord orig, uint8_t direction){    
-    return cube_add(orig, cube_direction_vectors[direction])
+    return cube_add(orig, cube_direction_vectors[direction]);    
 }
 
 CubeCoord cube_scale(CubeCoord orig, uint16_t factor){
@@ -73,9 +75,9 @@ uint64_t hex_count_in_sprial(uint16_t radius){
     return 1 + (3 * radius * (radius + 1));
 }
 
-CubeCoord* cube_sprial(CubeCoord orig, uint16_t radius){
+CubeCoord** cube_sprial(CubeCoord orig, uint16_t radius){
     uint64_t hex_amount = hex_count_in_sprial(radius);
-    CubeCoord* spiral = malloc((1 + radius) * sizeof(CubeCoord*));
+    CubeCoord** spiral = malloc((1 + radius) * sizeof(CubeCoord*));
     if (!spiral){
         SDL_LogError(LOG_CAT_HEXMATH, "Memory allocation for hex spiral failed (%u entries, %zu bytes).", (1 + radius), (1 + radius) * sizeof(CubeCoord*));        
         free(spiral);
@@ -83,7 +85,7 @@ CubeCoord* cube_sprial(CubeCoord orig, uint16_t radius){
         return NULL;
     }
 
-    spiral[0] = orig;
+    spiral[0] = &orig;
     uint64_t spiral_index = 1;
     for (uint16_t i = 0; i < radius; i++){
         CubeCoord* ring = cube_ring(orig, i);

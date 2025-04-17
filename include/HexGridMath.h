@@ -26,8 +26,7 @@ uint64_t hex_count_in_ring(uint16_t radius);
 CubeCoord* cube_ring(CubeCoord orig, uint16_t radius);
 
 uint64_t hex_count_in_sprial(uint16_t radius);
-CubeCoord* cube_sprial(CubeCoord orig, uint16_t radius);
-
+CubeCoord** cube_sprial(CubeCoord orig, uint16_t radius);
 
 #endif
 

@@ -3,6 +3,7 @@
 #include <math.h> 
 #include <SDL3/SDL.h>
 
+#include "../include/HexGridMath.h"
 #include "../include/MapGen.h"
 #include "../include/Util.h"
 #include "../include/Globals.h"
@@ -40,7 +41,7 @@ int generate_board(uint8_t map_size_x, uint8_t map_size_y){
     }        
 
     // Assumes symmetrical hexagonal flat-top hex-grid. (Big hexagon composed of smaller hexagons)
-    uint64_t total_hex_count = 1 + (3 * map_size_x * (map_size_x - 1));
+    uint64_t total_hex_count = hex_count_in_sprial(map_size_x);
     g_game_map = hashmap_new(sizeof(TileState), total_hex_count, 0, 0, game_map_hash_map_hash, game_map_hash_map_compare, NULL, NULL);
 
     // Allocate rows
