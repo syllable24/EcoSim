@@ -316,7 +316,7 @@ void handle_left_click(SDL_Renderer* renderer){
     hashmap_set(g_game_map, &(TileState){
         .coord=coords,
         .tile_def=tile_state->tile_def,
-        .selected=true
+        .selected=!tile_state->selected
     });
     
     SDL_LogDebug(LOG_CAT_DISPLAY, "Converted [%"PRId64"][%"PRId64"][%"PRId64"]", coords.pos_q, coords.pos_r, coords.pos_s);    
