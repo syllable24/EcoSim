@@ -23,3 +23,19 @@ void cleanup_globals(){
     free(g_arr_tile_definitions);    
     hashmap_free(g_game_map);
 }
+
+char* get_biome_name(Biome b){
+    switch(b){
+        case FRESHWATER: return "FRESHWATER";
+        case MARINE: return "MARINE";
+        case TROPICAL_GRASSLAND: return "TROPICAL_GRASSLAND";
+        case TEMPERATE_GRASSLAND: return "TEMPERATE_GRASSLAND";
+        case TEMPERATE_RAINFOREST: return "TEMPERATE_RAINFOREST";
+        case TROPICAL_RAINFOREST: return "TROPICAL_RAINFOREST";
+        case BOREAL_FOREST: return "BOREAL_FOREST";
+        case DESERT: return "DESERT";
+        case ARCTIC_TUNDRA: return "ARCTIC_TUNDRA";
+        case ALPINE_TUNDRA: return "ALPINE_TUNDRA";
+        default: return "UNK";
+    }
+}

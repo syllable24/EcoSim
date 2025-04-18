@@ -9,20 +9,21 @@
 #define GLOBALS_H
 
 #define HEX_GRID_RADIUS 10
+#define NUM_BIOME_SEEDS 8
 
 // Common structs
 typedef enum {
-    BIOME_FRESHWATER,
-    BIOME_MARINE,
-    BIOME_TROPICAL_GRASSLAND,
-    BIOME_TEMPERATE_GRASSLAND,
-    BIOME_TEMPERATE_RAINFOREST,
-    BIOME_TROPICAL_RAINFOREST,
-    BIOME_BOREAL_FOREST,
-    BIOME_DESERT,    
-    BIOME_ARCTIC_TUNDRA,
-    BIOME_ALPINE_TUNDRA,
-    BIOME_COUNT
+    FRESHWATER = 1,
+    MARINE = 2,
+    TROPICAL_GRASSLAND = 3,
+    TEMPERATE_GRASSLAND = 4,
+    TEMPERATE_RAINFOREST = 5,
+    TROPICAL_RAINFOREST = 6,
+    BOREAL_FOREST = 7,
+    DESERT = 8,
+    ARCTIC_TUNDRA = 9,
+    ALPINE_TUNDRA = 10,
+    COUNT = 11
 } Biome;
 
 typedef struct {
@@ -59,6 +60,7 @@ extern float camera_offset_y;
 extern float g_mouse_pos_x;
 extern float g_mouse_pos_y;
 
+char* get_biome_name(Biome b);
 void cleanup_globals();
 
 #endif

@@ -81,6 +81,52 @@ int draw_hexagon_texture(SDL_Renderer* renderer, SDL_Texture* texture, SDL_FPoin
     return SDL_APP_CONTINUE;
 }
 
+int draw_hexagon_solid_color(SDL_Renderer* renderer, RgbColor color, SDL_FPoint points[6], float center_x, float center_y){
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+
+    // Define hexagon vertices and texture coordinates
+    SDL_Vertex vertices[7];     
+
+    // Center vertex
+    vertices[0].position.x = center_x;
+    vertices[0].position.y = center_y;
+    vertices[0].tex_coord.x = 0.5f; // Center of texture
+    vertices[0].tex_coord.y = 0.5f;
+    vertices[0].color.r = color.r;
+    vertices[0].color.g = color.g;
+    vertices[0].color.b = color.b;
+    vertices[0].color.a = color.a;
+
+    // Outer vertices
+    for (int i = 0; i < 6; i++) {
+        vertices[i + 1].position = points[i];
+        // Map texture coordinates to fit hexagon
+        float tex_angle = (float)(M_PI / 3.0 * i);
+        vertices[i + 1].tex_coord.x = 0.5f + 0.4f * cosf(tex_angle);
+        vertices[i + 1].tex_coord.y = 0.5f + 0.4f * sinf(tex_angle);
+        vertices[i + 1].color.r = color.r;
+        vertices[i + 1].color.g = color.g;
+        vertices[i + 1].color.b = color.b;
+        vertices[i + 1].color.a = color.a;
+    }
+
+    // Define triangle indices for fan
+    int indices[] = { 
+        0, 1, 2, 
+        0, 2, 3, 
+        0, 3, 4, 
+        0, 4, 5, 
+        0, 5, 6, 
+        0, 6, 1 
+    };
+
+    if (SDL_RenderGeometry(renderer, NULL, vertices, 7, indices, 18) < 0) {
+        SDL_LogError(LOG_CAT_DISPLAY, "RenderGeometry failed: %s", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+    return SDL_APP_CONTINUE;
+}
+
 int draw_tile_map(
     SDL_Renderer* renderer,
     uint8_t map_hex_radius
@@ -196,7 +242,7 @@ int draw_hexagon(SDL_Renderer* renderer, CubeCoord cube_coords, char* hex_def_na
     if (center.x < min_render_px_x || center.x > max_render_px_x ||
         center.y < -min_render_px_y || center.y > max_render_px_y) {
         return SDL_APP_CONTINUE;
-    }    
+    }
 
     // Get Hex Texture by name
     SDL_LogTrace(LOG_CAT_DISPLAY, "Hex def name: %s.", hex_def_name);
@@ -213,8 +259,30 @@ int draw_hexagon(SDL_Renderer* renderer, CubeCoord cube_coords, char* hex_def_na
     get_hexagon_vertices(points, center.x, center.y, HEX_RADIUS);
 
     // Draw Hex Texture to screen
-    if (draw_hexagon_texture(renderer, texture, points, center.x, center.y) != SDL_APP_CONTINUE){
-        SDL_LogError(LOG_CAT_MAIN, "Error during draw_hexagon_texture: %s.", SDL_GetError());
+    //if (draw_hexagon_texture(renderer, texture, points, center.x, center.y) != SDL_APP_CONTINUE){
+    //    SDL_LogError(LOG_CAT_MAIN, "Error during draw_hexagon_texture: %s.", SDL_GetError());
+    //    return SDL_APP_FAILURE;
+    //}
+
+    //Determine Biome color
+    const TileState* tile_state = hashmap_get(g_game_map, &(TileState){.coord=cube_coords});
+    RgbColor biome_color = {0,0,0,0};
+    switch(tile_state->tile_biome){
+        case FRESHWATER:           biome_color=(RgbColor){153,255,255,255}; break;
+        case MARINE:               biome_color=(RgbColor){ 51, 51,255,255}; break;
+        case TROPICAL_GRASSLAND:   biome_color=(RgbColor){  0,204,102,255}; break;
+        case TEMPERATE_GRASSLAND:  biome_color=(RgbColor){  0,204,  0,255}; break;
+        case TEMPERATE_RAINFOREST: biome_color=(RgbColor){102,204,  0,255}; break;
+        case TROPICAL_RAINFOREST:  biome_color=(RgbColor){  0,102,  0,255}; break;
+        case BOREAL_FOREST:        biome_color=(RgbColor){  0,102,102,255}; break;
+        case DESERT:               biome_color=(RgbColor){204,204,  0,255}; break;
+        case ARCTIC_TUNDRA:        biome_color=(RgbColor){153,255,255,255}; break;
+        case ALPINE_TUNDRA:        biome_color=(RgbColor){224,224,224,255}; break;
+        default:                   biome_color=(RgbColor){153,255,255,255}; break;
+    }
+
+    if (draw_hexagon_solid_color(renderer, biome_color, points, center.x, center.y) != SDL_APP_CONTINUE){
+        SDL_LogError(LOG_CAT_MAIN, "Error during draw_hexagon_solid_color: %s.", SDL_GetError());
         return SDL_APP_FAILURE;
     }
 
@@ -224,8 +292,9 @@ int draw_hexagon(SDL_Renderer* renderer, CubeCoord cube_coords, char* hex_def_na
 
     // Draw hex outline    
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Black Outline
-    draw_hexagon_outline(renderer, points);
-    const TileState* tile_state = hashmap_get(g_game_map, &(TileState){.coord=cube_coords});
+    draw_hexagon_outline(renderer, points);    
+
+    // Red inner Hex for selected tiles
     if (tile_state->selected){
         get_hexagon_vertices(points, center.x, center.y, HEX_RADIUS - 5.0f);
         SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); // Red outline
@@ -316,10 +385,12 @@ void handle_left_click(SDL_Renderer* renderer){
     hashmap_set(g_game_map, &(TileState){
         .coord=coords,
         .tile_def=tile_state->tile_def,
-        .selected=!tile_state->selected
+        .selected=!tile_state->selected,
+        .tile_biome=tile_state->tile_biome
     });
     
-    SDL_LogDebug(LOG_CAT_DISPLAY, "Converted [%"PRId64"][%"PRId64"][%"PRId64"]", coords.pos_q, coords.pos_r, coords.pos_s);    
+    SDL_LogDebug(LOG_CAT_DISPLAY, "Grid Coords: [%"PRId64"][%"PRId64"][%"PRId64"]", coords.pos_q, coords.pos_r, coords.pos_s);
+    SDL_LogDebug(LOG_CAT_DISPLAY, "Biome: %d (%s)",tile_state->tile_biome, get_biome_name(tile_state->tile_biome));
 }
 
 int frame_update(SDL_Renderer* renderer) {
@@ -357,8 +428,8 @@ int frame_update(SDL_Renderer* renderer) {
     float hex_grid_max_y = (-total_map_heigth) - (WINDOW_HEIGHT / 2.0f) * -1.0f;
 
     // Clamp offsets
-    camera_offset_x = fminf(fmaxf(camera_offset_x, hex_grid_min_x), hex_grid_max_x);
-    camera_offset_y = fminf(fmaxf(camera_offset_y, hex_grid_min_y), hex_grid_max_y);        
+    //camera_offset_x = fminf(fmaxf(camera_offset_x, hex_grid_min_x), hex_grid_max_x);
+    //camera_offset_y = fminf(fmaxf(camera_offset_y, hex_grid_min_y), hex_grid_max_y);        
 
     /* Draw Map*/
     if(draw_tile_map(renderer, HEX_GRID_RADIUS) != SDL_APP_CONTINUE){

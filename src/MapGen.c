@@ -8,6 +8,9 @@
 #include "../include/Util.h"
 #include "../include/Globals.h"
 
+#define STB_PERLIN_IMPLEMENTATION
+#include "stb_perlin.h"
+
 int game_map_hash_map_compare(const void *a, const void *b, void *udata){
     const TileState* ua = a;
     const TileState* ub = b;
@@ -44,12 +47,7 @@ int generate_board(uint8_t map_hex_radius){
  
     // Init all TileStates
     init_tile_states(map_hex_radius);
-
-
-    // Randomly determine seed biome tiles
-
-    // Grow Biomes based on 2d noise
-
+    
     // Assign random Tile Definitons based on biome
 
     exit_status = SDL_APP_CONTINUE;
@@ -66,17 +64,18 @@ void init_tile_states(uint8_t map_hex_radius){
 
     g_game_map = hashmap_new(sizeof(TileState), total_hex_count, 0, 0, game_map_hash_map_hash, game_map_hash_map_compare, NULL, NULL);
     
-    CubeCoord origin = {0,0,0};
-    CubeCoord** spiral_coords = cube_sprial(origin, map_hex_radius);
+    CubeCoord origin_coord = {0,0,0};
+    CubeCoord** spiral_coords = cube_sprial(origin_coord, map_hex_radius);
 
-    uint32_t rand_tile_def_id = determine_rand_val(0, g_arr_tile_definitions_size - 1);    
-    SDL_LogDebug(LOG_CAT_MAPGEN, "Adding origin hex to g_game_map.");
+    uint32_t rand_tile_def_id = determine_rand_val(0, g_arr_tile_definitions_size - 1);
+    SDL_LogDebug(LOG_CAT_MAPGEN, "Adding origin_coord hex to g_game_map.");
 
     // Center
     hashmap_set(g_game_map, &(TileState){
-        .coord = origin,
+        .coord = origin_coord,
         .tile_def = g_arr_tile_definitions[rand_tile_def_id],
-        .selected = false
+        .selected = false,
+        .tile_biome = assign_biome(origin_coord)
     });
 
     // Spiraling States
@@ -91,18 +90,56 @@ void init_tile_states(uint8_t map_hex_radius){
             hashmap_set(g_game_map, &(TileState){
                 .coord = curr_coord,
                 .tile_def = g_arr_tile_definitions[rand_tile_def_id],
-                .selected = false
+                .selected = false,
+                .tile_biome = assign_biome(curr_coord)
             });
-        }        
+        }
     }
 }
 
-void assign_biomes(){
 
+Biome assign_biome(CubeCoord coord){
+    float x = (float)coord.pos_q;
+    float y = (float)coord.pos_r;
+    float z = (float)coord.pos_s;
+    float scale = determine_rand_val(0, 100) / 100.0f;    
+    float noise_val = stb_perlin_noise3(x*scale,y*scale,z*scale,0,0,0);
+
+    SDL_LogDebug(LOG_CAT_MAPGEN, "Got Noise: %.04f", noise_val);
+    float norm = (noise_val + 1.0f) / 2.0f;
+
+    Biome biome = ARCTIC_TUNDRA;
+    if (norm < 0.1f){
+        biome = FRESHWATER;
+    }
+    else if (norm < 0.2f){
+        biome = MARINE;
+    }
+    else if (norm < 0.3f){
+        biome = TROPICAL_GRASSLAND;
+    }
+    else if (norm < 0.4f){
+        biome = TEMPERATE_GRASSLAND;
+    }
+    else if (norm < 0.5f){
+        biome = TEMPERATE_RAINFOREST;
+    }
+    else if (norm < 0.6f){
+        biome = TROPICAL_RAINFOREST;
+    }
+    else if (norm < 0.7f){
+        biome = BOREAL_FOREST;
+    }
+    else if (norm < 0.8f){
+        biome = DESERT;
+    }        
+    else if (norm < 0.9f){
+        biome = ARCTIC_TUNDRA;
+    }        
+    else{
+        biome = ALPINE_TUNDRA;
+    }
+    SDL_LogDebug(LOG_CAT_MAPGEN, "Assigned %s to [%"PRId64"][%"PRId64"][%"PRId64"].", get_biome_name(biome), coord.pos_q, coord.pos_r, coord.pos_s);
+    return biome;
 }
 
-float hash_noise(int x, int y) {
-    int n = x + y * 57;
-    n = (n << 13) ^ n;
-    return (1.0f - ((n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 1073741824.0f);
-}

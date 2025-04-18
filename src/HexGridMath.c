@@ -92,7 +92,14 @@ CubeCoord** cube_sprial(CubeCoord orig, uint16_t radius){
         return NULL;
     }
 
-    spiral[0] = &orig;
+    spiral[0] = malloc(sizeof(CubeCoord));
+    if (!spiral[0]) {
+        SDL_LogError(LOG_CAT_HEXMATH, "Memory allocation failed for spiral[0].");
+        free(spiral);
+        return NULL;
+    }
+    *spiral[0] = orig;
+
     uint64_t spiral_index = 1;
     for (uint16_t i = 0; i < radius; i++){
         CubeCoord* ring = cube_ring(orig, spiral_index);                

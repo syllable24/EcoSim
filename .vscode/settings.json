@@ -4,6 +4,7 @@
         "util.h": "c",
         "population.h": "c",
         "mapgen.h": "c",
-        "globals.h": "c"
+        "globals.h": "c",
+        "stb_perlin.h": "c"
     }
 }
