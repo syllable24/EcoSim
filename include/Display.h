@@ -22,9 +22,9 @@ int draw_hexagon_texture(SDL_Renderer* renderer, SDL_Texture* texture, SDL_FPoin
 
 int draw_tile_map(SDL_Renderer* renderer, uint8_t map_hex_radius);
 
-void frame_update();
+int frame_update(SDL_Renderer* renderer);
 
-void handle_left_click();
+void handle_left_click(SDL_Renderer* renderer);
 
 int texture_hash_map_compare(const void *a, const void *b, void *udata);
 

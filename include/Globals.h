@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "../include/hashmap.h"
 #include "../include/HexGridMath.h"
@@ -23,6 +24,7 @@ typedef struct {
 typedef struct {
     const CubeCoord coord;
     const TileDefinition* tile_def;
+    bool selected;
 } TileState;
 
 

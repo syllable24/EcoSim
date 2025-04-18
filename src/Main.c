@@ -122,15 +122,7 @@ SDL_AppResult SDL_AppIterate(void *appstate){
     // Update mouse coordinates
     SDL_GetGlobalMouseState(&g_mouse_pos_x, &g_mouse_pos_y);
     
-    frame_update();
-
-    /* Draw Map*/
-    if(draw_tile_map(renderer, HEX_GRID_RADIUS) != SDL_APP_CONTINUE){
-       SDL_LogError(LOG_CAT_MAIN, "Error while drawing tile map: %s", SDL_GetError());
-        return SDL_APP_FAILURE;
-    }
-
-	return SDL_APP_CONTINUE;
+    return frame_update(renderer);
 }
 
 /* This function runs once at shutdown. */

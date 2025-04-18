@@ -213,18 +213,25 @@ int draw_hexagon(SDL_Renderer* renderer, CubeCoord cube_coords, char* hex_def_na
     get_hexagon_vertices(points, center.x, center.y, HEX_RADIUS);
 
     // Draw Hex Texture to screen
-    //if (draw_hexagon_texture(renderer, texture, points, center_px_x, center_px_y) != SDL_APP_CONTINUE){
-    //    SDL_LogError(LOG_CAT_MAIN, "Error during draw_hexagon_texture: %s.", SDL_GetError());
-    //    return SDL_APP_FAILURE;
-    //}
+    if (draw_hexagon_texture(renderer, texture, points, center.x, center.y) != SDL_APP_CONTINUE){
+        SDL_LogError(LOG_CAT_MAIN, "Error during draw_hexagon_texture: %s.", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
 
-    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); // GREEN
-    // DEBUG INFO
-    SDL_RenderDebugTextFormat(renderer, center.x - (HEX_RADIUS/2.0f), center.y, "[%d][%d][%d]", cube_coords.pos_q, cube_coords.pos_r, cube_coords.pos_s);
+    // DEBUG INFO Coords
+    //SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); // GREEN
+    //SDL_RenderDebugTextFormat(renderer, center.x - (HEX_RADIUS/2.0f), center.y, "[%d][%d][%d]", cube_coords.pos_q, cube_coords.pos_r, cube_coords.pos_s);
 
-    // Draw hex outline
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    // Draw hex outline    
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Black Outline
     draw_hexagon_outline(renderer, points);
+    const TileState* tile_state = hashmap_get(g_game_map, &(TileState){.coord=cube_coords});
+    if (tile_state->selected){
+        get_hexagon_vertices(points, center.x, center.y, HEX_RADIUS - 5.0f);
+        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); // Red outline
+        draw_hexagon_outline(renderer, points);
+    }
+
     return SDL_APP_CONTINUE;
 }
 
@@ -294,7 +301,6 @@ void handle_left_click(SDL_Renderer* renderer){
         .x = camera_offset_x,
         .y = camera_offset_y
     };
-
     SDL_FPoint click = { 
         g_mouse_pos_x,
         g_mouse_pos_y
@@ -302,13 +308,21 @@ void handle_left_click(SDL_Renderer* renderer){
     SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Grid (adjusted by camera offset) X: %04.02f Y: %04.02f", click.x, click.y);
 
     CubeCoord coords = flat_top_pixel_to_hex(click, HEX_RADIUS, top_left_menu, camera_offset);
-
-
+    const TileState* tile_state = hashmap_get(g_game_map, &(TileState){.coord=coords});
+    if (!tile_state) {
+        SDL_LogError(LOG_CAT_DISPLAY, "No Tile State found for coords [%"PRId64"][%"PRId64"][%"PRId64"]", coords.pos_q, coords.pos_r, coords.pos_s);
+        return;
+    }    
+    hashmap_set(g_game_map, &(TileState){
+        .coord=coords,
+        .tile_def=tile_state->tile_def,
+        .selected=true
+    });
+    
     SDL_LogDebug(LOG_CAT_DISPLAY, "Converted [%"PRId64"][%"PRId64"][%"PRId64"]", coords.pos_q, coords.pos_r, coords.pos_s);    
 }
 
-
-void frame_update() {
+int frame_update(SDL_Renderer* renderer) {
     // Update camera
     const float scroll_speed = (HEX_RADIUS * 2) / 120.0f;
     const bool* keys = SDL_GetKeyboardState(NULL);
@@ -345,6 +359,13 @@ void frame_update() {
     // Clamp offsets
     camera_offset_x = fminf(fmaxf(camera_offset_x, hex_grid_min_x), hex_grid_max_x);
     camera_offset_y = fminf(fmaxf(camera_offset_y, hex_grid_min_y), hex_grid_max_y);        
+
+    /* Draw Map*/
+    if(draw_tile_map(renderer, HEX_GRID_RADIUS) != SDL_APP_CONTINUE){
+        SDL_LogError(LOG_CAT_MAIN, "Error while drawing tile map: %s", SDL_GetError());
+            return SDL_APP_FAILURE;
+        }
+    return SDL_APP_CONTINUE;
 }
 
 

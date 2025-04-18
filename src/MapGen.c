@@ -71,7 +71,8 @@ int generate_board(uint8_t map_hex_radius){
             // Init each TileState
             hashmap_set(g_game_map, &(TileState){
                 .coord = curr_coord,
-                .tile_def = g_arr_tile_definitions[rand_tile_def_id]
+                .tile_def = g_arr_tile_definitions[rand_tile_def_id],
+                .selected = false
             });
         }        
     }
