@@ -161,14 +161,19 @@ CubeCoord cube_round(float q, float r, float s) {
     return result;
 }
 
-CubeCoord flat_top_pixel_to_hex(SDL_FPoint point, float hex_radius){
-    float frac_q = ((2.0f / 3.0f) * point.x) / hex_radius;
-    float frac_r = ((-1.0f / 3.0f) * point.x + (sqrtf(3.0f) / 3.0f) * point.y) / hex_radius;
+CubeCoord flat_top_pixel_to_hex(SDL_FPoint point, float hex_radius, SDL_FPoint grid_origin, SDL_FPoint camera_offset){
+    SDL_FPoint offset_adj_click = { 
+        (point.x - grid_origin.x) + camera_offset.x,
+        (point.y - grid_origin.y) + camera_offset.y
+    };
+    
+    float frac_q = ((2.0f / 3.0f) * offset_adj_click.x) / hex_radius;
+    float frac_r = ((-1.0f / 3.0f) * offset_adj_click.x + (sqrtf(3.0f) / 3.0f) * offset_adj_click.y) / hex_radius;
     float axial_s = -frac_q - frac_r;
 
-    SDL_LogTrace(LOG_CAT_HEXMATH, "Pixel to hex: x = %.2f, y = %.2f", point.x, point.y);
-    SDL_LogTrace(LOG_CAT_HEXMATH, "Pixel to hex: frac_q: (2.0f / 3.0f) * %.2f / %.2f = %.2f", point.x, hex_radius, frac_q);
-    SDL_LogTrace(LOG_CAT_HEXMATH, "Pixel to hex: frac_r: (-1.0f / 3.0f) * %.2f / sqrtf(3.0f) * %.2f / %.2f = %.2f", point.x, point.y, hex_radius, frac_r);
+    SDL_LogTrace(LOG_CAT_HEXMATH, "Pixel to hex: x = %.2f, y = %.2f", offset_adj_click.x, offset_adj_click.y);
+    SDL_LogTrace(LOG_CAT_HEXMATH, "Pixel to hex: frac_q: (2.0f / 3.0f) * %.2f / %.2f = %.2f", offset_adj_click.x, hex_radius, frac_q);
+    SDL_LogTrace(LOG_CAT_HEXMATH, "Pixel to hex: frac_r: (-1.0f / 3.0f) * %.2f / sqrtf(3.0f) * %.2f / %.2f = %.2f", offset_adj_click.x, offset_adj_click.y, hex_radius, frac_r);
 
     CubeCoord hex = cube_round(frac_q, frac_r, axial_s);
     return hex;

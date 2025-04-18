@@ -290,14 +290,18 @@ void handle_left_click(SDL_Renderer* renderer){
         .x = WINDOW_WIDTH / 8.0f,
         .y = WINDOW_HEIGHT / 8.0f
     };
+    SDL_FPoint camera_offset = {
+        .x = camera_offset_x,
+        .y = camera_offset_y
+    };
 
     SDL_FPoint click = { 
-        (g_mouse_pos_x - top_left_menu.x) + camera_offset_x,
-        (g_mouse_pos_y - top_left_menu.y) + camera_offset_y
-    };    
+        g_mouse_pos_x,
+        g_mouse_pos_y
+    };
     SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Grid (adjusted by camera offset) X: %04.02f Y: %04.02f", click.x, click.y);
 
-    CubeCoord coords = flat_top_pixel_to_hex(click, HEX_RADIUS);
+    CubeCoord coords = flat_top_pixel_to_hex(click, HEX_RADIUS, top_left_menu, camera_offset);
 
 
     SDL_LogDebug(LOG_CAT_DISPLAY, "Converted [%"PRId64"][%"PRId64"][%"PRId64"]", coords.pos_q, coords.pos_r, coords.pos_s);    
