@@ -117,7 +117,7 @@ CubeCoord** cube_sprial(CubeCoord orig, uint16_t radius){
     return spiral;
 }
 
-SDL_FPoint flat_top_hex_to_pixel(CubeCoord coord, float hex_radius){    
+SDL_FPoint flat_top_hex_to_pixel(CubeCoord coord, float hex_radius, SDL_FPoint grid_origin, SDL_FPoint camera_offset){
     SDL_LogTrace(LOG_CAT_HEXMATH, "Converting Hex Coords: %s with radius %d.",
         print_coord(coord), hex_radius
     );
@@ -129,6 +129,14 @@ SDL_FPoint flat_top_hex_to_pixel(CubeCoord coord, float hex_radius){
     float y = hex_radius * (sqrtf(3.0f) * (r + q / 2.0f));
 
     SDL_LogTrace(LOG_CAT_HEXMATH, "Pixel position: x = %.2f, y = %.2f", x, y);
+
+    // Add origin shift
+    x += grid_origin.x;
+    y += grid_origin.y;
+
+    // Add camera offset
+    x -= camera_offset.x;
+    y -= camera_offset.y;
 
     return (SDL_FPoint){ x, y };
 }

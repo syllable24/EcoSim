@@ -172,18 +172,17 @@ int draw_hexagon(SDL_Renderer* renderer, CubeCoord cube_coords, char* hex_def_na
         .x = WINDOW_WIDTH / 8.0f,
         .y = WINDOW_HEIGHT / 8.0f
     };
+
+    SDL_FPoint camera_offset = {
+        .x = camera_offset_x,
+        .y = camera_offset_y
+    };
     
-    // Calculate Hex Texture center (flat-top odd-q hex grid)
-    SDL_FPoint center = flat_top_hex_to_pixel(cube_coords, HEX_RADIUS);
-
-    float base_center_x = center.x + top_left_menu.x;
-    float base_center_y = center.y + top_left_menu.y;
-
-    // Add camera offset
-    float center_px_x = base_center_x - camera_offset_x;
-    float center_px_y = base_center_y - camera_offset_y;
+    // Calculate Hex Texture center (flat-top odd-q hex grid)        
+    SDL_FPoint center = flat_top_hex_to_pixel(cube_coords, HEX_RADIUS, top_left_menu, camera_offset);
+    
     SDL_LogTrace(LOG_CAT_DISPLAY, "Calculated Hex Center: X: %04.02f Y: %04.02f for [%d][%d][%d].", 
-        center_px_x, center_px_y,
+        center.x, center.y,
         cube_coords.pos_q, cube_coords.pos_r, cube_coords.pos_s
     );
 
@@ -194,8 +193,8 @@ int draw_hexagon(SDL_Renderer* renderer, CubeCoord cube_coords, char* hex_def_na
     float min_render_px_y = (-(HEX_RADIUS + (WINDOW_HEIGHT / 8.0f)) * 0.6f);
     float max_render_px_y = WINDOW_HEIGHT + HEX_RADIUS;
     
-    if (center_px_x < min_render_px_x || center_px_x > max_render_px_x ||
-        center_px_y < -min_render_px_y || center_px_y > max_render_px_y) {
+    if (center.x < min_render_px_x || center.x > max_render_px_x ||
+        center.y < -min_render_px_y || center.y > max_render_px_y) {
         return SDL_APP_CONTINUE;
     }    
 
@@ -211,7 +210,7 @@ int draw_hexagon(SDL_Renderer* renderer, CubeCoord cube_coords, char* hex_def_na
 
     // Calc Hex vertices
     SDL_FPoint points[6];
-    get_hexagon_vertices(points, center_px_x, center_px_y, HEX_RADIUS);
+    get_hexagon_vertices(points, center.x, center.y, HEX_RADIUS);
 
     // Draw Hex Texture to screen
     //if (draw_hexagon_texture(renderer, texture, points, center_px_x, center_px_y) != SDL_APP_CONTINUE){
@@ -221,7 +220,7 @@ int draw_hexagon(SDL_Renderer* renderer, CubeCoord cube_coords, char* hex_def_na
 
     SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); // GREEN
     // DEBUG INFO
-    SDL_RenderDebugTextFormat(renderer, center_px_x - (HEX_RADIUS/2.0f), center_px_y, "[%d][%d][%d]", cube_coords.pos_q, cube_coords.pos_r, cube_coords.pos_s);
+    SDL_RenderDebugTextFormat(renderer, center.x - (HEX_RADIUS/2.0f), center.y, "[%d][%d][%d]", cube_coords.pos_q, cube_coords.pos_r, cube_coords.pos_s);
 
     // Draw hex outline
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
