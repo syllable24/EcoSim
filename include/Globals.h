@@ -11,6 +11,20 @@
 #define HEX_GRID_RADIUS 10
 
 // Common structs
+typedef enum {
+    BIOME_FRESHWATER,
+    BIOME_MARINE,
+    BIOME_TROPICAL_GRASSLAND,
+    BIOME_TEMPERATE_GRASSLAND,
+    BIOME_TEMPERATE_RAINFOREST,
+    BIOME_TROPICAL_RAINFOREST,
+    BIOME_BOREAL_FOREST,
+    BIOME_DESERT,    
+    BIOME_ARCTIC_TUNDRA,
+    BIOME_ALPINE_TUNDRA,
+    BIOME_COUNT
+} Biome;
+
 typedef struct {
     char* name;
     char* texture;
@@ -23,8 +37,9 @@ typedef struct {
 
 typedef struct {
     const CubeCoord coord;
+    const Biome tile_biome;
     const TileDefinition* tile_def;
-    bool selected;
+    bool selected;    
 } TileState;
 
 

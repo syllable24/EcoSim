@@ -41,7 +41,25 @@ int generate_board(uint8_t map_hex_radius){
                      g_arr_tile_definitions, g_arr_tile_definitions_size, map_hex_radius);
         return SDL_APP_FAILURE;
     }        
+ 
+    // Init all TileStates
+    init_tile_states(map_hex_radius);
 
+
+    // Randomly determine seed biome tiles
+
+    // Grow Biomes based on 2d noise
+
+    // Assign random Tile Definitons based on biome
+
+    exit_status = SDL_APP_CONTINUE;
+
+cleanup:
+    SDL_LogTrace(LOG_CAT_MAPGEN, "End generate_board()");
+    return exit_status;
+}
+
+void init_tile_states(uint8_t map_hex_radius){
     // Assumes symmetrical hexagonal flat-top hex-grid. (Big hexagon composed of smaller hexagons)
     uint64_t total_hex_count = hex_count_in_sprial(map_hex_radius);
     SDL_LogDebug(LOG_CAT_MAPGEN, "Calculating Hex Coords for %d hexes.", total_hex_count);
@@ -50,16 +68,18 @@ int generate_board(uint8_t map_hex_radius){
     
     CubeCoord origin = {0,0,0};
     CubeCoord** spiral_coords = cube_sprial(origin, map_hex_radius);
-    
-    uint32_t rand_tile_def_id = determine_rand_val(0, g_arr_tile_definitions_size - 1);    
 
+    uint32_t rand_tile_def_id = determine_rand_val(0, g_arr_tile_definitions_size - 1);    
     SDL_LogDebug(LOG_CAT_MAPGEN, "Adding origin hex to g_game_map.");
-    // Init center TileState
+
+    // Center
     hashmap_set(g_game_map, &(TileState){
         .coord = origin,
-        .tile_def = g_arr_tile_definitions[rand_tile_def_id]
+        .tile_def = g_arr_tile_definitions[rand_tile_def_id],
+        .selected = false
     });
 
+    // Spiraling States
     for (uint64_t curr_radius = 1; curr_radius <= map_hex_radius; curr_radius++){
         uint64_t hexes_in_ring = hex_count_in_ring(curr_radius);
         SDL_LogDebug(LOG_CAT_MAPGEN, "Adding %d hexes to g_game_map.", hexes_in_ring);
@@ -67,8 +87,7 @@ int generate_board(uint8_t map_hex_radius){
         for (uint64_t curr_ring_pos = 0; curr_ring_pos < hexes_in_ring; curr_ring_pos++){
             CubeCoord curr_coord = spiral_coords[curr_radius][curr_ring_pos];            
 
-            rand_tile_def_id = determine_rand_val(0, g_arr_tile_definitions_size - 1);    
-            // Init each TileState
+            rand_tile_def_id = determine_rand_val(0, g_arr_tile_definitions_size - 1);            
             hashmap_set(g_game_map, &(TileState){
                 .coord = curr_coord,
                 .tile_def = g_arr_tile_definitions[rand_tile_def_id],
@@ -76,10 +95,14 @@ int generate_board(uint8_t map_hex_radius){
             });
         }        
     }
+}
 
-    exit_status = SDL_APP_CONTINUE;
+void assign_biomes(){
 
-cleanup:
-    SDL_LogTrace(LOG_CAT_MAPGEN, "End generate_board()");
-    return exit_status;
+}
+
+float hash_noise(int x, int y) {
+    int n = x + y * 57;
+    n = (n << 13) ^ n;
+    return (1.0f - ((n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 1073741824.0f);
 }
