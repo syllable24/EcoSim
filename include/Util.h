@@ -32,4 +32,6 @@ void log_with_timestamp(void* userdata, int category, SDL_LogPriority priority, 
 
 char* print_coord(CubeCoord coord);
 
+void log_tile_state_string(const TileState* state);
+
 #endif

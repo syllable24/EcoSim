@@ -332,8 +332,7 @@ void handle_left_click(SDL_Renderer* renderer){
         .tile_biome=tile_state->tile_biome
     });
     
-    SDL_LogDebug(LOG_CAT_DISPLAY, "Grid Coords: [%"PRId64"][%"PRId64"][%"PRId64"]", coords.pos_q, coords.pos_r, coords.pos_s);
-    SDL_LogDebug(LOG_CAT_DISPLAY, "Biome: %d (%s)",tile_state->tile_biome, get_biome_name(tile_state->tile_biome));
+    log_tile_state_string(tile_state);
 }
 
 int frame_update(SDL_Renderer* renderer) {

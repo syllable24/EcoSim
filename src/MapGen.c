@@ -77,8 +77,9 @@ void init_tile_states(uint8_t map_hex_radius){
         center_tile->coord = origin_coord;
         center_tile->tile_def = g_arr_tile_definitions[rand_tile_def_id];
         center_tile->selected = false;
-        center_tile->tile_biome = assign_biome(origin_coord);
-        SDL_LogDebug(LOG_CAT_MAPGEN, "Placing tile at (%lld, %lld, %lld)", origin_coord.pos_q, origin_coord.pos_r, origin_coord.pos_s);
+        center_tile->tile_biome = 0;        
+        assign_biome(center_tile);
+        SDL_LogDebug(LOG_CAT_MAPGEN, "Placing tile at (%lld, %lld, %lld)", origin_coord.pos_q, origin_coord.pos_r, origin_coord.pos_s);        
         hashmap_set(g_game_map, center_tile);
     }
     
@@ -97,7 +98,9 @@ void init_tile_states(uint8_t map_hex_radius){
                 new_tile->coord = curr_coord;
                 new_tile->tile_def = g_arr_tile_definitions[rand_tile_def_id];
                 new_tile->selected = false;
-                new_tile->tile_biome = assign_biome(curr_coord);
+                new_tile->tile_biome = 0;
+                
+                assign_biome(new_tile);
                 SDL_LogDebug(LOG_CAT_MAPGEN, "Placing tile at (%lld, %lld, %lld)", curr_coord.pos_q, curr_coord.pos_r, curr_coord.pos_s);
                 hashmap_set(g_game_map, new_tile);
             }
@@ -107,17 +110,17 @@ void init_tile_states(uint8_t map_hex_radius){
 }
 
 
-uint8_t assign_biome(CubeCoord coord){
-    float x = (float)coord.pos_q;
-    float y = (float)coord.pos_r;
-    float z = (float)coord.pos_s;    
+uint8_t assign_biome(TileState* state){
+    float x = (float)state->coord.pos_q;
+    float y = (float)state->coord.pos_r;
+    float z = (float)state->coord.pos_s;    
     float scale = determine_rand_val(0, 100) / 100.0f;    
 
-    float temperature = (coord.pos_r + HEX_GRID_RADIUS / 2.0f) / HEX_GRID_RADIUS;
-    temperature += fbm_noise(coord, scale, 3) * 0.2f;
+    float temperature = (state->coord.pos_r + HEX_GRID_RADIUS / 2.0f) / HEX_GRID_RADIUS;
+    temperature += fbm_noise(state->coord, scale, 3) * 0.2f;
     temperature = (temperature + 1.0f) / 2.0f;
 
-    float moisture = fbm_noise(coord, scale, 4);
+    float moisture = fbm_noise(state->coord, scale, 4);
     moisture = (moisture + 1.0f) / 2.0f;
     
     uint8_t biome = BIOME_ARCTIC_TUNDRA;
@@ -126,7 +129,7 @@ uint8_t assign_biome(CubeCoord coord){
         else if (moisture < 0.5f) biome = BIOME_TROPICAL_GRASSLAND;
         else biome = BIOME_TROPICAL_RAINFOREST;
     }
-    else if (temperature > 0.33) {
+    else if (temperature > 0.33f) {
         if (moisture < 0.4f) biome = BIOME_TEMPERATE_GRASSLAND;
         else if (moisture < 0.5f) biome = BIOME_TEMPERATE_RAINFOREST;
         else biome = BIOME_BOREAL_FOREST;
@@ -134,9 +137,13 @@ uint8_t assign_biome(CubeCoord coord){
     else {
         if (moisture < 0.5f) biome = BIOME_ARCTIC_TUNDRA;
         else biome = BIOME_ALPINE_TUNDRA;        
-    }
-        
-    SDL_LogTrace(LOG_CAT_MAPGEN, "Assigned %s to [%"PRId64"][%"PRId64"][%"PRId64"].", get_biome_name(biome), coord.pos_q, coord.pos_r, coord.pos_s);
+    }    
+    state->tile_biome = biome;
+    state->tile_def->base_moisture = moisture;
+    state->tile_def->base_temperature = temperature;
+
+    SDL_LogTrace(LOG_CAT_MAPGEN, "Assigned %s to [%"PRId64"][%"PRId64"][%"PRId64"].", get_biome_name(biome), 
+    state->coord.pos_q, state->coord.pos_r, state->coord.pos_s);
     return biome;
 }
 

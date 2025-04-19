@@ -220,20 +220,10 @@ int read_tile_definition(TileDefinition*** target, uint8_t* target_size){
 		
 		char* raw_name = NULL;
 		char* raw_texture = NULL;
-		uint8_t raw_base_water_quality = 0;
-		uint8_t raw_base_light_quality = 0;
-		uint8_t raw_base_air_quality = 0;
-		uint8_t raw_base_soil_quality = 0;
-		uint8_t raw_base_temperature_mod = 0;
 
 		bool valid_definitions = 
 			validate_json_non_empty_string(tile_def, "name", &raw_name)
-			&& validate_json_non_empty_string(tile_def, "texture", &raw_texture)
-			&& validate_json_percent_number(tile_def, "base_water_quality", &raw_base_water_quality) 
-			&& validate_json_percent_number(tile_def, "base_light_quality", &raw_base_light_quality)
-			&& validate_json_percent_number(tile_def, "base_air_quality", &raw_base_air_quality)
-			&& validate_json_percent_number(tile_def, "base_soil_quality", &raw_base_soil_quality)
-			&& validate_json_percent_number(tile_def, "base_temperature_mod", &raw_base_temperature_mod);
+			&& validate_json_non_empty_string(tile_def, "texture", &raw_texture);
 
 		if (!valid_definitions){
 			goto cleanup;
@@ -241,11 +231,6 @@ int read_tile_definition(TileDefinition*** target, uint8_t* target_size){
 
 		(*target)[tile_index]->name = raw_name;					
 		(*target)[tile_index]->texture = raw_texture;
-		(*target)[tile_index]->base_water_quality = raw_base_water_quality;
-		(*target)[tile_index]->base_light_quality = raw_base_light_quality;
-		(*target)[tile_index]->base_air_quality = raw_base_air_quality;
-		(*target)[tile_index]->base_soil_quality = raw_base_soil_quality;
-		(*target)[tile_index]->base_temperature_mod = raw_base_temperature_mod;
 		
 		tile_index++;
 	}
@@ -272,6 +257,53 @@ cleanup:
 	SDL_LogTrace(LOG_CAT_UTIL, "End read_tile_definition()");
     return exit_status;
 }
+
+void log_tile_state_string(const TileState* state){
+	
+	// Format log message
+	char coord_message[1024];	
+	snprintf(coord_message, sizeof(coord_message), "tile_state.coord [%lld] [%lld] [%lld]\n",
+		state->coord.pos_q,
+		state->coord.pos_r,
+		state->coord.pos_s
+	);
+	fputs(coord_message, stderr);
+	fflush(stderr);
+
+	char meta_message[1024];
+	snprintf(meta_message, sizeof(meta_message), 
+	"tile_state.selected: [%d]\n"
+	"tile_state.biome: [%s]\n",
+		state->selected,
+		get_biome_name(state->tile_biome)
+	);
+	fputs(meta_message, stderr);
+	fflush(stderr);
+	
+	char tile_def_message[1024];	
+	snprintf(tile_def_message, sizeof(tile_def_message), 
+		"tile_def.name: [%s]\n"
+		"tile_def.texture: [%s]\n"
+		"tile_def.base_temperature: [%.02f]\n"
+		"tile_def.base_moisture: [%.02f]\n"
+		"tile_def.base_air_quality: [%.02f]\n"
+		"tile_def.base_light_quality: [%.02f]\n"
+		"tile_def.base_soil_quality: [%.02f]\n"
+		,
+		state->tile_def->name,
+		state->tile_def->texture,
+		state->tile_def->base_temperature,
+		state->tile_def->base_moisture,
+		state->tile_def->base_air_quality,
+		state->tile_def->base_light_quality,
+		state->tile_def->base_soil_quality
+	);	
+
+	// Output to console (stderr)
+	fputs(tile_def_message, stderr);
+	fflush(stderr);
+}
+
 
 bool validate_json_non_empty_string(const cJSON* json, const char *key, char** target_value) {
 	SDL_LogTrace(LOG_CAT_UTIL, "Start validate_json_non_empty_string()");
