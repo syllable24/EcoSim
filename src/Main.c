@@ -30,7 +30,7 @@ void setup_logging(){
     SDL_SetLogPriority(LOG_CAT_DISPLAY, SDL_LOG_PRIORITY_DEBUG);
     SDL_SetLogPriority(LOG_CAT_POPULATION, SDL_LOG_PRIORITY_INFO);
     SDL_SetLogPriority(LOG_CAT_UTIL, SDL_LOG_PRIORITY_INFO);
-    SDL_SetLogPriority(LOG_CAT_MAPGEN, SDL_LOG_PRIORITY_DEBUG);
+    SDL_SetLogPriority(LOG_CAT_MAPGEN, SDL_LOG_PRIORITY_TRACE);
     SDL_SetLogPriority(LOG_CAT_HEXMATH, SDL_LOG_PRIORITY_DEBUG);
 
     // TODO: Add timestamp to log lines

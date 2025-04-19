@@ -12,13 +12,6 @@ typedef struct {
     SDL_Texture* texture;
 } TextureHashMapRecord;
 
-typedef struct {
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
-    uint8_t a;    
-} RgbColor;
-
 int load_textures(SDL_Renderer* renderer, TileDefinition** tile_definitions, uint8_t tile_definition_size);
 
 void get_hexagon_vertices(SDL_FPoint* points, float center_x, float center_y, float radius);

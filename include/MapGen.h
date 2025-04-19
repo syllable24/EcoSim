@@ -7,6 +7,6 @@
 
 int generate_board(uint8_t map_hex_radius);
 void init_tile_states(uint8_t map_hex_radius);
-Biome assign_biome(CubeCoord coord);
+uint8_t assign_biome(CubeCoord coord);
 #endif
 

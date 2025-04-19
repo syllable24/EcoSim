@@ -5,6 +5,15 @@
         "population.h": "c",
         "mapgen.h": "c",
         "globals.h": "c",
-        "stb_perlin.h": "c"
+        "stb_perlin.h": "c",
+        "compare": "c",
+        "cstddef": "c",
+        "limits": "c",
+        "type_traits": "c",
+        "vector": "c",
+        "xhash": "c",
+        "xmemory": "c",
+        "xstring": "c",
+        "xutility": "c"
     }
 }

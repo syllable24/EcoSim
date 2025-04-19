@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.26)
 project(EcoSim C)
+set(CMAKE_BUILD_TYPE Debug)
 
 find_package(SDL3 REQUIRED)
 
@@ -7,7 +8,7 @@ add_executable(EcoSim)
 
 target_sources(EcoSim
 PRIVATE
-    src/Main.c    
+    src/Main.c
     src/Population.c
     src/Util.c
     src/Display.c

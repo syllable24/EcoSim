@@ -63,6 +63,7 @@ void init_tile_states(uint8_t map_hex_radius){
     SDL_LogDebug(LOG_CAT_MAPGEN, "Calculating Hex Coords for %d hexes.", total_hex_count);
 
     g_game_map = hashmap_new(sizeof(TileState), total_hex_count, 0, 0, game_map_hash_map_hash, game_map_hash_map_compare, NULL, NULL);
+    SDL_LogDebug(LOG_CAT_MAPGEN, "Hashmap init done.");
     
     CubeCoord origin_coord = {0,0,0};
     CubeCoord** spiral_coords = cube_sprial(origin_coord, map_hex_radius);
@@ -71,75 +72,83 @@ void init_tile_states(uint8_t map_hex_radius){
     SDL_LogDebug(LOG_CAT_MAPGEN, "Adding origin_coord hex to g_game_map.");
 
     // Center
-    hashmap_set(g_game_map, &(TileState){
-        .coord = origin_coord,
-        .tile_def = g_arr_tile_definitions[rand_tile_def_id],
-        .selected = false,
-        .tile_biome = assign_biome(origin_coord)
-    });
-
+    TileState* center_tile = malloc(sizeof(TileState));
+    if (center_tile != NULL) {    
+        center_tile->coord = origin_coord;
+        center_tile->tile_def = g_arr_tile_definitions[rand_tile_def_id];
+        center_tile->selected = false;
+        center_tile->tile_biome = assign_biome(origin_coord);
+        SDL_LogDebug(LOG_CAT_MAPGEN, "Placing tile at (%lld, %lld, %lld)", origin_coord.pos_q, origin_coord.pos_r, origin_coord.pos_s);
+        hashmap_set(g_game_map, center_tile);
+    }
+    
     // Spiraling States
+    uint64_t curr_tile_id = 1;
     for (uint64_t curr_radius = 1; curr_radius <= map_hex_radius; curr_radius++){
-        uint64_t hexes_in_ring = hex_count_in_ring(curr_radius);
-        SDL_LogDebug(LOG_CAT_MAPGEN, "Adding %d hexes to g_game_map.", hexes_in_ring);
+        uint64_t hexes_in_ring = hex_count_in_ring(curr_radius);        
 
         for (uint64_t curr_ring_pos = 0; curr_ring_pos < hexes_in_ring; curr_ring_pos++){
             CubeCoord curr_coord = spiral_coords[curr_radius][curr_ring_pos];            
 
             rand_tile_def_id = determine_rand_val(0, g_arr_tile_definitions_size - 1);            
-            hashmap_set(g_game_map, &(TileState){
-                .coord = curr_coord,
-                .tile_def = g_arr_tile_definitions[rand_tile_def_id],
-                .selected = false,
-                .tile_biome = assign_biome(curr_coord)
-            });
+            
+            TileState* new_tile = malloc(sizeof(TileState));
+            if (new_tile != NULL) {                
+                new_tile->coord = curr_coord;
+                new_tile->tile_def = g_arr_tile_definitions[rand_tile_def_id];
+                new_tile->selected = false;
+                new_tile->tile_biome = assign_biome(curr_coord);
+                SDL_LogDebug(LOG_CAT_MAPGEN, "Placing tile at (%lld, %lld, %lld)", curr_coord.pos_q, curr_coord.pos_r, curr_coord.pos_s);
+                hashmap_set(g_game_map, new_tile);
+            }
+            curr_tile_id++;            
         }
     }
 }
 
 
-Biome assign_biome(CubeCoord coord){
+uint8_t assign_biome(CubeCoord coord){
     float x = (float)coord.pos_q;
     float y = (float)coord.pos_r;
     float z = (float)coord.pos_s;
     float scale = determine_rand_val(0, 100) / 100.0f;    
     float noise_val = stb_perlin_noise3(x*scale,y*scale,z*scale,0,0,0);
 
-    SDL_LogDebug(LOG_CAT_MAPGEN, "Got Noise: %.04f", noise_val);
+    SDL_LogTrace(LOG_CAT_MAPGEN, "Got Noise: %.04f", noise_val);
     float norm = (noise_val + 1.0f) / 2.0f;
 
-    Biome biome = ARCTIC_TUNDRA;
+    uint8_t biome = BIOME_ARCTIC_TUNDRA;
     if (norm < 0.1f){
-        biome = FRESHWATER;
+        biome = BIOME_FRESHWATER;
     }
     else if (norm < 0.2f){
-        biome = MARINE;
+        biome = BIOME_MARINE;
     }
     else if (norm < 0.3f){
-        biome = TROPICAL_GRASSLAND;
+        biome = BIOME_TROPICAL_GRASSLAND;
     }
     else if (norm < 0.4f){
-        biome = TEMPERATE_GRASSLAND;
+        biome = BIOME_TEMPERATE_GRASSLAND;
     }
     else if (norm < 0.5f){
-        biome = TEMPERATE_RAINFOREST;
+        biome = BIOME_TEMPERATE_RAINFOREST;
     }
     else if (norm < 0.6f){
-        biome = TROPICAL_RAINFOREST;
+        biome = BIOME_TROPICAL_RAINFOREST;
     }
     else if (norm < 0.7f){
-        biome = BOREAL_FOREST;
+        biome = BIOME_BOREAL_FOREST;
     }
     else if (norm < 0.8f){
-        biome = DESERT;
+        biome = BIOME_DESERT;
     }        
     else if (norm < 0.9f){
-        biome = ARCTIC_TUNDRA;
-    }        
-    else{
-        biome = ALPINE_TUNDRA;
+        biome = BIOME_ARCTIC_TUNDRA;
     }
-    SDL_LogDebug(LOG_CAT_MAPGEN, "Assigned %s to [%"PRId64"][%"PRId64"][%"PRId64"].", get_biome_name(biome), coord.pos_q, coord.pos_r, coord.pos_s);
+    else{
+        biome = BIOME_ALPINE_TUNDRA;
+    }
+    SDL_LogTrace(LOG_CAT_MAPGEN, "Assigned %s to [%"PRId64"][%"PRId64"][%"PRId64"].", get_biome_name(biome), coord.pos_q, coord.pos_r, coord.pos_s);
     return biome;
 }
 

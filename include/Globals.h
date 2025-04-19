@@ -11,20 +11,26 @@
 #define HEX_GRID_RADIUS 10
 #define NUM_BIOME_SEEDS 8
 
+#define BIOME_FRESHWATER 1
+#define BIOME_MARINE 2
+#define BIOME_TROPICAL_GRASSLAND 3
+#define BIOME_TEMPERATE_GRASSLAND 4
+#define BIOME_TEMPERATE_RAINFOREST 5
+#define BIOME_TROPICAL_RAINFOREST 6
+#define BIOME_BOREAL_FOREST 7
+#define BIOME_DESERT 8
+#define BIOME_ARCTIC_TUNDRA 9
+#define BIOME_ALPINE_TUNDRA 10
+
 // Common structs
-typedef enum {
-    FRESHWATER = 1,
-    MARINE = 2,
-    TROPICAL_GRASSLAND = 3,
-    TEMPERATE_GRASSLAND = 4,
-    TEMPERATE_RAINFOREST = 5,
-    TROPICAL_RAINFOREST = 6,
-    BOREAL_FOREST = 7,
-    DESERT = 8,
-    ARCTIC_TUNDRA = 9,
-    ALPINE_TUNDRA = 10,
-    COUNT = 11
-} Biome;
+typedef struct {
+    float r;
+    float g;
+    float b;
+    float a;
+} RgbColor;
+
+extern RgbColor biome_colors[11];
 
 typedef struct {
     char* name;
@@ -37,9 +43,9 @@ typedef struct {
 } TileDefinition;
 
 typedef struct {
-    const CubeCoord coord;
-    const Biome tile_biome;
-    const TileDefinition* tile_def;
+    CubeCoord coord;
+    uint8_t tile_biome;
+    TileDefinition* tile_def;
     bool selected;    
 } TileState;
 
@@ -60,7 +66,8 @@ extern float camera_offset_y;
 extern float g_mouse_pos_x;
 extern float g_mouse_pos_y;
 
-char* get_biome_name(Biome b);
+RgbColor get_biome_color(uint8_t curr_biome);
+char* get_biome_name(uint8_t b);
 void cleanup_globals();
 
 #endif

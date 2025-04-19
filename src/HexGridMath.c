@@ -82,6 +82,7 @@ uint64_t hex_count_in_sprial(uint16_t radius){
 }
 
 CubeCoord** cube_sprial(CubeCoord orig, uint16_t radius){    
+    SDL_LogTrace(LOG_CAT_HEXMATH, "Start cube_spiral()");
     uint64_t hex_amount = hex_count_in_sprial(radius);
     SDL_LogTrace(LOG_CAT_HEXMATH, "Calculated Hex Amount in Spiral: %d.", hex_amount);
     CubeCoord** spiral = malloc((1 + radius) * sizeof(CubeCoord*));
