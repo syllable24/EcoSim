@@ -110,45 +110,52 @@ void init_tile_states(uint8_t map_hex_radius){
 uint8_t assign_biome(CubeCoord coord){
     float x = (float)coord.pos_q;
     float y = (float)coord.pos_r;
-    float z = (float)coord.pos_s;
+    float z = (float)coord.pos_s;    
     float scale = determine_rand_val(0, 100) / 100.0f;    
-    float noise_val = stb_perlin_noise3(x*scale,y*scale,z*scale,0,0,0);
 
-    SDL_LogTrace(LOG_CAT_MAPGEN, "Got Noise: %.04f", noise_val);
-    float norm = (noise_val + 1.0f) / 2.0f;
+    float temperature = (coord.pos_r + HEX_GRID_RADIUS / 2.0f) / HEX_GRID_RADIUS;
+    temperature += fbm_noise(coord, scale, 3) * 0.2f;
+    temperature = (temperature + 1.0f) / 2.0f;
 
+    float moisture = fbm_noise(coord, scale, 4);
+    moisture = (moisture + 1.0f) / 2.0f;
+    
     uint8_t biome = BIOME_ARCTIC_TUNDRA;
-    if (norm < 0.1f){
-        biome = BIOME_FRESHWATER;
+    if (temperature > 0.66f) {
+        if (moisture < 0.4f) biome = BIOME_DESERT;
+        else if (moisture < 0.5f) biome = BIOME_TROPICAL_GRASSLAND;
+        else biome = BIOME_TROPICAL_RAINFOREST;
     }
-    else if (norm < 0.2f){
-        biome = BIOME_MARINE;
+    else if (temperature > 0.33) {
+        if (moisture < 0.4f) biome = BIOME_TEMPERATE_GRASSLAND;
+        else if (moisture < 0.5f) biome = BIOME_TEMPERATE_RAINFOREST;
+        else biome = BIOME_BOREAL_FOREST;
     }
-    else if (norm < 0.3f){
-        biome = BIOME_TROPICAL_GRASSLAND;
+    else {
+        if (moisture < 0.5f) biome = BIOME_ARCTIC_TUNDRA;
+        else biome = BIOME_ALPINE_TUNDRA;        
     }
-    else if (norm < 0.4f){
-        biome = BIOME_TEMPERATE_GRASSLAND;
-    }
-    else if (norm < 0.5f){
-        biome = BIOME_TEMPERATE_RAINFOREST;
-    }
-    else if (norm < 0.6f){
-        biome = BIOME_TROPICAL_RAINFOREST;
-    }
-    else if (norm < 0.7f){
-        biome = BIOME_BOREAL_FOREST;
-    }
-    else if (norm < 0.8f){
-        biome = BIOME_DESERT;
-    }        
-    else if (norm < 0.9f){
-        biome = BIOME_ARCTIC_TUNDRA;
-    }
-    else{
-        biome = BIOME_ALPINE_TUNDRA;
-    }
+        
     SDL_LogTrace(LOG_CAT_MAPGEN, "Assigned %s to [%"PRId64"][%"PRId64"][%"PRId64"].", get_biome_name(biome), coord.pos_q, coord.pos_r, coord.pos_s);
     return biome;
 }
 
+float fbm_noise(CubeCoord coord, float scale, int octaves) {
+    float total = 0.0f;
+    float frequency = 1.0f;
+    float amplitude = 1.0f;
+    float max_value = 0.0f;
+
+    for (int i = 0; i < octaves; i++) {
+        total += stb_perlin_noise3(coord.pos_q * scale * frequency,
+                                   coord.pos_r * scale * frequency,
+                                   coord.pos_s * scale * frequency,
+                                   0, 0, 0) * amplitude;
+
+        max_value += amplitude;
+        amplitude *= 0.5f;
+        frequency *= 2.0f;
+    }
+
+    return total / max_value; // Normalize to [-1, 1]
+}

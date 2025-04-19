@@ -8,8 +8,7 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
-#define HEX_GRID_RADIUS 10
-#define NUM_BIOME_SEEDS 8
+#define HEX_GRID_RADIUS 20
 
 #define BIOME_FRESHWATER 1
 #define BIOME_MARINE 2
