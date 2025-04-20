@@ -14,13 +14,14 @@ RgbColor biome_colors[11] = {
     {153,255,255,255}, // [BIOME_FRESHWATER]
     {51,51,255,255},   // [BIOME_MARINE]
     {0,204,102,255},   // [BIOME_TROPICAL_GRASSLAND]
-    {0,204,0,255},     // [BIOME_TEMPERATE_GRASSLAND]
-    {102,204,0,255},   // [BIOME_TEMPERATE_RAINFOREST]
+    {135,169,54,255},  // [BIOME_TEMPERATE_GRASSLAND]
+    {65,129,0,255},   // [BIOME_TEMPERATE_RAINFOREST]
     {0,102,0,255},     // [BIOME_TROPICAL_RAINFOREST]
     {0,102,102,255},   // [BIOME_BOREAL_FOREST]
     {204,204,0,255},   // [BIOME_DESERT]
     {153,255,255,255}, // [BIOME_ARCTIC_TUNDRA]
-    {224,224,224,255}  // [BIOME_ALPINE_TUNDRA]
+    {224,224,224,255}, // [BIOME_ALPINE_TUNDRA]
+    {128,128,128,255}  // [BIOME_MOUNTAIN]
 };
 
 // Game State
@@ -55,6 +56,7 @@ char* get_biome_name(uint8_t b){
         case BIOME_DESERT: return "DESERT";
         case BIOME_ARCTIC_TUNDRA: return "ARCTIC_TUNDRA";
         case BIOME_ALPINE_TUNDRA: return "ALPINE_TUNDRA";
+        case BIOME_MOUNTAIN: return "MOUNTAIN";
         default: return "UNK";
     }
 }

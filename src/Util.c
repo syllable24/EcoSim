@@ -27,11 +27,11 @@ bool validate_json_non_empty_string(const cJSON* json, const char *key, char** t
 
 bool validate_json_percent_number(const cJSON* json, const char *key, uint8_t* target_value);
 
-uint32_t determine_rand_val(int min, int max){
+int32_t determine_rand_val(int min, int max){
 	return rand() % (max - min + 1) + min;	
 }
 
-uint8_t determine_rand_percent(){
+int8_t determine_rand_percent(){
 	return rand() % (100 + 1);	
 }
 

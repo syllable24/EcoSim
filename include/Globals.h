@@ -9,6 +9,8 @@
 #define GLOBALS_H
 
 #define HEX_GRID_RADIUS 20
+#define MOUNTAIN_CHAIN_AMOUNT 5
+#define MOUNTAIN_CHAIN_LENGTH 15
 
 #define BIOME_FRESHWATER 1
 #define BIOME_MARINE 2
@@ -20,6 +22,7 @@
 #define BIOME_DESERT 8
 #define BIOME_ARCTIC_TUNDRA 9
 #define BIOME_ALPINE_TUNDRA 10
+#define BIOME_MOUNTAIN 11
 
 // Common structs
 typedef struct {

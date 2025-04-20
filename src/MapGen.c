@@ -11,6 +11,8 @@
 #define STB_PERLIN_IMPLEMENTATION
 #include "stb_perlin.h"
 
+void generate_mountain_chain();
+
 int game_map_hash_map_compare(const void *a, const void *b, void *udata){
     const TileState* ua = a;
     const TileState* ub = b;
@@ -55,6 +57,77 @@ int generate_board(uint8_t map_hex_radius){
 cleanup:
     SDL_LogTrace(LOG_CAT_MAPGEN, "End generate_board()");
     return exit_status;
+}
+
+void generate_mountain_chain(){    
+    bool valid = false;
+
+    CubeCoord curr_coords = {
+        0,0,0
+    };
+    const TileState* tile_state = NULL;
+    
+    valid = false;
+    while(!valid){
+        int16_t rand_q = determine_rand_val(-HEX_GRID_RADIUS, HEX_GRID_RADIUS);
+        int16_t rand_r = determine_rand_val(-HEX_GRID_RADIUS, HEX_GRID_RADIUS);
+        int16_t rand_s = -rand_q - rand_r;
+        
+        curr_coords = (CubeCoord){
+            rand_q, 
+            rand_r, 
+            rand_s        
+        };
+        SDL_LogDebug(LOG_CAT_MAPGEN, "Determined Mountain Seed (%d, %d, %d)", 
+            curr_coords.pos_q , curr_coords.pos_r, curr_coords.pos_s
+        );
+        tile_state = hashmap_get(g_game_map, &(TileState){.coord=curr_coords});
+        
+        if(!(tile_state->tile_biome == BIOME_MOUNTAIN)){
+            valid = true;
+        }
+    }
+
+    hashmap_set(g_game_map, &(TileState){
+        .coord=tile_state->coord,
+        .tile_def=tile_state->tile_def,
+        .selected=tile_state->selected,
+        .tile_biome=BIOME_MOUNTAIN
+    });
+        
+    uint8_t reject_counter = 0;
+    for (int i = 0; i < MOUNTAIN_CHAIN_LENGTH; i++){
+        uint8_t direction = determine_rand_val(0, 6);
+        CubeCoord neighbor = cube_neighbor(curr_coords, direction);
+        if (reject_counter == 6){
+            // Abort Mountain Chain
+            break;
+        }
+        if (neighbor.pos_q > HEX_GRID_RADIUS || neighbor.pos_q < -HEX_GRID_RADIUS
+            || neighbor.pos_r > HEX_GRID_RADIUS || neighbor.pos_r < -HEX_GRID_RADIUS
+            || neighbor.pos_s > HEX_GRID_RADIUS || neighbor.pos_s < -HEX_GRID_RADIUS){
+            // Reject position
+            i--;
+            continue;
+        }
+        const TileState* tile_state = hashmap_get(g_game_map, &(TileState){.coord=neighbor});        
+        if (tile_state->tile_biome == BIOME_MOUNTAIN){
+            // Reject position
+            reject_counter++;
+            i--;
+            continue;
+        }
+
+        // Accept 
+        reject_counter = 0;
+        curr_coords = neighbor;        
+        hashmap_set(g_game_map, &(TileState){
+            .coord=tile_state->coord,
+            .tile_def=tile_state->tile_def,
+            .selected=tile_state->selected,
+            .tile_biome=BIOME_MOUNTAIN
+        });        
+    }
 }
 
 void init_tile_states(uint8_t map_hex_radius){
@@ -112,6 +185,10 @@ void init_tile_states(uint8_t map_hex_radius){
 
     // Place random mountain seeds
     // Walk into random directions for random amount of tiles to from mountain chains, base on configurable world_mountain_precent
+    for (int i = 0; i < MOUNTAIN_CHAIN_AMOUNT; i++){
+        generate_mountain_chain();        
+    }
+
 
     // Place random marine seeds
     // Walk into random directions for random amount of tiles to from oceans, base on configurable world_marine_precent

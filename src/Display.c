@@ -323,7 +323,7 @@ void handle_left_click(SDL_Renderer* renderer){
     SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Grid (adjusted by camera offset) X: %04.02f Y: %04.02f", click.x, click.y);
 
     CubeCoord coords = flat_top_pixel_to_hex(click, HEX_RADIUS, top_left_menu, camera_offset);
-    const TileState* tile_state = hashmap_get(g_game_map, &(TileState){.coord=coords});    
+    const TileState* tile_state = hashmap_get(g_game_map, &(TileState){.coord=coords});
     if (!tile_state) {
         SDL_LogError(LOG_CAT_DISPLAY, "No Tile State found for coords [%"PRId64"][%"PRId64"][%"PRId64"]", coords.pos_q, coords.pos_r, coords.pos_s);
         return;
@@ -334,7 +334,9 @@ void handle_left_click(SDL_Renderer* renderer){
         .tile_def=tile_state->tile_def,
         .selected=!tile_state->selected,
         .tile_biome=tile_state->tile_biome
-    });        
+    });
+
+    log_tile_state_string(tile_state);
 }
 
 int frame_update(SDL_Renderer* renderer) {
