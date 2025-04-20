@@ -47,7 +47,7 @@ int generate_board(uint8_t map_hex_radius){
  
     // Init all TileStates
     init_tile_states(map_hex_radius);
-    
+       
     // Assign random Tile Definitons based on biome
 
     exit_status = SDL_APP_CONTINUE;
@@ -62,14 +62,12 @@ void init_tile_states(uint8_t map_hex_radius){
     uint64_t total_hex_count = hex_count_in_sprial(map_hex_radius);
     SDL_LogDebug(LOG_CAT_MAPGEN, "Calculating Hex Coords for %d hexes.", total_hex_count);
 
-    g_game_map = hashmap_new(sizeof(TileState), total_hex_count, 0, 0, game_map_hash_map_hash, game_map_hash_map_compare, NULL, NULL);
-    SDL_LogDebug(LOG_CAT_MAPGEN, "Hashmap init done.");
+    g_game_map = hashmap_new(sizeof(TileState), total_hex_count, 0, 0, game_map_hash_map_hash, game_map_hash_map_compare, NULL, NULL);    
     
     CubeCoord origin_coord = {0,0,0};
     CubeCoord** spiral_coords = cube_sprial(origin_coord, map_hex_radius);
 
-    uint32_t rand_tile_def_id = determine_rand_val(0, g_arr_tile_definitions_size - 1);
-    SDL_LogDebug(LOG_CAT_MAPGEN, "Adding origin_coord hex to g_game_map.");
+    uint32_t rand_tile_def_id = determine_rand_val(0, g_arr_tile_definitions_size - 1);    
 
     // Center
     TileState* center_tile = malloc(sizeof(TileState));
@@ -79,7 +77,7 @@ void init_tile_states(uint8_t map_hex_radius){
         center_tile->selected = false;
         center_tile->tile_biome = 0;        
         assign_biome(center_tile);
-        SDL_LogDebug(LOG_CAT_MAPGEN, "Placing tile at (%lld, %lld, %lld)", origin_coord.pos_q, origin_coord.pos_r, origin_coord.pos_s);        
+        SDL_LogTrace(LOG_CAT_MAPGEN, "Placing tile at (%lld, %lld, %lld)", origin_coord.pos_q, origin_coord.pos_r, origin_coord.pos_s);        
         hashmap_set(g_game_map, center_tile);
     }
     
@@ -96,12 +94,16 @@ void init_tile_states(uint8_t map_hex_radius){
             TileState* new_tile = malloc(sizeof(TileState));
             if (new_tile != NULL) {                
                 new_tile->coord = curr_coord;
-                new_tile->tile_def = g_arr_tile_definitions[rand_tile_def_id];
                 new_tile->selected = false;
                 new_tile->tile_biome = 0;
                 
+                new_tile->tile_def = malloc(sizeof (TileDefinition));
+                if (new_tile->tile_def != NULL) {
+                    *(new_tile->tile_def) = *(g_arr_tile_definitions[rand_tile_def_id]);
+                }                
+                
                 assign_biome(new_tile);
-                SDL_LogDebug(LOG_CAT_MAPGEN, "Placing tile at (%lld, %lld, %lld)", curr_coord.pos_q, curr_coord.pos_r, curr_coord.pos_s);
+                SDL_LogTrace(LOG_CAT_MAPGEN, "Placing tile at (%lld, %lld, %lld)", curr_coord.pos_q, curr_coord.pos_r, curr_coord.pos_s);
                 hashmap_set(g_game_map, new_tile);
             }
             curr_tile_id++;            
@@ -129,52 +131,79 @@ uint8_t assign_biome(TileState* state){
     float moisture = fbm_noise(state->coord, scale, 4);
     moisture = (moisture + 1.0f) / 2.0f;
 
-    float soil_quality = determine_rand_val(20, 100) / 100.0f;
-    state->tile_def->base_soil_quality = soil_quality;    
-
-    float water_quality = determine_rand_val(20, 100) / 100.0f;
-    state->tile_def->base_water_quality = water_quality;    
-
-    float air_quality = determine_rand_val(20, 100) / 100.0f;
-    state->tile_def->base_air_quality = air_quality;    
+    float soil_quality = 0;
+    float water_quality = 0;
+    float air_quality = 0;
 
     uint8_t biome = BIOME_ARCTIC_TUNDRA;
     if (temperature > 0.66f) {
         if (moisture < 0.4f){ 
             biome = BIOME_DESERT;
+            soil_quality  = roundf(determine_rand_val(0, 5)) / 100.0f;
+            water_quality = roundf(determine_rand_val(0, 1)) / 100.0f;
+            air_quality   = roundf(determine_rand_val(0, 10)) / 100.0f;
         }
         else if (moisture < 0.5f) {
             biome = BIOME_TROPICAL_GRASSLAND;
+            soil_quality  = roundf(determine_rand_val(80, 100)) / 100.0f;
+            water_quality = roundf(determine_rand_val(70, 100)) / 100.0f;
+            air_quality   = roundf(determine_rand_val(70, 100)) / 100.0f;
         }
         else {
             biome = BIOME_TROPICAL_RAINFOREST;
+            soil_quality  = roundf(determine_rand_val(40, 60)) / 100.0f;
+            water_quality = roundf(determine_rand_val(30, 50)) / 100.0f;
+            air_quality   = roundf(determine_rand_val(20, 70)) / 100.0f;
         }
     }
     else if (temperature > 0.33f) {
         if (moisture < 0.4f) {
             biome = BIOME_TEMPERATE_GRASSLAND;
+            soil_quality  = roundf(determine_rand_val(80, 100)) / 100.0f;
+            water_quality = roundf(determine_rand_val(70, 100)) / 100.0f;
+            air_quality   = roundf(determine_rand_val(70, 100)) / 100.0f;
         }
         else if (moisture < 0.5f) {
             biome = BIOME_TEMPERATE_RAINFOREST;
+            soil_quality  = roundf(determine_rand_val(50, 90)) / 100.0f;
+            water_quality = roundf(determine_rand_val(80, 100)) / 100.0f;
+            air_quality   = roundf(determine_rand_val(90, 100)) / 100.0f;            
         }
         else {
             biome = BIOME_BOREAL_FOREST;
+            soil_quality  = roundf(determine_rand_val(60, 80)) / 100.0f;
+            water_quality = roundf(determine_rand_val(40, 70)) / 100.0f;
+            air_quality   = roundf(determine_rand_val(50, 80)) / 100.0f;            
         }
     }
     else {
         if (moisture < 0.5f) {
             biome = BIOME_ARCTIC_TUNDRA;
+            soil_quality  = roundf(determine_rand_val(0, 10)) / 100.0f;
+            water_quality = roundf(determine_rand_val(40, 60)) / 100.0f;
+            air_quality   = roundf(determine_rand_val(60, 100)) / 100.0f;
         }
         else {
             biome = BIOME_ALPINE_TUNDRA;
+            soil_quality = determine_rand_val(0, 5) / 100.0f;            
+            water_quality = determine_rand_val(70, 100) / 100.0f;            
+            air_quality = determine_rand_val(80, 100) / 100.0f;
         }
     }    
-    state->tile_biome = biome;
-    state->tile_def->base_moisture = moisture;
-    state->tile_def->base_temperature = temperature;
+    state->tile_biome = biome;     
+    state->tile_def->base_moisture = roundf(moisture * 100.0f) / 100.0f;
+    state->tile_def->base_temperature = roundf(temperature * 100.0f) / 100.0f;
+
+    state->tile_def->base_soil_quality = soil_quality;
+    state->tile_def->base_water_quality = water_quality;
+    state->tile_def->base_air_quality = air_quality;
 
     SDL_LogTrace(LOG_CAT_MAPGEN, "Assigned %s to [%"PRId64"][%"PRId64"][%"PRId64"].", get_biome_name(biome), 
-    state->coord.pos_q, state->coord.pos_r, state->coord.pos_s);
+        state->coord.pos_q, state->coord.pos_r, state->coord.pos_s
+    );
+    SDL_LogTrace(LOG_CAT_MAPGEN, "soil quality: [%.02f].", soil_quality);
+    SDL_LogTrace(LOG_CAT_MAPGEN, "water quality: [%.02f].", water_quality);
+    SDL_LogTrace(LOG_CAT_MAPGEN, "air quality: [%.02f].", air_quality);
     return biome;
 }
 

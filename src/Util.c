@@ -280,14 +280,66 @@ void log_tile_state_string(const TileState* state){
 	fputs(meta_message, stderr);
 	fflush(stderr);
 	
-	char tile_def_message[1024];	
+	char tile_def_message[1024];
 	snprintf(tile_def_message, sizeof(tile_def_message), 
 		"tile_def.name: [%s]\n"
 		"tile_def.texture: [%s]\n"
-		"tile_def.base_temperature: [%.02f]\n"
-		"tile_def.base_moisture: [%.02f]\n"
-		"tile_def.base_air_quality: [%.02f]\n"		
-		"tile_def.base_soil_quality: [%.02f]\n"
+		"tile_def.base_temperature: [%.04f]\n"
+		"tile_def.base_moisture: [%.04f]\n"
+		"tile_def.base_air_quality: [%.04f]\n"
+		"tile_def.base_water_quality: [%.04f]\n"
+		"tile_def.base_soil_quality: [%.04f]\n"
+		,
+		state->tile_def->name,
+		state->tile_def->texture,
+		state->tile_def->base_temperature,
+		state->tile_def->base_moisture,
+		state->tile_def->base_air_quality,
+		state->tile_def->base_water_quality,		
+		state->tile_def->base_soil_quality
+	);	
+
+	// Output to console (stderr)
+	fputs(tile_def_message, stderr);
+	fflush(stderr);
+}
+
+void log_tile_state_string_to_file(const TileState* state, char* file_name){
+	
+	FILE* file = fopen(file_name, "a");
+    if (file == NULL) {
+        perror("Error opening file");
+        return;
+    }
+
+	// Format log message
+	char coord_message[1024];	
+	snprintf(coord_message, sizeof(coord_message), "tile_state.coord [%lld] [%lld] [%lld]\n",
+		state->coord.pos_q,
+		state->coord.pos_r,
+		state->coord.pos_s
+	);
+	fputs(coord_message, file);
+	fflush(file);
+
+	char meta_message[1024];
+	snprintf(meta_message, sizeof(meta_message), 
+	"tile_state.selected: [%d]\n"
+	"tile_state.biome: [%s]\n",
+		state->selected,
+		get_biome_name(state->tile_biome)
+	);
+	fputs(meta_message, file);
+	fflush(file);
+	
+	char tile_def_message[1024];
+	snprintf(tile_def_message, sizeof(tile_def_message), 
+		"tile_def.name: [%s]\n"
+		"tile_def.texture: [%s]\n"
+		"tile_def.base_temperature: [%.04f]\n"
+		"tile_def.base_moisture: [%.04f]\n"
+		"tile_def.base_air_quality: [%.04f]\n"		
+		"tile_def.base_soil_quality: [%.04f]\n"
 		,
 		state->tile_def->name,
 		state->tile_def->texture,
@@ -297,11 +349,13 @@ void log_tile_state_string(const TileState* state){
 		state->tile_def->base_soil_quality
 	);	
 
-	// Output to console (stderr)
-	fputs(tile_def_message, stderr);
-	fflush(stderr);
-}
+	fputs(tile_def_message, file);
+	fflush(file);
 
+	fputs("-----------------------------------------------------------------\n", file);
+
+	fclose(file);
+}
 
 bool validate_json_non_empty_string(const cJSON* json, const char *key, char** target_value) {
 	SDL_LogTrace(LOG_CAT_UTIL, "Start validate_json_non_empty_string()");

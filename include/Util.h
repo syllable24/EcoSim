@@ -34,4 +34,6 @@ char* print_coord(CubeCoord coord);
 
 void log_tile_state_string(const TileState* state);
 
+void log_tile_state_string_to_file(const TileState* state, char* file_name);
+
 #endif

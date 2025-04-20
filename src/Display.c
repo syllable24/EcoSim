@@ -127,7 +127,7 @@ int draw_tile_map(
         // Get Hex Texture by name
         char* hex_def_name = curr_state->tile_def->name;
 
-        draw_hexagon(renderer, curr_state, hex_def_name);
+        draw_hexagon(renderer, curr_state, hex_def_name);        
     }
 
     // Draw Box around grid    
@@ -222,7 +222,7 @@ int draw_hexagon(SDL_Renderer* renderer, const TileState* curr_state, char* hex_
     int curr_biome = curr_state->tile_biome;
     RgbColor biome_color = get_biome_color(curr_biome-1);
 
-    // DEBUG INFO Coords
+    // DEBUG INFO Biome
     SDL_SetRenderDrawColor(renderer, biome_color.r, biome_color.g, biome_color.b, 255); 
     SDL_FRect sq = {
         .x = center.x,
@@ -232,8 +232,11 @@ int draw_hexagon(SDL_Renderer* renderer, const TileState* curr_state, char* hex_
     };
     SDL_RenderFillRect(renderer, &sq);
 
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); 
-    SDL_RenderDebugTextFormat(renderer, center.x - (HEX_RADIUS/2.0f), center.y, "[%d]", curr_biome);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderDebugTextFormat(renderer, center.x - (HEX_RADIUS/1.5f), center.y, "[%d]", curr_biome);
+    SDL_RenderDebugTextFormat(renderer, center.x - (HEX_RADIUS/1.5f), center.y - 12, "[%d][%d][%d]", 
+        curr_state->coord.pos_q, curr_state->coord.pos_r, curr_state->coord.pos_s
+    );
 
     // Draw hex outline    
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Black Outline
@@ -324,15 +327,14 @@ void handle_left_click(SDL_Renderer* renderer){
     if (!tile_state) {
         SDL_LogError(LOG_CAT_DISPLAY, "No Tile State found for coords [%"PRId64"][%"PRId64"][%"PRId64"]", coords.pos_q, coords.pos_r, coords.pos_s);
         return;
-    }    
+    }
+
     hashmap_set(g_game_map, &(TileState){
         .coord=coords,
         .tile_def=tile_state->tile_def,
         .selected=!tile_state->selected,
         .tile_biome=tile_state->tile_biome
-    });
-    
-    log_tile_state_string(tile_state);
+    });        
 }
 
 int frame_update(SDL_Renderer* renderer) {
@@ -376,8 +378,8 @@ int frame_update(SDL_Renderer* renderer) {
     /* Draw Map*/
     if(draw_tile_map(renderer, HEX_GRID_RADIUS) != SDL_APP_CONTINUE){
         SDL_LogError(LOG_CAT_MAIN, "Error while drawing tile map: %s", SDL_GetError());
-            return SDL_APP_FAILURE;
-        }
+        return SDL_APP_FAILURE;
+    }
     return SDL_APP_CONTINUE;
 }
 
