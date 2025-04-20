@@ -33,10 +33,9 @@ extern RgbColor biome_colors[11];
 
 typedef struct {
     char* name;
-    char* texture;
+    char* texture;    
     float base_water_quality;
-    float base_light_quality;
-    float base_air_quality;
+    float base_air_quality;    
     float base_soil_quality;
     float base_temperature;
     float base_moisture;

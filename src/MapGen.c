@@ -107,6 +107,12 @@ void init_tile_states(uint8_t map_hex_radius){
             curr_tile_id++;            
         }
     }
+
+    // Place random mountain seeds
+    // Walk into random directions for random amount of tiles to from mountain chains, base on configurable world_mountain_precent
+
+    // Place random marine seeds
+    // Walk into random directions for random amount of tiles to from oceans, base on configurable world_marine_precent
 }
 
 
@@ -122,21 +128,46 @@ uint8_t assign_biome(TileState* state){
 
     float moisture = fbm_noise(state->coord, scale, 4);
     moisture = (moisture + 1.0f) / 2.0f;
-    
+
+    float soil_quality = determine_rand_val(20, 100) / 100.0f;
+    state->tile_def->base_soil_quality = soil_quality;    
+
+    float water_quality = determine_rand_val(20, 100) / 100.0f;
+    state->tile_def->base_water_quality = water_quality;    
+
+    float air_quality = determine_rand_val(20, 100) / 100.0f;
+    state->tile_def->base_air_quality = air_quality;    
+
     uint8_t biome = BIOME_ARCTIC_TUNDRA;
     if (temperature > 0.66f) {
-        if (moisture < 0.4f) biome = BIOME_DESERT;
-        else if (moisture < 0.5f) biome = BIOME_TROPICAL_GRASSLAND;
-        else biome = BIOME_TROPICAL_RAINFOREST;
+        if (moisture < 0.4f){ 
+            biome = BIOME_DESERT;
+        }
+        else if (moisture < 0.5f) {
+            biome = BIOME_TROPICAL_GRASSLAND;
+        }
+        else {
+            biome = BIOME_TROPICAL_RAINFOREST;
+        }
     }
     else if (temperature > 0.33f) {
-        if (moisture < 0.4f) biome = BIOME_TEMPERATE_GRASSLAND;
-        else if (moisture < 0.5f) biome = BIOME_TEMPERATE_RAINFOREST;
-        else biome = BIOME_BOREAL_FOREST;
+        if (moisture < 0.4f) {
+            biome = BIOME_TEMPERATE_GRASSLAND;
+        }
+        else if (moisture < 0.5f) {
+            biome = BIOME_TEMPERATE_RAINFOREST;
+        }
+        else {
+            biome = BIOME_BOREAL_FOREST;
+        }
     }
     else {
-        if (moisture < 0.5f) biome = BIOME_ARCTIC_TUNDRA;
-        else biome = BIOME_ALPINE_TUNDRA;        
+        if (moisture < 0.5f) {
+            biome = BIOME_ARCTIC_TUNDRA;
+        }
+        else {
+            biome = BIOME_ALPINE_TUNDRA;
+        }
     }    
     state->tile_biome = biome;
     state->tile_def->base_moisture = moisture;

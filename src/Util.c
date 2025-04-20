@@ -286,16 +286,14 @@ void log_tile_state_string(const TileState* state){
 		"tile_def.texture: [%s]\n"
 		"tile_def.base_temperature: [%.02f]\n"
 		"tile_def.base_moisture: [%.02f]\n"
-		"tile_def.base_air_quality: [%.02f]\n"
-		"tile_def.base_light_quality: [%.02f]\n"
+		"tile_def.base_air_quality: [%.02f]\n"		
 		"tile_def.base_soil_quality: [%.02f]\n"
 		,
 		state->tile_def->name,
 		state->tile_def->texture,
 		state->tile_def->base_temperature,
 		state->tile_def->base_moisture,
-		state->tile_def->base_air_quality,
-		state->tile_def->base_light_quality,
+		state->tile_def->base_air_quality,		
 		state->tile_def->base_soil_quality
 	);	
 
