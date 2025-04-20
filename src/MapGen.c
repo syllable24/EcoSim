@@ -71,8 +71,12 @@ void generate_mountain_chain(){
     while(!valid){
         int16_t rand_q = determine_rand_val(-HEX_GRID_RADIUS, HEX_GRID_RADIUS);
         int16_t rand_r = determine_rand_val(-HEX_GRID_RADIUS, HEX_GRID_RADIUS);
-        int16_t rand_s = -rand_q - rand_r;
-        
+        int16_t rand_s = (rand_q * -1) - rand_r;
+        if (rand_s > HEX_GRID_RADIUS || rand_s < -HEX_GRID_RADIUS){
+            // Rolled out of bounds seed
+            continue;
+        }
+
         curr_coords = (CubeCoord){
             rand_q, 
             rand_r, 
@@ -82,8 +86,13 @@ void generate_mountain_chain(){
             curr_coords.pos_q , curr_coords.pos_r, curr_coords.pos_s
         );
         tile_state = hashmap_get(g_game_map, &(TileState){.coord=curr_coords});
-        
-        if(!(tile_state->tile_biome == BIOME_MOUNTAIN)){
+        if (tile_state == NULL){
+            SDL_LogDebug(LOG_CAT_MAPGEN, "Got NULL tile_state at (%d, %d, %d)", 
+                curr_coords.pos_q , curr_coords.pos_r, curr_coords.pos_s
+            );
+        }
+
+        if (tile_state != NULL && tile_state->tile_biome != BIOME_MOUNTAIN) {
             valid = true;
         }
     }
@@ -96,12 +105,21 @@ void generate_mountain_chain(){
     });
         
     uint8_t reject_counter = 0;
-    for (int i = 0; i < MOUNTAIN_CHAIN_LENGTH; i++){
+    uint8_t chain_length = determine_rand_val(MOUNTAIN_CHAIN_MIN_LENGTH, MOUNTAIN_CHAIN_MAX_LENGTH);
+    for (int i = 0; i < chain_length; i++){
         uint8_t direction = determine_rand_val(0, 6);
         CubeCoord neighbor = cube_neighbor(curr_coords, direction);
         if (reject_counter == 6){
             // Abort Mountain Chain
             break;
+        }
+        if (tile_state == NULL) {
+            SDL_LogDebug(LOG_CAT_MAPGEN, "Got NULL tile_state at (%d, %d, %d)", 
+                curr_coords.pos_q , curr_coords.pos_r, curr_coords.pos_s
+            );
+            reject_counter++;
+            i--;
+            continue;
         }
         if (neighbor.pos_q > HEX_GRID_RADIUS || neighbor.pos_q < -HEX_GRID_RADIUS
             || neighbor.pos_r > HEX_GRID_RADIUS || neighbor.pos_r < -HEX_GRID_RADIUS
@@ -184,8 +202,11 @@ void init_tile_states(uint8_t map_hex_radius){
     }
 
     // Place random mountain seeds
-    // Walk into random directions for random amount of tiles to from mountain chains, base on configurable world_mountain_precent
-    for (int i = 0; i < MOUNTAIN_CHAIN_AMOUNT; i++){
+    // Walk into random directions for random amount of tiles to from mountain chains
+    
+    uint8_t chain_amount = determine_rand_val(MOUNTAIN_CHAIN_MIN_AMOUNT, MOUNTAIN_CHAIN_MAX_AMOUNT);
+    SDL_LogDebug(LOG_CAT_MAPGEN, "Start generating %d mountain chains", chain_amount);
+    for (int i = 0; i < chain_amount; i++){
         generate_mountain_chain();        
     }
 
