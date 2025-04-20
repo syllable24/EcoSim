@@ -13,6 +13,10 @@
 
 void generate_mountain_chain();
 
+void generate_marine_chain();
+
+void pick_seed_tile(CubeCoord* seed_coord);
+
 int game_map_hash_map_compare(const void *a, const void *b, void *udata){
     const TileState* ua = a;
     const TileState* ub = b;
@@ -61,40 +65,18 @@ cleanup:
 
 void generate_mountain_chain(){    
     bool valid = false;
-
-    CubeCoord curr_coords = {
+    
+    CubeCoord seed_coord = (CubeCoord){
         0,0,0
     };
-    const TileState* tile_state = NULL;
     
-    valid = false;
-    while(!valid){
-        int16_t rand_q = determine_rand_val(-HEX_GRID_RADIUS, HEX_GRID_RADIUS);
-        int16_t rand_r = determine_rand_val(-HEX_GRID_RADIUS, HEX_GRID_RADIUS);
-        int16_t rand_s = (rand_q * -1) - rand_r;
-        if (rand_s > HEX_GRID_RADIUS || rand_s < -HEX_GRID_RADIUS){
-            // Rolled out of bounds seed
-            continue;
-        }
-
-        curr_coords = (CubeCoord){
-            rand_q, 
-            rand_r, 
-            rand_s        
-        };
-        SDL_LogDebug(LOG_CAT_MAPGEN, "Determined Mountain Seed (%d, %d, %d)", 
-            curr_coords.pos_q , curr_coords.pos_r, curr_coords.pos_s
+    pick_seed_tile(&seed_coord);
+    const TileState* tile_state = hashmap_get(g_game_map, &(TileState){.coord=seed_coord});
+    if (tile_state == NULL) {
+        SDL_LogDebug(LOG_CAT_MAPGEN, "Got NULL tile_state at (%d, %d, %d)", 
+            seed_coord.pos_q , seed_coord.pos_r, seed_coord.pos_s
         );
-        tile_state = hashmap_get(g_game_map, &(TileState){.coord=curr_coords});
-        if (tile_state == NULL){
-            SDL_LogDebug(LOG_CAT_MAPGEN, "Got NULL tile_state at (%d, %d, %d)", 
-                curr_coords.pos_q , curr_coords.pos_r, curr_coords.pos_s
-            );
-        }
-
-        if (tile_state != NULL && tile_state->tile_biome != BIOME_MOUNTAIN) {
-            valid = true;
-        }
+        return;
     }
 
     hashmap_set(g_game_map, &(TileState){
@@ -103,7 +85,8 @@ void generate_mountain_chain(){
         .selected=tile_state->selected,
         .tile_biome=BIOME_MOUNTAIN
     });
-        
+    
+    CubeCoord curr_coords = tile_state->coord;
     uint8_t reject_counter = 0;
     uint8_t chain_length = determine_rand_val(MOUNTAIN_CHAIN_MIN_LENGTH, MOUNTAIN_CHAIN_MAX_LENGTH);
     for (int i = 0; i < chain_length; i++){
@@ -146,6 +129,41 @@ void generate_mountain_chain(){
             .tile_biome=BIOME_MOUNTAIN
         });        
     }
+}
+
+void pick_seed_tile(CubeCoord* seed_coord){
+    bool valid = false;    
+    while(!valid){
+        int16_t rand_q = determine_rand_val(-HEX_GRID_RADIUS, HEX_GRID_RADIUS);
+        int16_t rand_r = determine_rand_val(-HEX_GRID_RADIUS, HEX_GRID_RADIUS);
+        int16_t rand_s = (rand_q * -1) - rand_r;
+        if (rand_s > HEX_GRID_RADIUS || rand_s < -HEX_GRID_RADIUS){
+            // Rolled out of bounds seed
+            continue;
+        }
+
+        *(seed_coord) = (CubeCoord){
+            rand_q, 
+            rand_r, 
+            rand_s        
+        };
+        SDL_LogDebug(LOG_CAT_MAPGEN, "Determined Seed (%d, %d, %d)", 
+            seed_coord->pos_q , seed_coord->pos_r, seed_coord->pos_s
+        );
+        const TileState* tile_state = hashmap_get(g_game_map, &(TileState){.coord=*(seed_coord)});
+        if (tile_state == NULL) {
+            SDL_LogDebug(LOG_CAT_MAPGEN, "Got NULL tile_state at (%d, %d, %d)", 
+                seed_coord->pos_q , seed_coord->pos_r, seed_coord->pos_s
+            );
+        }
+        if (tile_state != NULL && tile_state->tile_biome != BIOME_MOUNTAIN) {
+            valid = true;
+        }
+    }
+}
+
+void generate_marine_chain(){
+    
 }
 
 void init_tile_states(uint8_t map_hex_radius){
@@ -202,8 +220,7 @@ void init_tile_states(uint8_t map_hex_radius){
     }
 
     // Place random mountain seeds
-    // Walk into random directions for random amount of tiles to from mountain chains
-    
+    // Walk into random directions for random amount of tiles to from mountain chains    
     uint8_t chain_amount = determine_rand_val(MOUNTAIN_CHAIN_MIN_AMOUNT, MOUNTAIN_CHAIN_MAX_AMOUNT);
     SDL_LogDebug(LOG_CAT_MAPGEN, "Start generating %d mountain chains", chain_amount);
     for (int i = 0; i < chain_amount; i++){
@@ -212,7 +229,12 @@ void init_tile_states(uint8_t map_hex_radius){
 
 
     // Place random marine seeds
-    // Walk into random directions for random amount of tiles to from oceans, base on configurable world_marine_precent
+    // Walk into random directions for random amount of 7-tile-groups to from oceans
+    uint8_t marine_chain_amount = determine_rand_val(MOUNTAIN_CHAIN_MIN_AMOUNT, MOUNTAIN_CHAIN_MAX_AMOUNT);
+    SDL_LogDebug(LOG_CAT_MAPGEN, "Start generating %d marine chains", chain_amount);
+    for (int i = 0; i < marine_chain_amount; i++){
+        generate_marine_chain();
+    }
 }
 
 
