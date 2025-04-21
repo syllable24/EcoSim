@@ -11,14 +11,6 @@
 #define STB_PERLIN_IMPLEMENTATION
 #include "stb_perlin.h"
 
-void generate_mountain_chain();
-
-void generate_marine_chain();
-
-void generate_river();
-
-void pick_seed_tile(CubeCoord* seed_coord, uint8_t filter);
-
 int game_map_hash_map_compare(const void *a, const void *b, void *udata){
     const TileState* ua = a;
     const TileState* ub = b;
@@ -42,7 +34,7 @@ uint64_t game_map_hash_map_hash(const void *item, uint64_t seed0, uint64_t seed1
     return hashmap_sip((const CubeCoord*)rec, sizeof(CubeCoord), seed0, seed1);
 }
 
-void generate_mountain_chain(){    
+void generate_mountain_chain(CubeCoord* arr_mountain_coords, uint16_t* arr_mountain_coords_size){
     bool valid = false;
     
     CubeCoord seed_coord = (CubeCoord){
@@ -64,7 +56,10 @@ void generate_mountain_chain(){
         .selected=tile_state->selected,
         .tile_biome=BIOME_MOUNTAIN
     });
-    
+
+    arr_mountain_coords[*arr_mountain_coords_size] = tile_state->coord;
+    (*arr_mountain_coords_size)++;
+
     CubeCoord curr_coords = tile_state->coord;
     uint8_t reject_counter = 0;
     uint8_t chain_length = determine_rand_val(MOUNTAIN_CHAIN_MIN_LENGTH, MOUNTAIN_CHAIN_MAX_LENGTH);
@@ -106,7 +101,9 @@ void generate_mountain_chain(){
             .tile_def=tile_state->tile_def,
             .selected=tile_state->selected,
             .tile_biome=BIOME_MOUNTAIN
-        });        
+        });
+        arr_mountain_coords[*arr_mountain_coords_size] = tile_state->coord;
+        (*arr_mountain_coords_size)++;
     }
 }
 
@@ -141,8 +138,8 @@ void pick_seed_tile(CubeCoord* seed_coord, uint8_t filter){
     }
 }
 
-void generate_river(){
-    
+void generate_river(CubeCoord* arr_mountain_coords, uint16_t arr_mountain_coords_size){
+     
 }
 
 void generate_marine_chain(){
@@ -270,65 +267,22 @@ int generate_map(uint8_t map_hex_radius){
         return SDL_APP_FAILURE;
     }
 
-    uint64_t total_hex_count = hex_count_in_sprial(map_hex_radius);
-    SDL_LogDebug(LOG_CAT_MAPGEN, "Calculating Hex Coords for %d hexes.", total_hex_count);
+    generate_base_tiles(map_hex_radius);
 
-    g_game_map = hashmap_new(sizeof(TileState), total_hex_count, 0, 0, game_map_hash_map_hash, game_map_hash_map_compare, NULL, NULL);    
-    
-    CubeCoord origin_coord = {0,0,0};
-    CubeCoord** spiral_coords = cube_sprial(origin_coord, map_hex_radius);
-
-    uint32_t rand_tile_def_id = determine_rand_val(0, g_arr_tile_definitions_size - 1);    
-
-    // Center
-    TileState* center_tile = malloc(sizeof(TileState));
-    if (center_tile != NULL) {    
-        center_tile->coord = origin_coord;
-        center_tile->tile_def = g_arr_tile_definitions[rand_tile_def_id];
-        center_tile->selected = false;
-        center_tile->tile_biome = 0;        
-        assign_biome(center_tile);
-        SDL_LogTrace(LOG_CAT_MAPGEN, "Placing tile at (%lld, %lld, %lld)", origin_coord.pos_q, origin_coord.pos_r, origin_coord.pos_s);        
-        hashmap_set(g_game_map, center_tile);
+    CubeCoord* arr_mountain_coords = malloc(MOUNTAIN_CHAIN_MAX_LENGTH * MOUNTAIN_CHAIN_MAX_AMOUNT * sizeof(CubeCoord));
+    if (!arr_mountain_coords){
+        SDL_LogError(LOG_CAT_MAPGEN, "Memory Allocation for arr_mountain_coords failed");        
+        return SDL_APP_FAILURE;
     }
-    
-    // Spiraling States
-    uint64_t curr_tile_id = 1;
-    for (uint64_t curr_radius = 1; curr_radius <= map_hex_radius; curr_radius++){
-        uint64_t hexes_in_ring = hex_count_in_ring(curr_radius);        
-
-        for (uint64_t curr_ring_pos = 0; curr_ring_pos < hexes_in_ring; curr_ring_pos++){
-            CubeCoord curr_coord = spiral_coords[curr_radius][curr_ring_pos];            
-
-            rand_tile_def_id = determine_rand_val(0, g_arr_tile_definitions_size - 1);            
-            
-            TileState* new_tile = malloc(sizeof(TileState));
-            if (new_tile != NULL) {                
-                new_tile->coord = curr_coord;
-                new_tile->selected = false;
-                new_tile->tile_biome = 0;
-                
-                new_tile->tile_def = malloc(sizeof (TileDefinition));
-                if (new_tile->tile_def != NULL) {
-                    *(new_tile->tile_def) = *(g_arr_tile_definitions[rand_tile_def_id]);
-                }                
-                
-                assign_biome(new_tile);
-                SDL_LogTrace(LOG_CAT_MAPGEN, "Placing tile at (%lld, %lld, %lld)", curr_coord.pos_q, curr_coord.pos_r, curr_coord.pos_s);
-                hashmap_set(g_game_map, new_tile);
-            }
-            curr_tile_id++;            
-        }
-    }
+    uint16_t arr_mountain_coords_size = 0;
 
     // Place random mountain seeds
     // Walk into random directions for random amount of tiles to from mountain chains    
     uint8_t chain_amount = determine_rand_val(MOUNTAIN_CHAIN_MIN_AMOUNT, MOUNTAIN_CHAIN_MAX_AMOUNT);
     SDL_LogDebug(LOG_CAT_MAPGEN, "Start generating %d mountain chains", chain_amount);
     for (int i = 0; i < chain_amount; i++){
-        generate_mountain_chain();        
+        generate_mountain_chain(arr_mountain_coords, &arr_mountain_coords_size);
     }
-
 
     // Place random marine seeds
     // Walk into random directions for random amount of 7-tile-groups to from oceans
@@ -343,7 +297,7 @@ int generate_map(uint8_t map_hex_radius){
     uint8_t river_amount = determine_rand_val(RIVER_MIN_AMOUNT, RIVER_MAX_AMOUNT);
     SDL_LogDebug(LOG_CAT_MAPGEN, "Start generating %d rivers", river_amount);
     for (int i = 0; i < river_amount; i++){
-        generate_river();
+        generate_river(arr_mountain_coords, arr_mountain_coords_size);
     }
 
     return SDL_APP_CONTINUE;
@@ -457,4 +411,58 @@ float fbm_noise(CubeCoord coord, float scale, int octaves) {
     }
 
     return total / max_value; // Normalize to [-1, 1]
+}
+
+void generate_base_tiles(uint8_t map_hex_radius){
+
+    uint64_t total_hex_count = hex_count_in_sprial(map_hex_radius);
+    SDL_LogDebug(LOG_CAT_MAPGEN, "Calculating Hex Coords for %d hexes.", total_hex_count);
+
+    g_game_map = hashmap_new(sizeof(TileState), total_hex_count, 0, 0, game_map_hash_map_hash, game_map_hash_map_compare, NULL, NULL);    
+    
+    CubeCoord origin_coord = {0,0,0};
+    CubeCoord** spiral_coords = cube_sprial(origin_coord, map_hex_radius);
+
+    uint32_t rand_tile_def_id = determine_rand_val(0, g_arr_tile_definitions_size - 1);    
+
+    // Center
+    TileState* center_tile = malloc(sizeof(TileState));
+    if (center_tile != NULL) {    
+        center_tile->coord = origin_coord;
+        center_tile->tile_def = g_arr_tile_definitions[rand_tile_def_id];
+        center_tile->selected = false;
+        center_tile->tile_biome = 0;        
+        assign_biome(center_tile);
+        SDL_LogTrace(LOG_CAT_MAPGEN, "Placing tile at (%lld, %lld, %lld)", origin_coord.pos_q, origin_coord.pos_r, origin_coord.pos_s);        
+        hashmap_set(g_game_map, center_tile);
+    }
+    
+    // Spiraling States
+    uint64_t curr_tile_id = 1;
+    for (uint64_t curr_radius = 1; curr_radius <= map_hex_radius; curr_radius++){
+        uint64_t hexes_in_ring = hex_count_in_ring(curr_radius);        
+
+        for (uint64_t curr_ring_pos = 0; curr_ring_pos < hexes_in_ring; curr_ring_pos++){
+            CubeCoord curr_coord = spiral_coords[curr_radius][curr_ring_pos];            
+
+            rand_tile_def_id = determine_rand_val(0, g_arr_tile_definitions_size - 1);            
+            
+            TileState* new_tile = malloc(sizeof(TileState));
+            if (new_tile != NULL) {                
+                new_tile->coord = curr_coord;
+                new_tile->selected = false;
+                new_tile->tile_biome = 0;
+                
+                new_tile->tile_def = malloc(sizeof (TileDefinition));
+                if (new_tile->tile_def != NULL) {
+                    *(new_tile->tile_def) = *(g_arr_tile_definitions[rand_tile_def_id]);
+                }                
+                
+                assign_biome(new_tile);
+                SDL_LogTrace(LOG_CAT_MAPGEN, "Placing tile at (%lld, %lld, %lld)", curr_coord.pos_q, curr_coord.pos_r, curr_coord.pos_s);
+                hashmap_set(g_game_map, new_tile);
+            }
+            curr_tile_id++;            
+        }
+    }
 }
