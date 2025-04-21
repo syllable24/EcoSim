@@ -15,6 +15,8 @@ void generate_mountain_chain();
 
 void generate_marine_chain();
 
+void generate_river();
+
 void pick_seed_tile(CubeCoord* seed_coord, uint8_t filter);
 
 int game_map_hash_map_compare(const void *a, const void *b, void *udata){
@@ -37,30 +39,7 @@ uint64_t game_map_hash_map_hash(const void *item, uint64_t seed0, uint64_t seed1
     // Use fixed seeds for deterministic hashing
     seed0 = 0x1234567890abcdefULL;
     seed1 = 0xfedcba0987654321ULL;
-    return hashmap_sip((const AxialCoord*)rec, sizeof(AxialCoord), seed0, seed1);
-}
-
-int generate_board(uint8_t map_hex_radius){
-    SDL_LogTrace(LOG_CAT_MAPGEN, "Start generate_board()");
-    int exit_status = SDL_APP_FAILURE;
-
-    // Validate inputs
-    if (!g_arr_tile_definitions || g_arr_tile_definitions_size <= 0 || map_hex_radius <= 0 ) {
-        SDL_LogError(LOG_CAT_MAPGEN, "Invalid input: g_arr_tile_definitions=%p, g_arr_tile_definitions_size=%u, map_hex_radius=%u",
-                     g_arr_tile_definitions, g_arr_tile_definitions_size, map_hex_radius);
-        return SDL_APP_FAILURE;
-    }        
- 
-    // Init all TileStates
-    init_tile_states(map_hex_radius);
-       
-    // Assign random Tile Definitons based on biome
-
-    exit_status = SDL_APP_CONTINUE;
-
-cleanup:
-    SDL_LogTrace(LOG_CAT_MAPGEN, "End generate_board()");
-    return exit_status;
+    return hashmap_sip((const CubeCoord*)rec, sizeof(CubeCoord), seed0, seed1);
 }
 
 void generate_mountain_chain(){    
@@ -160,6 +139,10 @@ void pick_seed_tile(CubeCoord* seed_coord, uint8_t filter){
             valid = true;
         }
     }
+}
+
+void generate_river(){
+    
 }
 
 void generate_marine_chain(){
@@ -278,8 +261,15 @@ void generate_marine_chain(){
     }
 }
 
-void init_tile_states(uint8_t map_hex_radius){
-    // Assumes symmetrical hexagonal flat-top hex-grid. (Big hexagon composed of smaller hexagons)
+// Assumes symmetrical hexagonal flat-top hex-grid. (Big hexagon composed of smaller hexagons)
+int generate_map(uint8_t map_hex_radius){
+    // Validate config and inputs
+    if (!g_arr_tile_definitions || g_arr_tile_definitions_size <= 0 || map_hex_radius <= 0 ) {
+        SDL_LogError(LOG_CAT_MAPGEN, "Invalid input: g_arr_tile_definitions=%p, g_arr_tile_definitions_size=%u, map_hex_radius=%u",
+                     g_arr_tile_definitions, g_arr_tile_definitions_size, map_hex_radius);
+        return SDL_APP_FAILURE;
+    }
+
     uint64_t total_hex_count = hex_count_in_sprial(map_hex_radius);
     SDL_LogDebug(LOG_CAT_MAPGEN, "Calculating Hex Coords for %d hexes.", total_hex_count);
 
@@ -347,6 +337,16 @@ void init_tile_states(uint8_t map_hex_radius){
     for (int i = 0; i < marine_chain_amount; i++){
         generate_marine_chain();
     }
+
+    // Place random river seeds on mountains
+    // Walk into random directions until the river length is hit (then form a lage) or a marine tile is found.
+    uint8_t river_amount = determine_rand_val(RIVER_MIN_AMOUNT, RIVER_MAX_AMOUNT);
+    SDL_LogDebug(LOG_CAT_MAPGEN, "Start generating %d rivers", river_amount);
+    for (int i = 0; i < river_amount; i++){
+        generate_river();
+    }
+
+    return SDL_APP_CONTINUE;
 }
 
 

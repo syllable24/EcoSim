@@ -66,8 +66,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
     }
     
     /* Generate Map */
-    if(generate_board(HEX_GRID_RADIUS) != SDL_APP_CONTINUE){
-        SDL_LogError(LOG_CAT_MAIN, "Error while generating board: %s", SDL_GetError());
+    if(generate_map(HEX_GRID_RADIUS) != SDL_APP_CONTINUE){
+        SDL_LogError(LOG_CAT_MAIN, "Error while generating map: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
 

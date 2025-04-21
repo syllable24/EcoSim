@@ -5,8 +5,8 @@
 #define HEXGRIDMATH_H
 
 typedef struct {
-    const uint32_t pos_q;
-    const uint32_t pos_r;
+    int64_t pos_q;
+    int64_t pos_r;
 } AxialCoord;
 
 typedef struct {
