@@ -242,6 +242,17 @@ int draw_hexagon(SDL_Renderer* renderer, const TileState* curr_state, char* hex_
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Black Outline
     draw_hexagon_outline(renderer, points);    
 
+    if (curr_state->has_river == true){
+        SDL_SetRenderDrawColor(renderer, 153, 153, 255, 255);
+        SDL_FRect river_sq = {
+            .x = center.x,
+            .y = center.y,
+            .w = HEX_RADIUS / 8.0f,
+            .h = HEX_RADIUS / 8.0f
+        };
+        SDL_RenderFillRect(renderer, &river_sq);
+    }
+
     // Red inner Hex for selected tiles
     if (curr_state->selected){
         get_hexagon_vertices(points, center.x, center.y, HEX_RADIUS - 5.0f);
@@ -329,12 +340,9 @@ void handle_left_click(SDL_Renderer* renderer){
         return;
     }
 
-    hashmap_set(g_game_map, &(TileState){
-        .coord=coords,
-        .tile_def=tile_state->tile_def,
-        .selected=!tile_state->selected,
-        .tile_biome=tile_state->tile_biome
-    });
+    TileState new_state = *tile_state;
+    new_state.selected = !new_state.selected;
+    hashmap_set(g_game_map, &new_state);
 
     log_tile_state_string(tile_state);
 }

@@ -262,7 +262,9 @@ void log_tile_state_string(const TileState* state){
 	
 	// Format log message
 	char coord_message[1024];	
-	snprintf(coord_message, sizeof(coord_message), "tile_state.coord [%lld] [%lld] [%lld]\n",
+	snprintf(coord_message, sizeof(coord_message), 
+		"tile_state.coord [%lld] [%lld] [%lld]\n"
+		,
 		state->coord.pos_q,
 		state->coord.pos_r,
 		state->coord.pos_s
@@ -272,10 +274,15 @@ void log_tile_state_string(const TileState* state){
 
 	char meta_message[1024];
 	snprintf(meta_message, sizeof(meta_message), 
-	"tile_state.selected: [%d]\n"
-	"tile_state.biome: [%s]\n",
+		"tile_state.selected: [%d]\n"
+		"tile_state.biome: [%s]\n"
+		"tile_state.has_river: [%d]\n"
+		"tile_state.river_direction: [%lld][%lld][%lld]\n"
+		,
 		state->selected,
-		get_biome_name(state->tile_biome)
+		get_biome_name(state->tile_biome),
+		state->has_river,
+		state->river_direction.pos_q, state->river_direction.pos_r, state->river_direction.pos_s
 	);
 	fputs(meta_message, stderr);
 	fflush(stderr);
@@ -296,7 +303,7 @@ void log_tile_state_string(const TileState* state){
 		state->tile_def->base_moisture,
 		state->tile_def->base_air_quality,
 		state->tile_def->base_water_quality,		
-		state->tile_def->base_soil_quality
+		state->tile_def->base_soil_quality		
 	);	
 
 	// Output to console (stderr)
