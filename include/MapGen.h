@@ -19,8 +19,19 @@ void generate_marine_chain();
 
 void generate_river(CubeCoord* arr_mountain_coords, uint16_t arr_mountain_coords_size);
 
-void pick_seed_tile(CubeCoord* seed_coord, uint8_t filter);
+const TileState* pick_seed_tile(CubeCoord* seed_coord, uint8_t filter);
 
+typedef bool (*NeighborPredicate)(const TileState* tile, void* context);
+
+bool any_neighbor_matches(CubeCoord center, NeighborPredicate predicate, void* context);
+
+bool is_out_of_bounds(CubeCoord coord);
+
+bool is_marine(const TileState* tile, void* context);
+
+bool is_mountain(const TileState* tile, void* context);
+
+bool is_marine_or_mountain(const TileState* tile, void* context);
 
 #endif
 

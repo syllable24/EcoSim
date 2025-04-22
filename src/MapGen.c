@@ -85,7 +85,7 @@ void generate_mountain_chain(CubeCoord* arr_mountain_coords, uint16_t* arr_mount
             i--;
             continue;
         }
-        const TileState* tile_state = hashmap_get(g_game_map, &(TileState){.coord=neighbor});        
+        const TileState* tile_state = hashmap_get(g_game_map, &(TileState){.coord=neighbor});
         if (tile_state->tile_biome == BIOME_MOUNTAIN){
             // Reject position
             reject_counter++;
@@ -107,8 +107,9 @@ void generate_mountain_chain(CubeCoord* arr_mountain_coords, uint16_t* arr_mount
     }
 }
 
-void pick_seed_tile(CubeCoord* seed_coord, uint8_t filter){
+const TileState* pick_seed_tile(CubeCoord* seed_coord, uint8_t filter){
     bool valid = false;    
+    const TileState* tile_state = NULL;
     while(!valid){
         int16_t rand_q = determine_rand_val(-HEX_GRID_RADIUS, HEX_GRID_RADIUS);
         int16_t rand_r = determine_rand_val(-HEX_GRID_RADIUS, HEX_GRID_RADIUS);
@@ -123,12 +124,12 @@ void pick_seed_tile(CubeCoord* seed_coord, uint8_t filter){
             rand_r, 
             rand_s        
         };
-        SDL_LogDebug(LOG_CAT_MAPGEN, "Determined Seed (%d, %d, %d)", 
+        SDL_LogTrace(LOG_CAT_MAPGEN, "Determined Seed (%d, %d, %d)", 
             seed_coord->pos_q , seed_coord->pos_r, seed_coord->pos_s
         );
-        const TileState* tile_state = hashmap_get(g_game_map, &(TileState){.coord=*(seed_coord)});
+        tile_state = hashmap_get(g_game_map, &(TileState){.coord=*(seed_coord)});
         if (tile_state == NULL) {
-            SDL_LogDebug(LOG_CAT_MAPGEN, "Got NULL tile_state at (%d, %d, %d)", 
+            SDL_LogError(LOG_CAT_MAPGEN, "Got NULL tile_state at (%d, %d, %d)", 
                 seed_coord->pos_q , seed_coord->pos_r, seed_coord->pos_s
             );
         }
@@ -136,10 +137,31 @@ void pick_seed_tile(CubeCoord* seed_coord, uint8_t filter){
             valid = true;
         }
     }
+    return tile_state;
 }
 
 void generate_river(CubeCoord* arr_mountain_coords, uint16_t arr_mountain_coords_size){
-     
+    CubeCoord river_seed = {0,0,0};
+    bool valid = false;
+    while (!valid){
+        int32_t rand_index = determine_rand_val(0, arr_mountain_coords_size - 1);
+        river_seed = arr_mountain_coords[rand_index];
+        valid = !any_neighbor_matches(river_seed, is_marine, NULL);
+    }
+    SDL_LogTrace(LOG_CAT_MAPGEN, "Determined river seed [%lld][%lld][%lld]", river_seed.pos_q,river_seed.pos_r,river_seed.pos_s);
+        
+    const TileState* river_state = hashmap_get(g_game_map, &(TileState){.coord=river_seed});
+
+    int32_t rand_length = determine_rand_val(RIVER_MIN_LENGTH, RIVER_MAX_LENGTH);
+
+    CubeCoord curr_coord = river_state->coord;
+    for(int i = 0; i < rand_length; i++){
+        uint8_t rand_direction = determine_rand_val(0, 6);
+        CubeCoord neighbor = cube_neighbor(curr_coord, rand_direction);
+
+        
+    }
+
 }
 
 void generate_marine_chain(){
@@ -152,8 +174,7 @@ void generate_marine_chain(){
     const TileState* tile_state = NULL;
 
     while (!seed_valid){
-        pick_seed_tile(&seed_coord, BIOME_MARINE);
-        tile_state = hashmap_get(g_game_map, &(TileState){.coord=seed_coord});
+        tile_state = pick_seed_tile(&seed_coord, BIOME_MARINE);         
         if (tile_state == NULL) {
             SDL_LogDebug(LOG_CAT_MAPGEN, "Got NULL tile_state at (%d, %d, %d)", 
                 seed_coord.pos_q , seed_coord.pos_r, seed_coord.pos_s
@@ -161,15 +182,7 @@ void generate_marine_chain(){
             return;
         }
     
-        // Scan neighbors
-        for (int i = 0; i < 6; i++){
-            CubeCoord neighbor = cube_neighbor(tile_state->coord, i);
-            const TileState* neighbor_state = hashmap_get(g_game_map, &(TileState){.coord=neighbor});
-            if (neighbor_state->tile_biome == BIOME_MOUNTAIN || neighbor_state->tile_biome == BIOME_MARINE){
-                seed_valid = false;
-            }
-        }
-        seed_valid = true;
+        seed_valid = !any_neighbor_matches(tile_state->coord, is_marine_or_mountain, NULL);
     }
 
     hashmap_set(g_game_map, &(TileState){
@@ -179,9 +192,12 @@ void generate_marine_chain(){
         .tile_biome=BIOME_MARINE
     });
 
-    // Set neighbors to Biome MARINE
+    // Set neighbors to Biome MARINE    
     for (int i = 0; i < 6; i++){
         CubeCoord neighbor = cube_neighbor(tile_state->coord, i);
+        if (is_out_of_bounds(neighbor)){
+            continue;
+        }
         const TileState* neighbor_state = hashmap_get(g_game_map, &(TileState){.coord=neighbor});
         hashmap_set(g_game_map, &(TileState){
             .coord=neighbor_state->coord,
@@ -202,18 +218,16 @@ void generate_marine_chain(){
             // Abort Marine Chain
             break;
         }
+        if (is_out_of_bounds(next_neighbor)){
+            // Reject position
+            i--;
+            continue;
+        }
         if (tile_state == NULL) {
             SDL_LogDebug(LOG_CAT_MAPGEN, "Got NULL tile_state at (%d, %d, %d)", 
                 curr_coords.pos_q , curr_coords.pos_r, curr_coords.pos_s
             );
             reject_counter++;
-            i--;
-            continue;
-        }
-        if (next_neighbor.pos_q > HEX_GRID_RADIUS || next_neighbor.pos_q < -HEX_GRID_RADIUS
-            || next_neighbor.pos_r > HEX_GRID_RADIUS || next_neighbor.pos_r < -HEX_GRID_RADIUS
-            || next_neighbor.pos_s > HEX_GRID_RADIUS || next_neighbor.pos_s < -HEX_GRID_RADIUS){
-            // Reject position
             i--;
             continue;
         }
@@ -239,9 +253,7 @@ void generate_marine_chain(){
         for (int i = 0; i < 6; i++){
             CubeCoord neighbor = cube_neighbor(tile_state->coord, i);
             const TileState* neighbor_state = hashmap_get(g_game_map, &(TileState){.coord=neighbor});
-            if (neighbor.pos_q > HEX_GRID_RADIUS || neighbor.pos_q < -HEX_GRID_RADIUS
-                || neighbor.pos_r > HEX_GRID_RADIUS || neighbor.pos_r < -HEX_GRID_RADIUS
-                || neighbor.pos_s > HEX_GRID_RADIUS || neighbor.pos_s < -HEX_GRID_RADIUS){
+            if (is_out_of_bounds(neighbor)){
                 continue;
             }            
             if (neighbor_state->tile_biome == BIOME_MOUNTAIN || neighbor_state->tile_biome == BIOME_MARINE){                
@@ -302,7 +314,6 @@ int generate_map(uint8_t map_hex_radius){
 
     return SDL_APP_CONTINUE;
 }
-
 
 uint8_t assign_biome(TileState* state){
     float x = (float)state->coord.pos_q;
@@ -431,7 +442,9 @@ void generate_base_tiles(uint8_t map_hex_radius){
         center_tile->coord = origin_coord;
         center_tile->tile_def = g_arr_tile_definitions[rand_tile_def_id];
         center_tile->selected = false;
-        center_tile->tile_biome = 0;        
+        center_tile->tile_biome = 0;
+        center_tile->has_river = false;
+        center_tile->river_direction = (CubeCoord){0,0,0};
         assign_biome(center_tile);
         SDL_LogTrace(LOG_CAT_MAPGEN, "Placing tile at (%lld, %lld, %lld)", origin_coord.pos_q, origin_coord.pos_r, origin_coord.pos_s);        
         hashmap_set(g_game_map, center_tile);
@@ -452,6 +465,8 @@ void generate_base_tiles(uint8_t map_hex_radius){
                 new_tile->coord = curr_coord;
                 new_tile->selected = false;
                 new_tile->tile_biome = 0;
+                new_tile->has_river = false;
+                new_tile->river_direction = (CubeCoord){0,0,0};
                 
                 new_tile->tile_def = malloc(sizeof (TileDefinition));
                 if (new_tile->tile_def != NULL) {
@@ -466,3 +481,40 @@ void generate_base_tiles(uint8_t map_hex_radius){
         }
     }
 }
+
+bool any_neighbor_matches(CubeCoord center, NeighborPredicate predicate, void* context) {
+    for (int i = 0; i < 6; i++) {    
+        CubeCoord neighbor = cube_neighbor(center, i);
+        SDL_LogTrace(LOG_CAT_MAPGEN, "Check Neighbor [%lld][%lld][%lld]", neighbor.pos_q,neighbor.pos_r,neighbor.pos_s);
+        if (is_out_of_bounds(neighbor)){
+            SDL_LogTrace(LOG_CAT_MAPGEN, "Neighbor [%lld][%lld][%lld] OOB", neighbor.pos_q,neighbor.pos_r,neighbor.pos_s);
+            continue;
+        }
+        const TileState* neighbor_state = hashmap_get(g_game_map, &(TileState){.coord = neighbor});
+        if (neighbor_state && predicate(neighbor_state, context)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool is_out_of_bounds(CubeCoord coord){
+    bool oob = coord.pos_q > HEX_GRID_RADIUS || coord.pos_q < -HEX_GRID_RADIUS
+            || coord.pos_r > HEX_GRID_RADIUS || coord.pos_r < -HEX_GRID_RADIUS
+            || coord.pos_s > HEX_GRID_RADIUS || coord.pos_s < -HEX_GRID_RADIUS;
+    return oob;
+}
+
+bool is_marine_or_mountain(const TileState* tile, void* context) {
+    return is_marine(tile, context) || is_mountain(tile, context);
+}
+
+bool is_marine(const TileState* tile, void* context) {
+    return tile->tile_biome == BIOME_MARINE;
+}
+
+bool is_mountain(const TileState* tile, void* context) {
+    return tile->tile_biome == BIOME_MOUNTAIN;
+}
+
+// End of file

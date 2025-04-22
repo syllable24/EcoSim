@@ -10,12 +10,13 @@
 
 #define HEX_GRID_RADIUS 20
 
-#define RIVER_MAX_LENGTH 6
+#define RIVER_MIN_LENGTH 6
+#define RIVER_MAX_LENGTH 15
 #define RIVER_MIN_AMOUNT 10
 #define RIVER_MAX_AMOUNT 15
 
-#define MOUNTAIN_CHAIN_MIN_AMOUNT 3
-#define MOUNTAIN_CHAIN_MAX_AMOUNT 6
+#define MOUNTAIN_CHAIN_MIN_AMOUNT 5
+#define MOUNTAIN_CHAIN_MAX_AMOUNT 8
 #define MOUNTAIN_CHAIN_MIN_LENGTH 5
 #define MOUNTAIN_CHAIN_MAX_LENGTH 15
 
@@ -60,8 +61,11 @@ typedef struct {
     CubeCoord coord;
     uint8_t tile_biome;
     TileDefinition* tile_def;
-    bool selected;    
+    bool selected;
+    bool has_river;
+    CubeCoord river_direction;
 } TileState;
+
 
 
 // Common Config
