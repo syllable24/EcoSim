@@ -151,15 +151,53 @@ void generate_river(CubeCoord* arr_mountain_coords, uint16_t arr_mountain_coords
     SDL_LogTrace(LOG_CAT_MAPGEN, "Determined river seed [%lld][%lld][%lld]", river_seed.pos_q,river_seed.pos_r,river_seed.pos_s);
         
     const TileState* river_state = hashmap_get(g_game_map, &(TileState){.coord=river_seed});
+    if (river_state == NULL) {
+        SDL_LogError(LOG_CAT_MAPGEN, "generate_river(): Got NULL tile_state at (%d, %d, %d)", 
+            river_seed.pos_q , river_seed.pos_r, river_seed.pos_s
+        );
+    }
 
-    int32_t rand_length = determine_rand_val(RIVER_MIN_LENGTH, RIVER_MAX_LENGTH);
+    int32_t rand_river_length = determine_rand_val(RIVER_MIN_LENGTH, RIVER_MAX_LENGTH);
+    
+    TileState curr_river_state = *river_state;    
+    bool create_lake = true;
+    for(int i = 0; i < rand_river_length; i++){
+        curr_river_state.has_river = true;
 
-    CubeCoord curr_coord = river_state->coord;
-    for(int i = 0; i < rand_length; i++){
-        uint8_t rand_direction = determine_rand_val(0, 6);
-        CubeCoord neighbor = cube_neighbor(curr_coord, rand_direction);
+        bool valid_neighbor = false;
+        CubeCoord neighbor_coord = {0,0,0};
+        while(!valid_neighbor){
+            uint8_t rand_direction = determine_rand_val(0, 6);
+            neighbor_coord = cube_neighbor(curr_river_state.coord, rand_direction);
+            if (is_out_of_bounds(neighbor_coord)){                
+                continue;
+            }
+            if (!is_same_coord(&curr_river_state.coord, &neighbor_coord)){
+                valid_neighbor = true;
+            }
+        }
 
-        
+        const TileState* neighbor_state = hashmap_get(g_game_map, &(TileState){.coord=neighbor_coord});
+        if (neighbor_state == NULL) {
+            SDL_LogError(LOG_CAT_MAPGEN, "generate_river(): Got NULL tile_state at (%lld, %lld, %lld)", 
+                neighbor_coord.pos_q , neighbor_coord.pos_r, neighbor_coord.pos_s
+            );
+        }
+
+        curr_river_state.river_direction=neighbor_state->coord;
+        hashmap_set(g_game_map, &curr_river_state); 
+
+        // Check river-end Tile
+        if (neighbor_state->has_river || neighbor_state->tile_biome == BIOME_MARINE){            
+            TileState new_state = *neighbor_state;
+            new_state.has_river = true;
+            new_state.river_direction = neighbor_state->coord;
+            hashmap_set(g_game_map, &new_state);
+            create_lake = false;
+            break;
+        }
+
+        curr_river_state = *neighbor_state;
     }
 
 }
@@ -185,12 +223,9 @@ void generate_marine_chain(){
         seed_valid = !any_neighbor_matches(tile_state->coord, is_marine_or_mountain, NULL);
     }
 
-    hashmap_set(g_game_map, &(TileState){
-        .coord=tile_state->coord,
-        .tile_def=tile_state->tile_def,
-        .selected=tile_state->selected,
-        .tile_biome=BIOME_MARINE
-    });
+    TileState new_state = *tile_state;
+    new_state.tile_biome = BIOME_MARINE;
+    hashmap_set(g_game_map, &new_state);
 
     // Set neighbors to Biome MARINE    
     for (int i = 0; i < 6; i++){
@@ -466,7 +501,7 @@ void generate_base_tiles(uint8_t map_hex_radius){
                 new_tile->selected = false;
                 new_tile->tile_biome = 0;
                 new_tile->has_river = false;
-                new_tile->river_direction = (CubeCoord){0,0,0};
+                new_tile->river_direction = curr_coord;
                 
                 new_tile->tile_def = malloc(sizeof (TileDefinition));
                 if (new_tile->tile_def != NULL) {
@@ -515,6 +550,12 @@ bool is_marine(const TileState* tile, void* context) {
 
 bool is_mountain(const TileState* tile, void* context) {
     return tile->tile_biome == BIOME_MOUNTAIN;
+}
+
+bool is_same_coord(CubeCoord* a, CubeCoord* b){
+    return a->pos_q == b->pos_q 
+        && a->pos_r == b->pos_r
+        && a->pos_s == b->pos_s;
 }
 
 // End of file

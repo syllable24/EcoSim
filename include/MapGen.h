@@ -33,5 +33,7 @@ bool is_mountain(const TileState* tile, void* context);
 
 bool is_marine_or_mountain(const TileState* tile, void* context);
 
+bool is_same_coord(CubeCoord* a, CubeCoord* b);
+
 #endif
 
