@@ -159,8 +159,9 @@ void generate_river(CubeCoord* arr_mountain_coords, uint16_t arr_mountain_coords
 
     int32_t rand_river_length = determine_rand_val(RIVER_MIN_LENGTH, RIVER_MAX_LENGTH);
     
-    TileState curr_river_state = *river_state;    
-    bool create_lake = true;
+    CubeCoord prev_river_coord = river_state->coord;
+    TileState curr_river_state = *river_state;
+    bool create_large_lake = true;
     SDL_LogDebug(LOG_CAT_MAPGEN, "------- Starting new river on [%lld][%lld][%lld]", 
         curr_river_state.coord.pos_q, curr_river_state.coord.pos_r, curr_river_state.coord.pos_s
     );
@@ -170,42 +171,87 @@ void generate_river(CubeCoord* arr_mountain_coords, uint16_t arr_mountain_coords
         );        
 
         bool valid_neighbor = false;
+        const TileState* neighbor_state = NULL;
         CubeCoord neighbor_coord = {0,0,0};
+        int reject_counter = 0;
         while(!valid_neighbor){
             uint8_t rand_direction = determine_rand_val(0, 6);
             neighbor_coord = cube_neighbor(curr_river_state.coord, rand_direction);
-            if (is_out_of_bounds(neighbor_coord)){                
+            if (reject_counter == 6){
+                break;
+            }
+
+            if (is_out_of_bounds(neighbor_coord) || is_same_coord(&neighbor_coord, &prev_river_coord)){
+                reject_counter++;
                 continue;
             }
-            if (!is_same_coord(&curr_river_state.coord, &neighbor_coord)){
+
+            neighbor_state = hashmap_get(g_game_map, &(TileState){.coord=neighbor_coord});
+            if (neighbor_state == NULL) {
+                SDL_LogError(LOG_CAT_MAPGEN, "generate_river(): Got NULL tile_state at (%lld, %lld, %lld)", 
+                    neighbor_coord.pos_q , neighbor_coord.pos_r, neighbor_coord.pos_s
+                );
+            }
+            if(!is_mountain(neighbor_state, NULL)){
+                reject_counter++;
                 valid_neighbor = true;
             }
         }
-
-        const TileState* neighbor_state = hashmap_get(g_game_map, &(TileState){.coord=neighbor_coord});
-        if (neighbor_state == NULL) {
-            SDL_LogError(LOG_CAT_MAPGEN, "generate_river(): Got NULL tile_state at (%lld, %lld, %lld)", 
-                neighbor_coord.pos_q , neighbor_coord.pos_r, neighbor_coord.pos_s
-            );
-        }
-
-        // Check river-end Tile
-        if (neighbor_state->has_river || neighbor_state->tile_biome == BIOME_MARINE){            
-            TileState new_state = *neighbor_state;
-            new_state.has_river = true;
-            new_state.river_direction = neighbor_state->coord;
-            hashmap_set(g_game_map, &new_state);
-            create_lake = false;
+        if (!valid_neighbor){
             break;
         }
 
-        curr_river_state.has_river = true;
-        if (i != rand_river_length - 1){
-            curr_river_state.river_direction = neighbor_coord;
-        }
-        hashmap_set(g_game_map, &curr_river_state); 
+        // Set River info
+        TileState new_river_state = curr_river_state;
+        new_river_state.has_river = true;
+        new_river_state.river_direction = (i != rand_river_length - 1) 
+                                            ? neighbor_state->coord
+                                            : new_river_state.coord;
+        hashmap_set(g_game_map, &new_river_state);
+        // Check river-end Tiles
+        if (neighbor_state->has_river){
+            // Set river-end State and end river gen
+            SDL_LogDebug(LOG_CAT_MAPGEN, "Hit River -> River end on [%lld][%lld][%lld]", 
+                neighbor_state->coord.pos_q, neighbor_state->coord.pos_r, neighbor_state->coord.pos_s
+            );
+            create_large_lake = false;
 
+            TileState new_river_end_state = *neighbor_state;
+            new_river_end_state.has_river = true;
+            new_river_end_state.river_direction = new_river_end_state.coord;
+            new_river_end_state.tile_biome = BIOME_FRESHWATER;
+            hashmap_set(g_game_map, &new_river_end_state);
+            break;
+        }
+
+        if (neighbor_state->tile_biome == BIOME_MARINE){                        
+            // Set river-end State and end river gen
+            SDL_LogDebug(LOG_CAT_MAPGEN, "Hit River -> marine end on [%lld][%lld][%lld]", 
+                neighbor_state->coord.pos_q, neighbor_state->coord.pos_r, neighbor_state->coord.pos_s
+            );
+            create_large_lake = false;
+            
+            TileState new_river_end_state = *neighbor_state;
+            new_river_end_state.has_river = true;
+            new_river_end_state.river_direction = new_river_end_state.coord;
+            hashmap_set(g_game_map, &new_river_end_state);
+            break;
+        }
+
+        // Move on to next tile
+        prev_river_coord = curr_river_state.coord;
         curr_river_state = *neighbor_state;
+    }
+
+    if (create_large_lake){        
+        SDL_LogDebug(LOG_CAT_MAPGEN, "Start Large Lake on [%lld][%lld][%lld]", 
+            curr_river_state.coord.pos_q, curr_river_state.coord.pos_r, curr_river_state.coord.pos_s
+        );
+        TileState new_state = curr_river_state;
+        new_state.has_river = true;
+        new_state.river_direction = curr_river_state.coord;
+        new_state.tile_biome = BIOME_FRESHWATER;
+        hashmap_set(g_game_map, &new_state);
     }
     SDL_LogDebug(LOG_CAT_MAPGEN, "------- End river.");
 }
@@ -354,6 +400,8 @@ int generate_map(uint8_t map_hex_radius){
     for (int i = 0; i < river_amount; i++){
         generate_river(arr_mountain_coords, arr_mountain_coords_size);
     }
+
+    // Store Large Lake coordinates in generate_river and pass them to generate_large_lakes();
 
     return SDL_APP_CONTINUE;
 }
