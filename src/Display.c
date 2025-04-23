@@ -14,9 +14,6 @@ int frame_count = 0;
 
 struct hashmap* g_texture_map = NULL;
 
-int init_and_add_texture(char* texture_id, char* texture_filename);
-int draw_hexagon(const TileState* curr_state, char* hex_def_name);
-
 // Calculate the six vertices of a flat-top hexagon
 void get_hexagon_vertices(SDL_FPoint* points, float center_x, float center_y, float radius) {
     for (int i = 0; i < 6; i++) {

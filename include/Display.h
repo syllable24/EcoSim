@@ -38,4 +38,8 @@ uint64_t texture_hash_map_hash(const void *item, uint64_t seed0, uint64_t seed1)
 
 void clear_display_state();
 
+int init_and_add_texture(char* texture_id, char* texture_filename);
+
+int draw_hexagon(const TileState* curr_state, char* hex_def_name);
+
 #endif
