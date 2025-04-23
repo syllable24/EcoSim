@@ -118,10 +118,7 @@ int draw_hexagon_texture(SDL_Renderer* renderer, SDL_Texture* texture, SDL_FPoin
     return SDL_APP_CONTINUE;
 }
 
-int draw_tile_map(
-    SDL_Renderer* renderer,
-    uint8_t map_hex_radius
-){
+int draw_tile_map(SDL_Renderer* renderer, uint8_t map_hex_radius, SDL_FRect border){
     SDL_LogTrace(LOG_CAT_DISPLAY, "Start draw_tile_map().");
 
     // Setup and Clear screen
@@ -129,19 +126,8 @@ int draw_tile_map(
     SDL_RenderClear(renderer);        
 
     // Draw Hex-Grid Background Texture
-    SDL_FPoint top_left_menu = {
-        .x = WINDOW_WIDTH / 8.0f,
-        .y = WINDOW_HEIGHT / 8.0f
-    };
-
-    SDL_FRect border = {
-        .x = top_left_menu.x,
-        .y = top_left_menu.y,
-        .w = WINDOW_WIDTH - (WINDOW_WIDTH / 16.0f),
-        .h = WINDOW_HEIGHT - (WINDOW_HEIGHT / 16.0f)
-    };
-      
     const TextureHashMapRecord* hex_grid_background_rec = hashmap_get(g_texture_map, &(TextureHashMapRecord){.name="Hex Grid Background"});    
+    
     SDL_RenderTextureTiled(renderer, hex_grid_background_rec->texture, NULL, 1.0f, &border);
 
     // Draw Hex Grid   
@@ -172,44 +158,6 @@ int draw_tile_map(
 
     // Draw Box around grid    
     SDL_LogTrace(LOG_CAT_DISPLAY, "Draw Board Borders.");
-
-    // Draw Menu
-    SDL_FRect horizontal_menu = {
-        .x = 0,
-        .y = 0,
-        .w = WINDOW_WIDTH,
-        .h = WINDOW_HEIGHT / 8.0f
-    };
-
-    SDL_FRect vertical_menu = {
-        .x = 0,
-        .y = WINDOW_HEIGHT / 8.0f,
-        .w = WINDOW_WIDTH / 8.0f,
-        .h = WINDOW_HEIGHT - (WINDOW_HEIGHT / 8.0f)
-    };
-
-    const TextureHashMapRecord* menu_background_rec = hashmap_get(g_texture_map, &(TextureHashMapRecord){.name="Menu Background"});       
-    SDL_RenderTexture(renderer, menu_background_rec->texture, NULL, &horizontal_menu);    
-    SDL_RenderTexture(renderer, menu_background_rec->texture, NULL, &vertical_menu);
-
-    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); // GREEN
-    SDL_RenderRect(renderer, &border);
-
-    // DEBUG INFO
-    SDL_RenderDebugTextFormat(renderer, 0, 0, "Camera Offset: X: %04.02f, Y: %04.02f", camera_offset_x, camera_offset_y);
-    SDL_RenderDebugTextFormat(renderer, 0, 12, "Screen Mouse Pos: X: %04.02f, Y: %04.02f", g_mouse_pos_x, g_mouse_pos_y);
-    SDL_RenderDebugTextFormat(renderer, 0, 24, "Grid Mouse Pos: X: %04.02f, Y: %04.02f", g_mouse_pos_x - border.x , g_mouse_pos_y - border.y);
-
-    frame_count++;
-    uint32_t now = SDL_GetTicks();
-    if (now > last_time + 1000) {        
-        frame_count = 0;
-        last_time = now;
-    }
-    SDL_RenderDebugTextFormat(renderer, 0, 36, "FPS: %d", frame_count);
-
-    // Present
-    SDL_RenderPresent(renderer);
 
     SDL_LogTrace(LOG_CAT_DISPLAY, "End draw_tile_map().");
     return SDL_APP_CONTINUE;
@@ -444,6 +392,13 @@ int frame_update(SDL_Renderer* renderer, float delta_time) {
         .y = WINDOW_HEIGHT / 8.0f
     };
 
+    SDL_FRect grid_border = {
+        .x = top_left_menu.x,
+        .y = top_left_menu.y,
+        .w = WINDOW_WIDTH - (WINDOW_WIDTH / 16.0f),
+        .h = WINDOW_HEIGHT - (WINDOW_HEIGHT / 16.0f)
+    };
+
     float hex_grid_min_x = -half_map_width + top_left_menu.x;
     float hex_grid_max_x = half_map_width / 4.0f;
     
@@ -454,14 +409,69 @@ int frame_update(SDL_Renderer* renderer, float delta_time) {
     camera_offset_x = fminf(fmaxf(camera_offset_x, hex_grid_min_x), hex_grid_max_x);
     camera_offset_y = fminf(fmaxf(camera_offset_y, hex_grid_min_y), hex_grid_max_y);        
 
-    /* Draw Map*/
-    if(draw_tile_map(renderer, HEX_GRID_RADIUS) != SDL_APP_CONTINUE){
+    /* Draw Map*/ 
+    if(draw_tile_map(renderer, HEX_GRID_RADIUS, grid_border) != SDL_APP_CONTINUE){
         SDL_LogError(LOG_CAT_MAIN, "Error while drawing tile map: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
+
+    // Draw Menu
+    if(draw_menu(renderer, grid_border) != SDL_APP_CONTINUE){
+        SDL_LogError(LOG_CAT_MAIN, "Error while drawing menu: %s", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+
+    // DEBUG INFO
+    if(draw_debug_info(renderer) != SDL_APP_CONTINUE){
+        SDL_LogError(LOG_CAT_MAIN, "Error while drawing debug_info: %s", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+
+    // Present
+    SDL_RenderPresent(renderer);
+
     return SDL_APP_CONTINUE;
 }
 
+int draw_debug_info(SDL_Renderer* renderer){
+    SDL_RenderDebugTextFormat(renderer, 0, 0, "Camera Offset: X: %04.02f, Y: %04.02f", camera_offset_x, camera_offset_y);
+    SDL_RenderDebugTextFormat(renderer, 0, 12, "Screen Mouse Pos: X: %04.02f, Y: %04.02f", g_mouse_pos_x, g_mouse_pos_y);    
+
+    frame_count++;
+    uint32_t now = SDL_GetTicks();
+    if (now > last_time + 1000) {        
+        frame_count = 0;
+        last_time = now;
+    }
+    SDL_RenderDebugTextFormat(renderer, 0, 36, "FPS: %d", frame_count);
+
+    return SDL_APP_CONTINUE;
+}
+
+int draw_menu(SDL_Renderer* renderer, SDL_FRect border){
+    SDL_FRect horizontal_menu = {
+        .x = 0,
+        .y = 0,
+        .w = WINDOW_WIDTH,
+        .h = WINDOW_HEIGHT / 8.0f
+    };
+
+    SDL_FRect vertical_menu = {
+        .x = 0,
+        .y = WINDOW_HEIGHT / 8.0f,
+        .w = WINDOW_WIDTH / 8.0f,
+        .h = WINDOW_HEIGHT - (WINDOW_HEIGHT / 8.0f)
+    };
+
+    const TextureHashMapRecord* menu_background_rec = hashmap_get(g_texture_map, &(TextureHashMapRecord){.name="Menu Background"});       
+    SDL_RenderTexture(renderer, menu_background_rec->texture, NULL, &horizontal_menu);    
+    SDL_RenderTexture(renderer, menu_background_rec->texture, NULL, &vertical_menu);
+
+    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); // GREEN
+    SDL_RenderRect(renderer, &border);
+
+    return SDL_APP_CONTINUE;
+}
 
 int texture_hash_map_compare(const void *a, const void *b, void *udata){
     const TextureHashMapRecord* ua = a;

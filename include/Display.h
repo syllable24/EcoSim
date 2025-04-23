@@ -20,9 +20,11 @@ void draw_hexagon_outline(SDL_Renderer* renderer, SDL_FPoint* vertices);
 
 int draw_hexagon_texture(SDL_Renderer* renderer, SDL_Texture* texture, SDL_FPoint points[6], float center_x, float center_y);
 
-int draw_hexagon_solid_color(SDL_Renderer* renderer, RgbColor color, SDL_FPoint points[6], float center_x, float center_y);
+int draw_tile_map(SDL_Renderer* renderer, uint8_t map_hex_radius, SDL_FRect border);
 
-int draw_tile_map(SDL_Renderer* renderer, uint8_t map_hex_radius);
+int draw_menu(SDL_Renderer* renderer, SDL_FRect border);
+
+int draw_debug_info(SDL_Renderer* renderer);
 
 int frame_update(SDL_Renderer* renderer, float delta_time);
 
