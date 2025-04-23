@@ -335,7 +335,7 @@ int init_and_add_texture(char* texture_id, char* texture_filename){
 }
 
 void handle_left_click(){
-    SDL_FPoint top_left_menu = {
+    SDL_FPoint grid_origin = {
         .x = WINDOW_WIDTH / 8.0f,
         .y = WINDOW_HEIGHT / 8.0f
     };
@@ -347,28 +347,50 @@ void handle_left_click(){
         g_mouse_pos_x,
         g_mouse_pos_y
     };
-    SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Grid (adjusted by camera offset) X: %04.02f Y: %04.02f", click.x, click.y);
 
-    CubeCoord coords = flat_top_pixel_to_hex(click, HEX_RADIUS, top_left_menu, camera_offset);    
-    const TileState* tile_state = hashmap_get(g_game_map, &(TileState){.coord = coords});
-    if (!tile_state) {
-        SDL_LogError(LOG_CAT_DISPLAY, "No Tile State found for coords [%"PRId64"][%"PRId64"][%"PRId64"]", 
-            coords.pos_q, coords.pos_r, coords.pos_s
-        );
-        g_tile_selected = false;
-        g_curr_selected_coords = (CubeCoord){0,0,0};
-        return;
+    SDL_FRect horizontal_menu = {
+        .x = 0,
+        .y = 0,
+        .w = WINDOW_WIDTH,
+        .h = WINDOW_HEIGHT / 8.0f
+    };
+
+    SDL_FRect vertical_menu = {
+        .x = 0,
+        .y = WINDOW_HEIGHT / 8.0f,
+        .w = WINDOW_WIDTH / 8.0f,
+        .h = WINDOW_HEIGHT - (WINDOW_HEIGHT / 8.0f)
+    };
+
+    bool clicked_menu = (click.x < vertical_menu.w || click.y < horizontal_menu.h);    
+
+    if (clicked_menu){
+        SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Menu X: %04.02f Y: %04.02f", click.x, click.y);
+        
+    } else {        
+        SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Grid (adjusted by camera offset) X: %04.02f Y: %04.02f", click.x, click.y);
+    
+        CubeCoord coords = flat_top_pixel_to_hex(click, HEX_RADIUS, grid_origin, camera_offset);    
+        const TileState* tile_state = hashmap_get(g_game_map, &(TileState){.coord = coords});
+        if (!tile_state) {
+            SDL_LogError(LOG_CAT_DISPLAY, "No Tile State found for coords [%"PRId64"][%"PRId64"][%"PRId64"]", 
+                coords.pos_q, coords.pos_r, coords.pos_s
+            );
+            g_tile_selected = false;
+            g_curr_selected_coords = (CubeCoord){0,0,0};
+            return;
+        }
+    
+        if (g_tile_selected && is_same_coord(&g_curr_selected_coords, &coords)){
+            g_tile_selected = false;        
+            g_curr_selected_coords = (CubeCoord){0,0,0};
+        } else {
+            g_tile_selected = true;        
+            g_curr_selected_coords = coords;
+        }
+    
+        log_tile_state_string(tile_state);
     }
-
-    if (g_tile_selected && is_same_coord(&g_curr_selected_coords, &coords)){
-        g_tile_selected = false;        
-        g_curr_selected_coords = (CubeCoord){0,0,0};
-    } else {
-        g_tile_selected = true;        
-        g_curr_selected_coords = coords;
-    }
-
-    log_tile_state_string(tile_state);
 }
 
 int frame_update(float delta_time) {
