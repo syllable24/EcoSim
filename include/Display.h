@@ -24,7 +24,7 @@ int draw_hexagon_solid_color(SDL_Renderer* renderer, RgbColor color, SDL_FPoint 
 
 int draw_tile_map(SDL_Renderer* renderer, uint8_t map_hex_radius);
 
-int frame_update(SDL_Renderer* renderer);
+int frame_update(SDL_Renderer* renderer, float delta_time);
 
 void handle_left_click(SDL_Renderer* renderer);
 

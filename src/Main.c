@@ -117,12 +117,29 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event){
 }
 
 /* This function runs once per frame, and is the heart of the program. */
-SDL_AppResult SDL_AppIterate(void *appstate){
-
+SDL_AppResult SDL_AppIterate(void *appstate){    
+    
     // Update mouse coordinates
     SDL_GetGlobalMouseState(&g_mouse_pos_x, &g_mouse_pos_y);
+
+    // Calculate delta time in seconds
+    uint32_t frame_start = SDL_GetTicks();
+
+    static uint32_t last_time = 0;
+    if (last_time == 0) last_time = frame_start;
+    float delta_time = (frame_start - last_time) / 1000.0f;
+    last_time = frame_start;
     
-    return frame_update(renderer);
+    int result = frame_update(renderer, delta_time);
+    
+    uint32_t frame_end = SDL_GetTicks();
+    uint32_t frame_duration = frame_end - frame_start;
+
+    if (frame_duration < TARGET_FRAME_TIME_MS){
+        SDL_Delay(TARGET_FRAME_TIME_MS - frame_duration);
+    }
+
+    return result;
 }
 
 /* This function runs once at shutdown. */

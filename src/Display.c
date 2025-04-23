@@ -9,6 +9,9 @@
 #include "../include/Display.h"
 #include "../include/Hashmap.h"
 
+uint32_t last_time = 0;
+int frame_count = 0;
+
 struct hashmap* g_texture_map = NULL;
 
 int init_and_add_texture(SDL_Renderer* renderer, char* texture_id, char* texture_filename);
@@ -196,6 +199,14 @@ int draw_tile_map(
     SDL_RenderDebugTextFormat(renderer, 0, 0, "Camera Offset: X: %04.02f, Y: %04.02f", camera_offset_x, camera_offset_y);
     SDL_RenderDebugTextFormat(renderer, 0, 12, "Screen Mouse Pos: X: %04.02f, Y: %04.02f", g_mouse_pos_x, g_mouse_pos_y);
     SDL_RenderDebugTextFormat(renderer, 0, 24, "Grid Mouse Pos: X: %04.02f, Y: %04.02f", g_mouse_pos_x - border.x , g_mouse_pos_y - border.y);
+
+    frame_count++;
+    uint32_t now = SDL_GetTicks();
+    if (now > last_time + 1000) {        
+        frame_count = 0;
+        last_time = now;
+    }
+    SDL_RenderDebugTextFormat(renderer, 0, 36, "FPS: %d", frame_count);
 
     // Present
     SDL_RenderPresent(renderer);
@@ -405,9 +416,9 @@ void handle_left_click(SDL_Renderer* renderer){
     log_tile_state_string(tile_state);
 }
 
-int frame_update(SDL_Renderer* renderer) {
-    // Update camera
-    const float scroll_speed = (HEX_RADIUS * 2) / 120.0f;
+int frame_update(SDL_Renderer* renderer, float delta_time) {
+    // Update camera    
+    const float scroll_speed = (WINDOW_WIDTH / (128 + 64)) * delta_time * 60.0f;
     const bool* keys = SDL_GetKeyboardState(NULL);
 
     // Update offsets based on arrow keys

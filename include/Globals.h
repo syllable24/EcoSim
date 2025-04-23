@@ -8,6 +8,9 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
+#define TARGET_FPS 60
+#define TARGET_FRAME_TIME_MS (1000 / TARGET_FPS)
+
 #define HEX_GRID_RADIUS 20
 
 #define RIVER_MIN_LENGTH 6
