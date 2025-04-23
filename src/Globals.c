@@ -1,4 +1,6 @@
 #include <stdlib.h>
+#include <SDL3/SDL.h>
+#include <SDL3_ttf/SDL_ttf.h>
 
 #include "../include/Globals.h"
 #include "../include/Hashmap.h"
@@ -27,6 +29,8 @@ RgbColor biome_colors[11] = {
 // Display
 SDL_Window* g_window = NULL;
 SDL_Renderer* g_renderer = NULL;
+TTF_Font* g_font_heading;
+TTF_Font* g_font_regular;
 
 // Game State
 struct hashmap* g_game_map = NULL;

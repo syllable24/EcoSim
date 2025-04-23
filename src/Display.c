@@ -3,6 +3,7 @@
 #include <stdio.h> 
 #include <math.h> 
 #include <SDL3/SDL.h>
+#include <SDL3_ttf/SDL_ttf.h>
 
 #include "../include/Globals.h"
 #include "../include/Util.h"
@@ -498,6 +499,30 @@ int draw_menu(SDL_FRect border){
 
     SDL_SetRenderDrawColor(g_renderer, 0, 255, 0, 255); // GREEN
     SDL_RenderRect(g_renderer, &border);
+
+    SDL_Color white = {255, 255, 255, SDL_ALPHA_OPAQUE };
+    SDL_Surface* text_surface = TTF_RenderText_Blended(g_font_heading, "Selected", 0, white);
+    if (!text_surface) {
+        SDL_LogError(LOG_CAT_DISPLAY, "Failed to render text.");
+        return SDL_APP_FAILURE;
+    }
+
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(g_renderer, text_surface);
+    SDL_DestroySurface(text_surface);
+    if (!texture){
+        SDL_LogError(LOG_CAT_DISPLAY, "Failed to render text-texture.");
+        return SDL_APP_FAILURE;
+    }
+
+    SDL_SetRenderDrawColor(g_renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+    
+    SDL_FRect dst;
+    SDL_GetTextureSize(texture, &dst.w, &dst.h);
+    dst.x = vertical_menu.x + (WINDOW_HEIGHT / 128.0f);
+    dst.y = vertical_menu.y + (WINDOW_WIDTH / 128.0f);
+
+    SDL_RenderTexture(g_renderer, texture, NULL, &dst);
+
 
     return SDL_APP_CONTINUE;
 }

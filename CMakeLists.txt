@@ -3,10 +3,7 @@ project(EcoSim C)
 set(CMAKE_BUILD_TYPE Debug)
 
 find_package(SDL3 REQUIRED)
-
-# Use pkg-config to find SDL3_ttf
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(SDL3TTF REQUIRED sdl3-ttf)
+find_package(SDL3_ttf REQUIRED)
 
 add_executable(EcoSim)
 
@@ -31,7 +28,7 @@ PRIVATE
 
 target_link_libraries(EcoSim 
     SDL3::SDL3
-    ${SDL3TTF_LIBRARIES}
+    SDL3_ttf::SDL3_ttf
 )
 
 # Ensure pkg-config flags are applied

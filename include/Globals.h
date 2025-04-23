@@ -1,5 +1,7 @@
 #include <stdint.h>
 #include <stdbool.h>
+#include <SDL3/SDL.h>
+#include <SDL3_ttf/SDL_ttf.h>
 
 #include "../include/hashmap.h"
 #include "../include/HexGridMath.h"
@@ -75,6 +77,8 @@ typedef struct {
 // Display
 extern SDL_Window* g_window;
 extern SDL_Renderer* g_renderer;
+extern TTF_Font* g_font_heading;
+extern TTF_Font* g_font_regular;
 
 // Common Config
 extern int WINDOW_WIDTH;

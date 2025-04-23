@@ -8,6 +8,7 @@
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <SDL3_ttf/SDL_ttf.h>
 
 #include "../include/Hashmap.h"
 #include "../include/cJSON.h"
@@ -62,6 +63,24 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
         return SDL_APP_FAILURE;
     }
     
+    /* Load TTF Fonts */
+    if (TTF_Init() < 0) {
+        SDL_LogError(LOG_CAT_MAIN, "TTF_Init failed.");
+        return SDL_APP_FAILURE;
+    }
+
+    g_font_heading = TTF_OpenFont("res/ArianaVioleta.ttf", 24);
+    if (!g_font_heading) {
+        SDL_LogError(LOG_CAT_MAIN, "Failed to load font: %s", "res/ArianaVioleta.ttf");
+        return SDL_APP_FAILURE;
+    }
+    
+    g_font_regular = TTF_OpenFont("res/TheConfessionFullRegular.ttf", 24);
+    if (!g_font_regular) {
+        SDL_LogError(LOG_CAT_MAIN, "Failed to load font: %s", "res/TheConfessionFullRegular.ttf");
+        return SDL_APP_FAILURE;
+    }
+
     /* Generate Map */
     if(generate_map(HEX_GRID_RADIUS) != SDL_APP_CONTINUE){
         SDL_LogError(LOG_CAT_MAIN, "Error while generating map: %s", SDL_GetError());
@@ -147,4 +166,5 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result){
     clear_display_state();    
     free(p.base_needs);
     cleanup_globals();
+    TTF_Quit();
 }
