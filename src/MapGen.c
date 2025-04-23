@@ -517,6 +517,7 @@ void generate_base_tiles(uint8_t map_hex_radius){
     uint32_t rand_tile_def_id = determine_rand_val(0, g_arr_tile_definitions_size - 1);    
 
     // Center
+    SDL_LogDebug(LOG_CAT_MAPGEN, "Allocating center tile.");
     TileState* center_tile = malloc(sizeof(TileState));
     if (center_tile != NULL) {    
         center_tile->coord = origin_coord;

@@ -54,10 +54,10 @@ uint64_t hex_count_in_ring(uint16_t radius){
 
 CubeCoord* cube_ring(CubeCoord orig, uint16_t radius){
     uint64_t hex_amount = hex_count_in_ring(radius);
-    SDL_LogTrace(LOG_CAT_HEXMATH, "Calculated Hex Amount in ring radius: %d: %d.", radius, hex_amount);
+    SDL_LogTrace(LOG_CAT_HEXMATH, "cube_ring() Calculated Hex Amount in ring radius: %d: %d.", radius, hex_amount);
     CubeCoord* ring = malloc(hex_amount * sizeof(CubeCoord));
     if (!ring){
-        SDL_LogError(LOG_CAT_HEXMATH, "Memory allocation for hex ring failed (%u entries, %zu bytes).", hex_amount, hex_amount * sizeof(CubeCoord));        
+        SDL_LogError(LOG_CAT_HEXMATH, "cube_ring() Memory allocation for hex ring failed (%u entries, %zu bytes).", hex_amount, hex_amount * sizeof(CubeCoord));        
         ring = NULL;
         return NULL;
     }
@@ -66,7 +66,7 @@ CubeCoord* cube_ring(CubeCoord orig, uint16_t radius){
     uint64_t ring_index = 0;    
     for (uint8_t i = 0; i < 6; i++){
         for (uint8_t j = 0; j < radius; j++){            
-            SDL_LogTrace(LOG_CAT_HEXMATH, "Ring radius %d: Coords: [%d][%d][%d].", 
+            SDL_LogTrace(LOG_CAT_HEXMATH, "cube_ring() Ring radius %d: Coords: [%d][%d][%d].", 
                 radius,                 
                 hex.pos_q,hex.pos_r,hex.pos_s
             );
@@ -111,9 +111,9 @@ CubeCoord** cube_sprial(CubeCoord orig, uint16_t radius){
             }
             return NULL;
         }
-        for (int j = 0; j < hex_count_in_ring(radius); j++){
-            SDL_LogTrace(LOG_CAT_HEXMATH, "cube_spiral Ring radius %d: Hex Coords: [%d][%d][%d].", 
-                radius,                 
+        for (int j = 0; j < hex_count_in_ring(i); j++){
+            SDL_LogTrace(LOG_CAT_HEXMATH, "cube_spiral() Ring radius %d: Hex Coords: [%lld][%lld][%lld].", 
+                i,                 
                 ring[j].pos_q, ring[j].pos_r, ring[j].pos_s
             );
         }
