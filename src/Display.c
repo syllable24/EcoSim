@@ -35,6 +35,40 @@ void draw_hexagon_outline(SDL_Renderer* renderer, SDL_FPoint* vertices) {
     }
 }
 
+int draw_hexagon_filled(SDL_Renderer* renderer, SDL_FColor color, SDL_FPoint points[6], float center_x, float center_y){    
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+
+    // Define hexagon vertices and texture coordinates
+    SDL_Vertex vertices[7];     
+
+    vertices[0].position.x = center_x;
+    // Center vertex
+    vertices[0].position.y = center_y;
+    vertices[0].color = color;
+
+    // Outer vertices
+    for (int i = 0; i < 6; i++) {
+        vertices[i + 1].position = points[i];
+        vertices[i + 1].color = color;
+    }
+
+    // Define triangle indices for fan
+    int indices[] = { 
+        0, 1, 2, 
+        0, 2, 3, 
+        0, 3, 4, 
+        0, 4, 5, 
+        0, 5, 6, 
+        0, 6, 1 
+    };
+
+    if (SDL_RenderGeometry(renderer, NULL, vertices, 7, indices, 18) < 0) {
+        SDL_LogError(LOG_CAT_DISPLAY, "RenderGeometry failed: %s", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+    return SDL_APP_CONTINUE;
+}
+
 int draw_hexagon_texture(SDL_Renderer* renderer, SDL_Texture* texture, SDL_FPoint points[6], float center_x, float center_y){    
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
 
@@ -127,7 +161,10 @@ int draw_tile_map(
         // Get Hex Texture by name
         char* hex_def_name = curr_state->tile_def->name;
 
-        draw_hexagon(renderer, curr_state, hex_def_name);        
+        if (draw_hexagon(renderer, curr_state, hex_def_name) != SDL_APP_CONTINUE){            
+            SDL_LogError(LOG_CAT_DISPLAY, "Error during draw_hexagon().");
+            return SDL_APP_FAILURE;
+        }
     }
 
     // Draw Box around grid    
@@ -198,7 +235,28 @@ int draw_hexagon(SDL_Renderer* renderer, const TileState* curr_state, char* hex_
         return SDL_APP_CONTINUE;
     }
 
-    // Get Hex Texture by name
+    // Calc Hex vertices
+    SDL_FPoint points[6];
+    get_hexagon_vertices(points, center.x, center.y, HEX_RADIUS);
+
+    //Determine Biome color
+    int curr_biome = curr_state->tile_biome;
+    RgbColor biome_color = get_biome_color(curr_biome - 1);
+    SDL_FColor color = {
+        .r = biome_color.r / 255.0f, 
+        .g = biome_color.g / 255.0f, 
+        .b = biome_color.b / 255.0f, 
+        .a = biome_color.a / 255.0f
+    };
+   
+    // Draw solid color Hex
+    if (draw_hexagon_filled(renderer, color, points, center.x, center.y) != SDL_APP_CONTINUE){
+        SDL_LogError(LOG_CAT_MAIN, "Error during draw_hexagon_filled: %s.", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+
+    // Draw Textured Hex
+    /*    
     SDL_LogTrace(LOG_CAT_DISPLAY, "Hex def name: %s.", hex_def_name);
     const TextureHashMapRecord* rec = hashmap_get(g_texture_map, &(TextureHashMapRecord){.name=hex_def_name});
     if (!rec || !rec->texture) {
@@ -206,54 +264,54 @@ int draw_hexagon(SDL_Renderer* renderer, const TileState* curr_state, char* hex_
         SDL_RenderPresent(renderer);
         return SDL_APP_FAILURE;
     }            
-    SDL_Texture* texture = rec->texture;
+    SDL_Texture* texture = rec->texture;    
+    if (draw_hexagon_texture(renderer, texture, points, center.x, center.y) != SDL_APP_CONTINUE){
+        SDL_LogError(LOG_CAT_MAIN, "Error during draw_hexagon_texture: %s.", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+    */
 
-    // Calc Hex vertices
-    SDL_FPoint points[6];
-    get_hexagon_vertices(points, center.x, center.y, HEX_RADIUS);
+    // Draw hex outline    
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Black Outline
+    draw_hexagon_outline(renderer, points);
 
-    // Draw Hex Texture to screen
-    //if (draw_hexagon_texture(renderer, texture, points, center.x, center.y) != SDL_APP_CONTINUE){
-    //    SDL_LogError(LOG_CAT_MAIN, "Error during draw_hexagon_texture: %s.", SDL_GetError());
-    //    return SDL_APP_FAILURE;
-    //}
+    // Draw Rivers
+    if (curr_state->has_river == true){
+        SDL_SetRenderDrawColor(renderer, 153, 153, 255, 255);
+        if (!is_same_coord(&curr_state->river_source, &curr_state->coord)){
+            SDL_FPoint river_source_center = flat_top_hex_to_pixel(curr_state->river_source, HEX_RADIUS, top_left_menu, camera_offset);
+            SDL_RenderLine(renderer, river_source_center.x, river_source_center.y, center.x, center.y);
+        } else {
+            SDL_FRect rect = {
+                .x = center.x - HEX_RADIUS / 8.0f,
+                .y = center.y - HEX_RADIUS / 8.0f,
+                .w = HEX_RADIUS / 4.0f,
+                .h = HEX_RADIUS / 4.0f
+            };
+            SDL_RenderFillRect(renderer, &rect);
+        }
 
-    //Determine Biome color
-    int curr_biome = curr_state->tile_biome;
-    RgbColor biome_color = get_biome_color(curr_biome-1);
+        if (!is_same_coord(&curr_state->river_destination, &curr_state->coord)){
+            SDL_FPoint river_dest_center = flat_top_hex_to_pixel(curr_state->river_destination, HEX_RADIUS, top_left_menu, camera_offset);        
+            SDL_RenderLine(renderer, center.x, center.y, river_dest_center.x, river_dest_center.y);
+        } else {
+            SDL_FRect rect = {
+                .x = center.x - HEX_RADIUS / 16.0f,
+                .y = center.y - HEX_RADIUS / 16.0f,
+                .w = HEX_RADIUS / 8.0f,
+                .h = HEX_RADIUS / 8.0f
+            };
+            SDL_RenderFillRect(renderer, &rect);
+        }                
+    }
 
-    // DEBUG INFO Biome
-    SDL_SetRenderDrawColor(renderer, biome_color.r, biome_color.g, biome_color.b, 255); 
-    SDL_FRect sq = {
-        .x = center.x,
-        .y = center.y,
-        .w = HEX_RADIUS / 2.0f,
-        .h = HEX_RADIUS / 2.0f
-    };
-    SDL_RenderFillRect(renderer, &sq);
-
+    // DEBUG INFO Coordinates
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderDebugTextFormat(renderer, center.x - (HEX_RADIUS/1.5f), center.y, "[%d]", curr_biome);
     SDL_RenderDebugTextFormat(renderer, center.x - (HEX_RADIUS/1.5f), center.y - 12, "[%d][%d][%d]", 
         curr_state->coord.pos_q, curr_state->coord.pos_r, curr_state->coord.pos_s
     );
 
-    // Draw hex outline    
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Black Outline
-    draw_hexagon_outline(renderer, points);    
-
-    if (curr_state->has_river == true){
-        SDL_SetRenderDrawColor(renderer, 153, 153, 255, 255);
-        SDL_FRect river_sq = {
-            .x = center.x,
-            .y = center.y,
-            .w = HEX_RADIUS / 8.0f,
-            .h = HEX_RADIUS / 8.0f
-        };
-        SDL_RenderFillRect(renderer, &river_sq);
-    }
-
-    // Red inner Hex for selected tiles
+    // Draw Red inner Hex for selected tiles
     if (curr_state->selected){
         get_hexagon_vertices(points, center.x, center.y, HEX_RADIUS - 5.0f);
         SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); // Red outline

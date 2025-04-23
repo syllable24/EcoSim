@@ -66,7 +66,8 @@ typedef struct {
     TileDefinition* tile_def;
     bool selected;
     bool has_river;
-    CubeCoord river_direction;
+    CubeCoord river_source;
+    CubeCoord river_destination;
 } TileState;
 
 

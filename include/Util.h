@@ -1,6 +1,7 @@
 #include <stdint.h>
 
 #include "../include/Globals.h"
+#include "../include/HexGridMath.h"
 
 #ifndef UTIL_H
 #define UTIL_H
@@ -35,5 +36,9 @@ char* print_coord(CubeCoord coord);
 void log_tile_state_string(const TileState* state);
 
 void log_tile_state_string_to_file(const TileState* state, char* file_name);
+
+bool is_same_coord(const CubeCoord* a, const CubeCoord* b);
+
+void shuffle_array(void* base, size_t n_items, size_t size) ;
 
 #endif

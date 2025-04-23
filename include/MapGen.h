@@ -21,9 +21,13 @@ void generate_river(CubeCoord* arr_mountain_coords, uint16_t arr_mountain_coords
 
 const TileState* pick_seed_tile(CubeCoord* seed_coord, uint8_t filter);
 
-typedef bool (*NeighborPredicate)(const TileState* tile, void* context);
+const TileState* pick_rand_river_neighbor(CubeCoord river_source, CubeCoord river_position);
 
+/* Cube Coord Neighbor checks */
+typedef bool (*NeighborPredicate)(const TileState* tile, void* context);
 bool any_neighbor_matches(CubeCoord center, NeighborPredicate predicate, void* context);
+
+bool all_neighbors_match(CubeCoord center, NeighborPredicate predicate, void* context);
 
 bool is_out_of_bounds(CubeCoord coord);
 
@@ -32,8 +36,6 @@ bool is_marine(const TileState* tile, void* context);
 bool is_mountain(const TileState* tile, void* context);
 
 bool is_marine_or_mountain(const TileState* tile, void* context);
-
-bool is_same_coord(CubeCoord* a, CubeCoord* b);
 
 #endif
 

@@ -277,12 +277,14 @@ void log_tile_state_string(const TileState* state){
 		"tile_state.selected: [%d]\n"
 		"tile_state.biome: [%s]\n"
 		"tile_state.has_river: [%d]\n"
-		"tile_state.river_direction: [%lld][%lld][%lld]\n"
+		"tile_state.river_source: [%lld][%lld][%lld]\n"
+		"tile_state.river_destination: [%lld][%lld][%lld]\n"
 		,
 		state->selected,
 		get_biome_name(state->tile_biome),
 		state->has_river,
-		state->river_direction.pos_q, state->river_direction.pos_r, state->river_direction.pos_s
+		state->river_source.pos_q, state->river_source.pos_r, state->river_source.pos_s,
+		state->river_destination.pos_q, state->river_destination.pos_r, state->river_destination.pos_s
 	);
 	fputs(meta_message, stderr);
 	fflush(stderr);
@@ -570,4 +572,28 @@ void log_with_timestamp(void* userdata, int category, SDL_LogPriority priority, 
         fputs(log_message, file);
         fflush(file);
     }
+}
+
+void shuffle_array(void* base, size_t n_items, size_t size) {
+    char* array = (char*) base;
+    void* temp = malloc(size);
+    if (!temp) return;
+
+    for (size_t i = n_items - 1; i > 0; i--) {
+        size_t j = rand() % (i + 1);
+
+        void* a = array + i * size;
+        void* b = array + j * size;
+
+        memcpy(temp, a, size);
+        memcpy(a, b, size);
+        memcpy(b, temp, size);
+    }
+    free(temp);
+}
+
+bool is_same_coord(const CubeCoord* a, const CubeCoord* b){
+    return a->pos_q == b->pos_q 
+        && a->pos_r == b->pos_r
+        && a->pos_s == b->pos_s;
 }
