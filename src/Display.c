@@ -9,8 +9,10 @@
 #include "../include/Display.h"
 #include "../include/Hashmap.h"
 
-uint32_t last_time = 0;
+uint32_t frame_last_time = 0;
 int frame_count = 0;
+bool g_tile_selected = false;
+CubeCoord g_curr_selected_coords = {0,0,0};
 
 struct hashmap* g_texture_map = NULL;
 
@@ -268,11 +270,11 @@ int draw_hexagon(const TileState* curr_state, char* hex_def_name){
     );
 
     // Draw Red inner Hex for selected tiles
-    if (curr_state->selected){
+    if (g_tile_selected && is_same_coord(&curr_state->coord, &g_curr_selected_coords)){
         get_hexagon_vertices(points, center.x, center.y, HEX_RADIUS - 5.0f);
         SDL_SetRenderDrawColor(g_renderer, 255, 0, 0, 255); // Red outline
         draw_hexagon_outline(points);
-    }    
+    }
 
     return SDL_APP_CONTINUE;
 }
@@ -347,16 +349,24 @@ void handle_left_click(){
     };
     SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Grid (adjusted by camera offset) X: %04.02f Y: %04.02f", click.x, click.y);
 
-    CubeCoord coords = flat_top_pixel_to_hex(click, HEX_RADIUS, top_left_menu, camera_offset);
-    const TileState* tile_state = hashmap_get(g_game_map, &(TileState){.coord=coords});
+    CubeCoord coords = flat_top_pixel_to_hex(click, HEX_RADIUS, top_left_menu, camera_offset);    
+    const TileState* tile_state = hashmap_get(g_game_map, &(TileState){.coord = coords});
     if (!tile_state) {
-        SDL_LogError(LOG_CAT_DISPLAY, "No Tile State found for coords [%"PRId64"][%"PRId64"][%"PRId64"]", coords.pos_q, coords.pos_r, coords.pos_s);
+        SDL_LogError(LOG_CAT_DISPLAY, "No Tile State found for coords [%"PRId64"][%"PRId64"][%"PRId64"]", 
+            coords.pos_q, coords.pos_r, coords.pos_s
+        );
+        g_tile_selected = false;
+        g_curr_selected_coords = (CubeCoord){0,0,0};
         return;
     }
 
-    TileState new_state = *tile_state;
-    new_state.selected = !new_state.selected;
-    hashmap_set(g_game_map, &new_state);
+    if (g_tile_selected && is_same_coord(&g_curr_selected_coords, &coords)){
+        g_tile_selected = false;        
+        g_curr_selected_coords = (CubeCoord){0,0,0};
+    } else {
+        g_tile_selected = true;        
+        g_curr_selected_coords = coords;
+    }
 
     log_tile_state_string(tile_state);
 }
@@ -436,9 +446,9 @@ int draw_debug_info(){
 
     frame_count++;
     uint32_t now = SDL_GetTicks();
-    if (now > last_time + 1000) {        
+    if (now > frame_last_time + 1000) {        
         frame_count = 0;
-        last_time = now;
+        frame_last_time = now;
     }
     SDL_RenderDebugTextFormat(g_renderer, 0, 36, "FPS: %d", frame_count);
 

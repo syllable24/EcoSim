@@ -273,14 +273,12 @@ void log_tile_state_string(const TileState* state){
 	fflush(stderr);
 
 	char meta_message[1024];
-	snprintf(meta_message, sizeof(meta_message), 
-		"tile_state.selected: [%d]\n"
+	snprintf(meta_message, sizeof(meta_message), 		
 		"tile_state.biome: [%s]\n"
 		"tile_state.has_river: [%d]\n"
 		"tile_state.river_source: [%lld][%lld][%lld]\n"
 		"tile_state.river_destination: [%lld][%lld][%lld]\n"
-		,
-		state->selected,
+		,		
 		get_biome_name(state->tile_biome),
 		state->has_river,
 		state->river_source.pos_q, state->river_source.pos_r, state->river_source.pos_s,
@@ -332,10 +330,8 @@ void log_tile_state_string_to_file(const TileState* state, char* file_name){
 	fflush(file);
 
 	char meta_message[1024];
-	snprintf(meta_message, sizeof(meta_message), 
-	"tile_state.selected: [%d]\n"
-	"tile_state.biome: [%s]\n",
-		state->selected,
+	snprintf(meta_message, sizeof(meta_message), 	
+	"tile_state.biome: [%s]\n",		
 		get_biome_name(state->tile_biome)
 	);
 	fputs(meta_message, file);

@@ -50,12 +50,9 @@ void generate_mountain_chain(CubeCoord* arr_mountain_coords, uint16_t* arr_mount
         return;
     }
 
-    hashmap_set(g_game_map, &(TileState){
-        .coord=tile_state->coord,
-        .tile_def=tile_state->tile_def,
-        .selected=tile_state->selected,
-        .tile_biome=BIOME_MOUNTAIN
-    });
+    TileState new_state = *tile_state;
+    new_state.tile_biome = BIOME_MOUNTAIN;
+    hashmap_set(g_game_map, &new_state);
 
     arr_mountain_coords[*arr_mountain_coords_size] = tile_state->coord;
     (*arr_mountain_coords_size)++;
@@ -95,13 +92,11 @@ void generate_mountain_chain(CubeCoord* arr_mountain_coords, uint16_t* arr_mount
 
         // Accept 
         reject_counter = 0;
-        curr_coords = neighbor;        
-        hashmap_set(g_game_map, &(TileState){
-            .coord=tile_state->coord,
-            .tile_def=tile_state->tile_def,
-            .selected=tile_state->selected,
-            .tile_biome=BIOME_MOUNTAIN
-        });
+        curr_coords = neighbor;
+
+        TileState new_state = *tile_state;
+        new_state.tile_biome = BIOME_MOUNTAIN;
+        hashmap_set(g_game_map, &new_state);
         arr_mountain_coords[*arr_mountain_coords_size] = tile_state->coord;
         (*arr_mountain_coords_size)++;
     }
@@ -277,12 +272,9 @@ void generate_marine_chain(){
             continue;
         }
         const TileState* neighbor_state = hashmap_get(g_game_map, &(TileState){.coord=neighbor});
-        hashmap_set(g_game_map, &(TileState){
-            .coord=neighbor_state->coord,
-            .tile_def=neighbor_state->tile_def,
-            .selected=neighbor_state->selected,
-            .tile_biome=BIOME_MARINE
-        });
+        TileState new_neighbor_state = *neighbor_state;
+        new_neighbor_state.tile_biome = BIOME_MARINE;
+        hashmap_set(g_game_map, &new_neighbor_state);
     }
     
     CubeCoord curr_coords = tile_state->coord;
@@ -319,13 +311,10 @@ void generate_marine_chain(){
 
         // Accept 
         reject_counter = 0;
-        curr_coords = next_neighbor;        
-        hashmap_set(g_game_map, &(TileState){
-            .coord=tile_state->coord,
-            .tile_def=tile_state->tile_def,
-            .selected=tile_state->selected,
-            .tile_biome=BIOME_MARINE
-        });        
+        curr_coords = next_neighbor;
+        TileState new_state = *tile_state;
+        new_state.tile_biome = BIOME_MARINE;
+        hashmap_set(g_game_map, &new_state);        
 
         // Set neighbors to Biome MARINE
         for (int i = 0; i < 6; i++){
@@ -337,12 +326,10 @@ void generate_marine_chain(){
             if (neighbor_state->tile_biome == BIOME_MOUNTAIN || neighbor_state->tile_biome == BIOME_MARINE){                
                 continue;
             }
-            hashmap_set(g_game_map, &(TileState){
-                .coord=neighbor_state->coord,
-                .tile_def=neighbor_state->tile_def,
-                .selected=neighbor_state->selected,
-                .tile_biome=BIOME_MARINE
-            });
+            
+            TileState new_neighbor_state = *neighbor_state;
+            new_neighbor_state.tile_biome = BIOME_MARINE;
+            hashmap_set(g_game_map, &new_neighbor_state);
         }
 
     }
@@ -521,8 +508,7 @@ void generate_base_tiles(uint8_t map_hex_radius){
     TileState* center_tile = malloc(sizeof(TileState));
     if (center_tile != NULL) {    
         center_tile->coord = origin_coord;
-        center_tile->tile_def = g_arr_tile_definitions[rand_tile_def_id];
-        center_tile->selected = false;
+        center_tile->tile_def = g_arr_tile_definitions[rand_tile_def_id];        
         center_tile->tile_biome = 0;
         center_tile->has_river = false;
         center_tile->river_source = (CubeCoord){0,0,0};
@@ -544,8 +530,7 @@ void generate_base_tiles(uint8_t map_hex_radius){
             
             TileState* new_tile = malloc(sizeof(TileState));
             if (new_tile != NULL) {                
-                new_tile->coord = curr_coord;
-                new_tile->selected = false;
+                new_tile->coord = curr_coord;                
                 new_tile->tile_biome = 0;
                 new_tile->has_river = false;
                 new_tile->river_destination = curr_coord;

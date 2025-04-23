@@ -66,8 +66,7 @@ typedef struct {
 typedef struct {
     CubeCoord coord;
     uint8_t tile_biome;
-    TileDefinition* tile_def;
-    bool selected;
+    TileDefinition* tile_def;    
     bool has_river;
     CubeCoord river_source;
     CubeCoord river_destination;
