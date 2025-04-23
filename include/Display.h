@@ -12,23 +12,23 @@ typedef struct {
     SDL_Texture* texture;
 } TextureHashMapRecord;
 
-int load_textures(SDL_Renderer* renderer, TileDefinition** tile_definitions, uint8_t tile_definition_size);
+int load_textures(TileDefinition** tile_definitions, uint8_t tile_definition_size);
 
 void get_hexagon_vertices(SDL_FPoint* points, float center_x, float center_y, float radius);
 
-void draw_hexagon_outline(SDL_Renderer* renderer, SDL_FPoint* vertices);
+void draw_hexagon_outline(SDL_FPoint* vertices);
 
-int draw_hexagon_texture(SDL_Renderer* renderer, SDL_Texture* texture, SDL_FPoint points[6], float center_x, float center_y);
+int draw_hexagon_texture(SDL_Texture* texture, SDL_FPoint points[6], float center_x, float center_y);
 
-int draw_tile_map(SDL_Renderer* renderer, uint8_t map_hex_radius, SDL_FRect border);
+int draw_tile_map(uint8_t map_hex_radius, SDL_FRect border);
 
-int draw_menu(SDL_Renderer* renderer, SDL_FRect border);
+int draw_menu(SDL_FRect border);
 
-int draw_debug_info(SDL_Renderer* renderer);
+int draw_debug_info();
 
-int frame_update(SDL_Renderer* renderer, float delta_time);
+int frame_update(float delta_time);
 
-void handle_left_click(SDL_Renderer* renderer);
+void handle_left_click();
 
 int texture_hash_map_compare(const void *a, const void *b, void *udata);
 

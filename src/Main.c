@@ -17,9 +17,6 @@
 #include "../include/MapGen.h"
 #include "../include/Globals.h"
 
-static SDL_Window* window = NULL;
-static SDL_Renderer* renderer = NULL;
-
 PopulationUnit p;
 
 char* message = "Hello EcoSim!";
@@ -46,8 +43,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
     
     /* Create the window */
     SDL_LogDebug(LOG_CAT_MAIN, "Creating Window and Renderer.");
-    if (!SDL_CreateWindowAndRenderer("Eco Sim", WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_FULLSCREEN, &window, &renderer)) {
-        SDL_LogError(LOG_CAT_MAIN, "Couldn't create window and renderer: %s", SDL_GetError());
+    if (!SDL_CreateWindowAndRenderer("Eco Sim", WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_FULLSCREEN, &g_window, &g_renderer)) {
+        SDL_LogError(LOG_CAT_MAIN, "Couldn't create g_window and renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
     
@@ -60,7 +57,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
 
     /* Load Textures */
     SDL_LogDebug(LOG_CAT_MAIN, "Loading Textures.");    
-    if (load_textures(renderer, g_arr_tile_definitions, g_arr_tile_definitions_size) != SDL_APP_CONTINUE){
+    if (load_textures(g_arr_tile_definitions, g_arr_tile_definitions_size) != SDL_APP_CONTINUE){
         SDL_LogError(LOG_CAT_MAIN, "Couldn't load textures: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
@@ -101,7 +98,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event){
             switch(event->button.button){
                 case 1: // Left-Click
                     SDL_LogDebug(LOG_CAT_MAIN, "Left-Click");
-                    handle_left_click(renderer);
+                    handle_left_click(g_renderer);
                     break;
                 case 2: // Middle-Click
                     SDL_LogDebug(LOG_CAT_MAIN, "Middle-Click");
@@ -130,7 +127,7 @@ SDL_AppResult SDL_AppIterate(void *appstate){
     float delta_time = (frame_start - last_time) / 1000.0f;
     last_time = frame_start;
     
-    int result = frame_update(renderer, delta_time);
+    int result = frame_update(delta_time);
     
     uint32_t frame_end = SDL_GetTicks();
     uint32_t frame_duration = frame_end - frame_start;
@@ -144,8 +141,8 @@ SDL_AppResult SDL_AppIterate(void *appstate){
 
 /* This function runs once at shutdown. */
 void SDL_AppQuit(void *appstate, SDL_AppResult result){    
-    if (renderer) SDL_DestroyRenderer(renderer);
-    if (window) SDL_DestroyWindow(window);
+    if (g_renderer) SDL_DestroyRenderer(g_renderer);
+    if (g_window) SDL_DestroyWindow(g_window);
     
     clear_display_state();    
     free(p.base_needs);

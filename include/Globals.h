@@ -73,7 +73,9 @@ typedef struct {
     CubeCoord river_destination;
 } TileState;
 
-
+// Display
+extern SDL_Window* g_window;
+extern SDL_Renderer* g_renderer;
 
 // Common Config
 extern int WINDOW_WIDTH;

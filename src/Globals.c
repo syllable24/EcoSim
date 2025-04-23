@@ -24,6 +24,10 @@ RgbColor biome_colors[11] = {
     {128,128,128,255}  // [BIOME_MOUNTAIN]
 };
 
+// Display
+SDL_Window* g_window = NULL;
+SDL_Renderer* g_renderer = NULL;
+
 // Game State
 struct hashmap* g_game_map = NULL;
 float camera_offset_x = 0.0f;
