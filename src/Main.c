@@ -26,12 +26,12 @@ char* message = "Hello EcoSim!";
 
 void setup_logging(){
     // Set Log Priorities
-    SDL_SetLogPriority(LOG_CAT_MAIN, SDL_LOG_PRIORITY_TRACE);
+    SDL_SetLogPriority(LOG_CAT_MAIN, SDL_LOG_PRIORITY_DEBUG);
     SDL_SetLogPriority(LOG_CAT_DISPLAY, SDL_LOG_PRIORITY_DEBUG);
     SDL_SetLogPriority(LOG_CAT_POPULATION, SDL_LOG_PRIORITY_INFO);
     SDL_SetLogPriority(LOG_CAT_UTIL, SDL_LOG_PRIORITY_INFO);
-    SDL_SetLogPriority(LOG_CAT_MAPGEN, SDL_LOG_PRIORITY_TRACE);
-    SDL_SetLogPriority(LOG_CAT_HEXMATH, SDL_LOG_PRIORITY_TRACE);
+    SDL_SetLogPriority(LOG_CAT_MAPGEN, SDL_LOG_PRIORITY_DEBUG);
+    SDL_SetLogPriority(LOG_CAT_HEXMATH, SDL_LOG_PRIORITY_INFO);
 
     // TODO: Add timestamp to log lines
     SDL_SetLogOutputFunction(log_with_timestamp, NULL);
