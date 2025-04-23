@@ -425,23 +425,23 @@ int frame_update(SDL_Renderer* renderer) {
     }
 
     // Calculate map boundaries
-    float total_map_width = HEX_RADIUS * 2.0f * HEX_GRID_RADIUS;
-    float total_map_heigth = HEX_RADIUS * sqrtf(3.0f) * HEX_GRID_RADIUS;
+    float half_map_width = HEX_RADIUS * 2.0f * HEX_GRID_RADIUS;
+    float half_map_heigth = HEX_RADIUS * sqrtf(3.0f) * HEX_GRID_RADIUS;
 
     SDL_FPoint top_left_menu = {
         .x = WINDOW_WIDTH / 8.0f,
         .y = WINDOW_HEIGHT / 8.0f
     };
 
-    float hex_grid_min_x = ((-total_map_width) - (WINDOW_WIDTH / 2.0f) + top_left_menu.x );
-    float hex_grid_max_x = ((total_map_width) + (WINDOW_WIDTH / 2.0f) + top_left_menu.x );
+    float hex_grid_min_x = -half_map_width + top_left_menu.x;
+    float hex_grid_max_x = half_map_width / 4.0f;
     
-    float hex_grid_min_y = ((-total_map_heigth) - (WINDOW_HEIGHT / 2.0f) + top_left_menu.y );
-    float hex_grid_max_y = (-total_map_heigth) - (WINDOW_HEIGHT / 2.0f) * -1.0f;
+    float hex_grid_min_y = (-half_map_heigth) - top_left_menu.y;
+    float hex_grid_max_y = half_map_heigth / 1.5f;
 
     // Clamp offsets
-    //camera_offset_x = fminf(fmaxf(camera_offset_x, hex_grid_min_x), hex_grid_max_x);
-    //camera_offset_y = fminf(fmaxf(camera_offset_y, hex_grid_min_y), hex_grid_max_y);        
+    camera_offset_x = fminf(fmaxf(camera_offset_x, hex_grid_min_x), hex_grid_max_x);
+    camera_offset_y = fminf(fmaxf(camera_offset_y, hex_grid_min_y), hex_grid_max_y);        
 
     /* Draw Map*/
     if(draw_tile_map(renderer, HEX_GRID_RADIUS) != SDL_APP_CONTINUE){
