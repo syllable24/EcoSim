@@ -185,8 +185,7 @@ void generate_river(CubeCoord* arr_mountain_coords, uint16_t arr_mountain_coords
             } else {
                 SDL_LogDebug(LOG_CAT_MAPGEN, "No more valid neighbors ending river early.");
                 break;
-            }
-            
+            }            
         }
 
         CubeCoord neigh_coord = valid_river_neighbor->coord;
@@ -209,7 +208,7 @@ void generate_river(CubeCoord* arr_mountain_coords, uint16_t arr_mountain_coords
 
     // Update last river tile in river
     if (curr_river_state.tile_biome != BIOME_MARINE){
-        curr_river_state.tile_biome = BIOME_FRESHWATER;    
+        curr_river_state.tile_biome = BIOME_FRESHWATER;
     }
     curr_river_state.has_river = true;
     curr_river_state.river_source = prev_river_state.coord;
