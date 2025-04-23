@@ -224,10 +224,10 @@ int draw_hexagon(SDL_Renderer* renderer, const TileState* curr_state, char* hex_
     );
 
     // Skip off-screen hexagons
-    float min_render_px_x = HEX_RADIUS + ((WINDOW_WIDTH / 8.0f) * 0.6f);
+    float min_render_px_x = HEX_RADIUS + ((WINDOW_WIDTH / 8.0f) * 0.5f);
     float max_render_px_x = WINDOW_WIDTH + HEX_RADIUS;
 
-    float min_render_px_y = (-(HEX_RADIUS + (WINDOW_HEIGHT / 8.0f)) * 0.6f);
+    float min_render_px_y = (-(HEX_RADIUS + (WINDOW_HEIGHT / 8.0f)) * 0.4f);
     float max_render_px_y = WINDOW_HEIGHT + HEX_RADIUS;
     
     if (center.x < min_render_px_x || center.x > max_render_px_x ||
