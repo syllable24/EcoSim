@@ -15,6 +15,26 @@ int frame_count = 0;
 bool g_tile_selected = false;
 CubeCoord g_curr_selected_coords = {0,0,0};
 
+SDL_FPoint g_grid_origin = {
+    .x = 0,
+    .y = 0
+};
+
+SDL_FRect g_horizontal_menu = {
+    .x = 0,
+    .y = 0,
+    .w = 0,
+    .h = 0
+};
+
+SDL_FRect g_vertical_menu = {
+    .x = 0,
+    .y = 0,
+    .w = 0,
+    .h = 0
+};
+
+
 struct hashmap* g_texture_map = NULL;
 
 // Calculate the six vertices of a flat-top hexagon
@@ -336,10 +356,6 @@ int init_and_add_texture(char* texture_id, char* texture_filename){
 }
 
 void handle_left_click(){
-    SDL_FPoint grid_origin = {
-        .x = WINDOW_WIDTH / 8.0f,
-        .y = WINDOW_HEIGHT / 8.0f
-    };
     SDL_FPoint camera_offset = {
         .x = camera_offset_x,
         .y = camera_offset_y
@@ -349,21 +365,8 @@ void handle_left_click(){
         g_mouse_pos_y
     };
 
-    SDL_FRect horizontal_menu = {
-        .x = 0,
-        .y = 0,
-        .w = WINDOW_WIDTH,
-        .h = WINDOW_HEIGHT / 8.0f
-    };
 
-    SDL_FRect vertical_menu = {
-        .x = 0,
-        .y = WINDOW_HEIGHT / 8.0f,
-        .w = WINDOW_WIDTH / 8.0f,
-        .h = WINDOW_HEIGHT - (WINDOW_HEIGHT / 8.0f)
-    };
-
-    bool clicked_menu = (click.x < vertical_menu.w || click.y < horizontal_menu.h);    
+    bool clicked_menu = (click.x < g_vertical_menu.w || click.y < g_horizontal_menu.h);    
 
     if (clicked_menu){
         SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Menu X: %04.02f Y: %04.02f", click.x, click.y);
@@ -371,7 +374,7 @@ void handle_left_click(){
     } else {        
         SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Grid (adjusted by camera offset) X: %04.02f Y: %04.02f", click.x, click.y);
     
-        CubeCoord coords = flat_top_pixel_to_hex(click, HEX_RADIUS, grid_origin, camera_offset);    
+        CubeCoord coords = flat_top_pixel_to_hex(click, HEX_RADIUS, g_grid_origin, camera_offset);    
         const TileState* tile_state = hashmap_get(g_game_map, &(TileState){.coord = coords});
         if (!tile_state) {
             SDL_LogError(LOG_CAT_DISPLAY, "No Tile State found for coords [%"PRId64"][%"PRId64"][%"PRId64"]", 
@@ -388,18 +391,144 @@ void handle_left_click(){
         } else {
             g_tile_selected = true;        
             g_curr_selected_coords = coords;
-        }
+        }            
+    }    
+}
+
+int draw_tile_state_menu(const TileState* state){    
+    SDL_Color white = {255, 255, 255, SDL_ALPHA_OPAQUE };
     
-        log_tile_state_string(tile_state);
+    float menu_x = g_vertical_menu.x + (WINDOW_HEIGHT / 128.0f);
+    float menu_line_y = g_vertical_menu.y + (WINDOW_WIDTH / 128.0f);
+
+    char selected_text[1024];
+	snprintf(selected_text, sizeof(selected_text), 
+		"Selected: (%lld) (%lld) (%lld)",
+        state->coord.pos_q,
+        state->coord.pos_r,
+        state->coord.pos_s
+	);
+    if(draw_text(white, g_font_regular, selected_text, menu_x, menu_line_y) != SDL_APP_CONTINUE){
+        return SDL_APP_FAILURE;
     }
+
+    char biome_text[1024];
+	snprintf(biome_text, sizeof(biome_text),
+		"Biome: %s",
+        get_biome_display_text(state->tile_biome)
+	);
+    if(draw_text(white, g_font_regular, biome_text, menu_x, menu_line_y += 24.0f) != SDL_APP_CONTINUE){
+        return SDL_APP_FAILURE;
+    }
+
+    if (state->has_river){                
+        
+        float river_border_x = menu_x + 6.0f;
+        float river_border_y = menu_line_y + 32.0f;
+        float river_border_h_start = menu_line_y;
+        
+        menu_line_y += 12.0f; // Leading seperation for border
+        menu_x += 12.0f; // Set text indent
+        
+        char river_heading[1024];
+        snprintf(river_heading, sizeof(river_heading),
+            "River:"
+        );
+        if(draw_text(white, g_font_regular, river_heading, menu_x, menu_line_y += 24.0f) != SDL_APP_CONTINUE){
+            return SDL_APP_FAILURE;
+        }
+
+        char river_source[1024];
+        snprintf(river_source, sizeof(river_source),
+            "Source: (%lld) (%lld) (%lld)",
+            state->river_source.pos_q, state->river_source.pos_r, state->river_source.pos_s            
+        );
+        if(draw_text(white, g_font_regular, river_source, menu_x, menu_line_y += 24.0f) != SDL_APP_CONTINUE){
+            return SDL_APP_FAILURE;
+        }        
+
+        char river_destination[1024];
+        snprintf(river_destination, sizeof(river_destination),
+            "Destination: (%lld) (%lld) (%lld)",            
+            state->river_destination.pos_q, state->river_destination.pos_r, state->river_destination.pos_s
+        );
+        if(draw_text(white, g_font_regular, river_destination, menu_x, menu_line_y += 24.0f) != SDL_APP_CONTINUE){
+            return SDL_APP_FAILURE;
+        }
+        
+        SDL_FRect river_text_border = {
+            .x = river_border_x,
+            .y = river_border_y,
+            .w = g_vertical_menu.w - 24.0f,
+            .h = menu_line_y - river_border_h_start
+        };
+
+        menu_line_y += 12.0f; // Trailing seperation for border
+        menu_x -= 12.0f; // Reset text indent
+
+        SDL_RenderRect(g_renderer, &river_text_border);
+    }    
+
+    return SDL_APP_CONTINUE;
+}
+
+
+int draw_text(SDL_Color color, TTF_Font* font, char* text, float x, float y){
+    SDL_Surface* text_surface = TTF_RenderText_Blended(font, text, 0, color);
+    if (!text_surface) {
+        SDL_LogError(LOG_CAT_DISPLAY, "Failed to render text.");
+        return SDL_APP_FAILURE;
+    }
+
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(g_renderer, text_surface);
+    SDL_DestroySurface(text_surface);
+    if (!texture){
+        SDL_LogError(LOG_CAT_DISPLAY, "Failed to render text-texture.");
+        return SDL_APP_FAILURE;
+    }
+
+    SDL_SetRenderDrawColor(g_renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+    
+    SDL_FRect dst;
+    
+    SDL_GetTextureSize(texture, &dst.w, &dst.h);
+    dst.x = x;
+    dst.y = y;
+
+    SDL_RenderTexture(g_renderer, texture, NULL, &dst);
+    return SDL_APP_CONTINUE;
 }
 
 int frame_update(float delta_time) {
-    // Update camera    
+    
+    // Window calculations
+    g_grid_origin = (SDL_FPoint){
+        .x = WINDOW_WIDTH / 8.0f,
+        .y = WINDOW_HEIGHT / 8.0f
+    };
+
+    g_horizontal_menu = (SDL_FRect){
+        .x = 0,
+        .y = 0,
+        .w = WINDOW_WIDTH,
+        .h = WINDOW_HEIGHT / 8.0f
+    };
+
+    g_vertical_menu = (SDL_FRect){
+        .x = 0,
+        .y = WINDOW_HEIGHT / 8.0f,
+        .w = WINDOW_WIDTH / 8.0f,
+        .h = WINDOW_HEIGHT - (WINDOW_HEIGHT / 8.0f)
+    };
+    
+    float half_map_width = HEX_RADIUS * 2.0f * HEX_GRID_RADIUS;
+    float half_map_heigth = HEX_RADIUS * sqrtf(3.0f) * HEX_GRID_RADIUS;
+
+    // Update camera
     const float scroll_speed = (WINDOW_WIDTH / (128 + 64)) * delta_time * 60.0f;
     const bool* keys = SDL_GetKeyboardState(NULL);
 
-    // Update offsets based on arrow keys
+    // Update camera offsets based on arrow keys
     if (keys[SDL_SCANCODE_UP]) {
         camera_offset_y -= scroll_speed;
     }
@@ -412,10 +541,6 @@ int frame_update(float delta_time) {
     if (keys[SDL_SCANCODE_RIGHT]) {
         camera_offset_x += scroll_speed;
     }
-
-    // Calculate map boundaries
-    float half_map_width = HEX_RADIUS * 2.0f * HEX_GRID_RADIUS;
-    float half_map_heigth = HEX_RADIUS * sqrtf(3.0f) * HEX_GRID_RADIUS;
 
     SDL_FPoint top_left_menu = {
         .x = WINDOW_WIDTH / 8.0f,
@@ -435,25 +560,39 @@ int frame_update(float delta_time) {
     float hex_grid_min_y = (-half_map_heigth) - top_left_menu.y;
     float hex_grid_max_y = half_map_heigth / 1.5f;
 
-    // Clamp offsets
+    // Clamp camera offset
     camera_offset_x = fminf(fmaxf(camera_offset_x, hex_grid_min_x), hex_grid_max_x);
     camera_offset_y = fminf(fmaxf(camera_offset_y, hex_grid_min_y), hex_grid_max_y);        
 
     /* Draw Map*/ 
     if(draw_tile_map(HEX_GRID_RADIUS, grid_border) != SDL_APP_CONTINUE){
-        SDL_LogError(LOG_CAT_MAIN, "Error while drawing tile map: %s", SDL_GetError());
+        SDL_LogError(LOG_CAT_DISPLAY, "Error while drawing tile map: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
 
     // Draw Menu
     if(draw_menu(grid_border) != SDL_APP_CONTINUE){
-        SDL_LogError(LOG_CAT_MAIN, "Error while drawing menu: %s", SDL_GetError());
+        SDL_LogError(LOG_CAT_DISPLAY, "Error while drawing menu: %s", SDL_GetError());
         return SDL_APP_FAILURE;
+    }
+    
+    /* Conditional display */
+    if(g_tile_selected){
+        const TileState* selected_tile_state = hashmap_get(g_game_map, &(TileState){.coord=g_curr_selected_coords});
+        if(!selected_tile_state){
+            SDL_LogError(LOG_CAT_DISPLAY, "Error while getting selected tile state: %s", SDL_GetError());
+            return SDL_APP_FAILURE;
+        }
+
+        if(draw_tile_state_menu(selected_tile_state) != SDL_APP_CONTINUE){
+            SDL_LogError(LOG_CAT_DISPLAY, "Error while drawing tile_state_menu: %s", SDL_GetError());
+            return SDL_APP_FAILURE;
+        }
     }
 
     // DEBUG INFO
     if(draw_debug_info() != SDL_APP_CONTINUE){
-        SDL_LogError(LOG_CAT_MAIN, "Error while drawing debug_info: %s", SDL_GetError());
+        SDL_LogError(LOG_CAT_DISPLAY, "Error while drawing debug_info: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
 
@@ -478,51 +617,13 @@ int draw_debug_info(){
     return SDL_APP_CONTINUE;
 }
 
-int draw_menu(SDL_FRect border){
-    SDL_FRect horizontal_menu = {
-        .x = 0,
-        .y = 0,
-        .w = WINDOW_WIDTH,
-        .h = WINDOW_HEIGHT / 8.0f
-    };
-
-    SDL_FRect vertical_menu = {
-        .x = 0,
-        .y = WINDOW_HEIGHT / 8.0f,
-        .w = WINDOW_WIDTH / 8.0f,
-        .h = WINDOW_HEIGHT - (WINDOW_HEIGHT / 8.0f)
-    };
-
+int draw_menu(SDL_FRect border){    
     const TextureHashMapRecord* menu_background_rec = hashmap_get(g_texture_map, &(TextureHashMapRecord){.name="Menu Background"});       
-    SDL_RenderTexture(g_renderer, menu_background_rec->texture, NULL, &horizontal_menu);    
-    SDL_RenderTexture(g_renderer, menu_background_rec->texture, NULL, &vertical_menu);
+    SDL_RenderTexture(g_renderer, menu_background_rec->texture, NULL, &g_horizontal_menu);
+    SDL_RenderTexture(g_renderer, menu_background_rec->texture, NULL, &g_vertical_menu);
 
     SDL_SetRenderDrawColor(g_renderer, 0, 255, 0, 255); // GREEN
     SDL_RenderRect(g_renderer, &border);
-
-    SDL_Color white = {255, 255, 255, SDL_ALPHA_OPAQUE };
-    SDL_Surface* text_surface = TTF_RenderText_Blended(g_font_heading, "Selected", 0, white);
-    if (!text_surface) {
-        SDL_LogError(LOG_CAT_DISPLAY, "Failed to render text.");
-        return SDL_APP_FAILURE;
-    }
-
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(g_renderer, text_surface);
-    SDL_DestroySurface(text_surface);
-    if (!texture){
-        SDL_LogError(LOG_CAT_DISPLAY, "Failed to render text-texture.");
-        return SDL_APP_FAILURE;
-    }
-
-    SDL_SetRenderDrawColor(g_renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-    
-    SDL_FRect dst;
-    SDL_GetTextureSize(texture, &dst.w, &dst.h);
-    dst.x = vertical_menu.x + (WINDOW_HEIGHT / 128.0f);
-    dst.y = vertical_menu.y + (WINDOW_WIDTH / 128.0f);
-
-    SDL_RenderTexture(g_renderer, texture, NULL, &dst);
-
 
     return SDL_APP_CONTINUE;
 }

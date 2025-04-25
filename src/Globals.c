@@ -68,3 +68,20 @@ char* get_biome_name(uint8_t b){
         default: return "UNK";
     }
 }
+
+char* get_biome_display_text(uint8_t b){
+    switch(b){
+        case BIOME_FRESHWATER: return "Freshwater";
+        case BIOME_MARINE: return "Marine";
+        case BIOME_TROPICAL_GRASSLAND: return "Trop Grassland";
+        case BIOME_TEMPERATE_GRASSLAND: return "Temp Grassland";
+        case BIOME_TEMPERATE_RAINFOREST: return "Temp Rainforest";
+        case BIOME_TROPICAL_RAINFOREST: return "Trop Rainforest";
+        case BIOME_BOREAL_FOREST: return "Boreal Forest";
+        case BIOME_DESERT: return "Desert";
+        case BIOME_ARCTIC_TUNDRA: return "Arctic Tundra";
+        case BIOME_ALPINE_TUNDRA: return "Alpine Tundra";
+        case BIOME_MOUNTAIN: return "Mountain";
+        default: return "Unknown";
+    }
+}

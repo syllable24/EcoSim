@@ -99,5 +99,6 @@ extern float g_mouse_pos_y;
 RgbColor get_biome_color(uint8_t curr_biome);
 char* get_biome_name(uint8_t b);
 void cleanup_globals();
+char* get_biome_display_text(uint8_t b);
 
 #endif

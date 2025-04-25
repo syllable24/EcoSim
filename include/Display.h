@@ -42,4 +42,8 @@ int init_and_add_texture(char* texture_id, char* texture_filename);
 
 int draw_hexagon(const TileState* curr_state, char* hex_def_name);
 
+int draw_tile_state_menu(const TileState* state);
+
+int draw_text(SDL_Color color, TTF_Font* font, char* text, float x, float y);
+
 #endif
