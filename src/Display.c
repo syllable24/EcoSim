@@ -421,8 +421,8 @@ int draw_tile_state_menu(const TileState* state){
         return SDL_APP_FAILURE;
     }
 
-    if (state->has_river){                
-        
+    // Display River-Info box
+    if (state->has_river){        
         float river_border_x = menu_x + 6.0f;
         float river_border_y = menu_line_y + 32.0f;
         float river_border_h_start = menu_line_y;
@@ -468,6 +468,43 @@ int draw_tile_state_menu(const TileState* state){
 
         SDL_RenderRect(g_renderer, &river_text_border);
     }    
+
+    // Display Quality Levels    
+    char air_quality_text[1024];
+	snprintf(air_quality_text, sizeof(air_quality_text),
+		"Air Quality: %.0f%%",
+        state->tile_def->base_air_quality * 100
+	);
+    if(draw_text(white, g_font_regular, air_quality_text, menu_x, menu_line_y += 24.0f) != SDL_APP_CONTINUE){
+        return SDL_APP_FAILURE;
+    }
+
+    char soil_quality_text[1024];
+	snprintf(soil_quality_text, sizeof(soil_quality_text),
+		"Water Quality: %.0f%%",
+        state->tile_def->base_soil_quality * 100
+	);
+    if(draw_text(white, g_font_regular, soil_quality_text, menu_x, menu_line_y += 24.0f) != SDL_APP_CONTINUE){
+        return SDL_APP_FAILURE;
+    }
+
+    char temperature_text[1024];
+	snprintf(temperature_text, sizeof(temperature_text),
+		"Temperature: %.0f%%",
+        state->tile_def->base_temperature * 100
+	);
+    if(draw_text(white, g_font_regular, temperature_text, menu_x, menu_line_y += 24.0f) != SDL_APP_CONTINUE){
+        return SDL_APP_FAILURE;
+    }
+
+    char moisture_text[1024];
+	snprintf(moisture_text, sizeof(moisture_text),
+		"Moisture: %.0f%%",
+        state->tile_def->base_moisture * 100
+	);
+    if(draw_text(white, g_font_regular, moisture_text, menu_x, menu_line_y += 24.0f) != SDL_APP_CONTINUE){
+        return SDL_APP_FAILURE;
+    }
 
     return SDL_APP_CONTINUE;
 }
