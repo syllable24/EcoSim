@@ -1,6 +1,6 @@
 #include <string.h>
 
-#include "./Util.h"
+#include "Util.h"
 
 #ifndef MAPGEN_H
 #define MAPGEN_H

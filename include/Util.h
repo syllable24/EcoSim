@@ -1,7 +1,7 @@
 #include <stdint.h>
 
-#include "../include/Globals.h"
-#include "../include/HexGridMath.h"
+#include "Globals.h"
+#include "HexGridMath.h"
 
 #ifndef UTIL_H
 #define UTIL_H

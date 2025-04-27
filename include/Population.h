@@ -1,9 +1,10 @@
-#include <string.h>
-#include <stdint.h>
-#include "./Util.h"
-
 #ifndef POPULATION_H
 #define POPULATION_H
+
+#include <string.h>
+#include <stdint.h>
+
+#include "Util.h"
 
 #define MIN_START_POP_COUNT 2500
 #define MAX_START_POP_COUNT 5000

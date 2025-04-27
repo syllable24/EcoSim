@@ -34,6 +34,10 @@ SDL_FRect g_vertical_menu = {
     .h = 0
 };
 
+float place_pop_x_start = 0;
+float place_pop_x_end = 0;
+float place_pop_y_start = 0;
+float place_pop_y_end = 0;
 
 struct hashmap* g_texture_map = NULL;
 
@@ -370,8 +374,26 @@ void handle_left_click(){
 
     if (clicked_menu){
         SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Menu X: %04.02f Y: %04.02f", click.x, click.y);
+
+        bool clicked_place_pop_button = click.x > place_pop_x_start 
+                                    && click.x < place_pop_x_end
+                                    && click.y > place_pop_y_start
+                                    && click.y < place_pop_y_end;
+
+        if (g_tile_selected && clicked_place_pop_button){
+            SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Place pop button");
+            const TileState* selected_tile_state = hashmap_get(g_game_map, &(TileState){.coord = g_curr_selected_coords});
+            if (!selected_tile_state) {
+                SDL_LogError(LOG_CAT_DISPLAY, "No Tile State found for coords [%"PRId64"][%"PRId64"][%"PRId64"]", 
+                    g_curr_selected_coords.pos_q, g_curr_selected_coords.pos_r, g_curr_selected_coords.pos_s
+                );
+                return;
+            }
+
+            
+        }
         
-    } else {        
+    } else {
         SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Grid (adjusted by camera offset) X: %04.02f Y: %04.02f", click.x, click.y);
     
         CubeCoord coords = flat_top_pixel_to_hex(click, HEX_RADIUS, g_grid_origin, camera_offset);    
@@ -395,7 +417,7 @@ void handle_left_click(){
     }    
 }
 
-int draw_tile_state_menu(const TileState* state){    
+int draw_selected_tile_state_menu(const TileState* state){    
     SDL_Color white = {255, 255, 255, SDL_ALPHA_OPAQUE };
     
     float menu_x = g_vertical_menu.x + (WINDOW_HEIGHT / 128.0f);
@@ -505,6 +527,37 @@ int draw_tile_state_menu(const TileState* state){
     if(draw_text(white, g_font_regular, moisture_text, menu_x, menu_line_y += 24.0f) != SDL_APP_CONTINUE){
         return SDL_APP_FAILURE;
     }
+    
+    // Place Pop Button
+    menu_line_y += 36.0f;
+    SDL_Color button_color = {255, 255, 255, SDL_ALPHA_OPAQUE };
+    if(state->tile_biome == BIOME_MARINE || state->tile_biome == BIOME_FRESHWATER){
+        button_color = (SDL_Color){96, 96, 96, SDL_ALPHA_OPAQUE };
+    }
+
+    SDL_SetRenderDrawColor(g_renderer, button_color.r, button_color.g, button_color.b, button_color.a);
+
+    SDL_FRect place_pop_button = {
+        .x = menu_x + 6.0f,
+        .y = menu_line_y,
+        .w = g_vertical_menu.w - 24.0f,
+        .h = 32.0f
+    };
+
+    place_pop_x_start = menu_x + 6.0f;
+    place_pop_x_end = menu_x + 6.0f + g_vertical_menu.w - 24.0f;
+    place_pop_y_start = menu_line_y;
+    place_pop_y_end = menu_line_y + 32.0f;
+
+    char place_pop_text[1024];
+	snprintf(place_pop_text, sizeof(place_pop_text),
+		"Place Pop"
+	);
+    if(draw_text(button_color, g_font_regular, place_pop_text, menu_x + 12.0f, menu_line_y) != SDL_APP_CONTINUE){
+        return SDL_APP_FAILURE;
+    }    
+
+    SDL_RenderRect(g_renderer, &place_pop_button);
 
     return SDL_APP_CONTINUE;
 }
@@ -621,7 +674,7 @@ int frame_update(float delta_time) {
             return SDL_APP_FAILURE;
         }
 
-        if(draw_tile_state_menu(selected_tile_state) != SDL_APP_CONTINUE){
+        if(draw_selected_tile_state_menu(selected_tile_state) != SDL_APP_CONTINUE){
             SDL_LogError(LOG_CAT_DISPLAY, "Error while drawing tile_state_menu: %s", SDL_GetError());
             return SDL_APP_FAILURE;
         }

@@ -3,10 +3,10 @@
 #include <math.h> 
 #include <SDL3/SDL.h>
 
-#include "../include/HexGridMath.h"
-#include "../include/MapGen.h"
-#include "../include/Util.h"
-#include "../include/Globals.h"
+#include "HexGridMath.h"
+#include "MapGen.h"
+#include "Util.h"
+#include "Globals.h"
 
 #define STB_PERLIN_IMPLEMENTATION
 #include "stb_perlin.h"

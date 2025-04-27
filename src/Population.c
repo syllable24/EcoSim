@@ -4,9 +4,9 @@
 #include <stdio.h> 
 #include <SDL3/SDL.h>
 
-#include "../include/Globals.h"
-#include "../include/Population.h"
-#include "../include/Util.h"
+#include "Globals.h"
+#include "Population.h"
+#include "Util.h"
 
 char** g_pop_base_needs = NULL; // Read from File ./res/NeedDefinition.cfg
 

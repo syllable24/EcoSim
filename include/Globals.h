@@ -1,14 +1,14 @@
+// globals.h
+#ifndef GLOBALS_H
+#define GLOBALS_H
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
-#include "../include/hashmap.h"
-#include "../include/HexGridMath.h"
-
-// globals.h
-#ifndef GLOBALS_H
-#define GLOBALS_H
+#include "hashmap.h"
+#include "HexGridMath.h"
 
 #define TARGET_FPS 60
 #define TARGET_FRAME_TIME_MS (1000 / TARGET_FPS)

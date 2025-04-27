@@ -2,8 +2,8 @@
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
-#include "../include/Globals.h"
-#include "../include/Hashmap.h"
+#include "Globals.h"
+#include "Hashmap.h"
 
 // Common Config
 int WINDOW_WIDTH = 1920;
