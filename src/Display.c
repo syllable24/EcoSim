@@ -390,7 +390,7 @@ void handle_left_click(){
                 return;
             }
 
-            
+
         }
         
     } else {
@@ -528,6 +528,15 @@ int draw_selected_tile_state_menu(const TileState* state){
         return SDL_APP_FAILURE;
     }
     
+    char pop_text[1024];
+	snprintf(pop_text, sizeof(pop_text),
+		"Population: %d",
+        state->pop_unit.pop_count
+	);
+    if(draw_text(white, g_font_regular, pop_text, menu_x, menu_line_y += 24.0f) != SDL_APP_CONTINUE){
+        return SDL_APP_FAILURE;
+    }
+
     // Place Pop Button
     menu_line_y += 36.0f;
     SDL_Color button_color = {255, 255, 255, SDL_ALPHA_OPAQUE };

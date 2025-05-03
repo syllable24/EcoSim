@@ -9,11 +9,14 @@
 
 #include "hashmap.h"
 #include "HexGridMath.h"
+#include "Population.h"
 
 #define TARGET_FPS 60
 #define TARGET_FRAME_TIME_MS (1000 / TARGET_FPS)
 
 #define HEX_GRID_RADIUS 20
+
+#define MAX_NAME_LENGTH 1024
 
 #define RIVER_MIN_LENGTH 6
 #define RIVER_MAX_LENGTH 15
@@ -72,6 +75,7 @@ typedef struct {
     bool has_river;
     CubeCoord river_source;
     CubeCoord river_destination;
+    PopulationUnit pop_unit;
 } TileState;
 
 // Display

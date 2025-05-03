@@ -6,7 +6,6 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-#define MAX_NAME_LENGTH 1024
 
 // Custom log categories
 #define LOG_CAT_UTIL SDL_LOG_CATEGORY_CUSTOM

@@ -6,6 +6,7 @@
 #include "HexGridMath.h"
 #include "MapGen.h"
 #include "Util.h"
+#include "Population.h"
 #include "Globals.h"
 
 #define STB_PERLIN_IMPLEMENTATION
@@ -513,6 +514,11 @@ void generate_base_tiles(uint8_t map_hex_radius){
         center_tile->has_river = false;
         center_tile->river_source = (CubeCoord){0,0,0};
         center_tile->river_destination = (CubeCoord){0,0,0};
+
+        PopulationUnit p;
+        create_population_unit(&p);
+        center_tile->pop_unit = p;
+
         assign_biome(center_tile);
         SDL_LogTrace(LOG_CAT_MAPGEN, "Placing tile at (%lld, %lld, %lld)", origin_coord.pos_q, origin_coord.pos_r, origin_coord.pos_s);        
         hashmap_set(g_game_map, center_tile);
@@ -534,11 +540,15 @@ void generate_base_tiles(uint8_t map_hex_radius){
                 new_tile->tile_biome = 0;
                 new_tile->has_river = false;
                 new_tile->river_destination = curr_coord;
+
+                PopulationUnit p;
+                create_population_unit(&p);
+                new_tile->pop_unit = p;
                 
                 new_tile->tile_def = malloc(sizeof (TileDefinition));
                 if (new_tile->tile_def != NULL) {
                     *(new_tile->tile_def) = *(g_arr_tile_definitions[rand_tile_def_id]);
-                }                
+                }
                 
                 assign_biome(new_tile);
                 SDL_LogTrace(LOG_CAT_MAPGEN, "Placing tile at (%lld, %lld, %lld)", curr_coord.pos_q, curr_coord.pos_r, curr_coord.pos_s);
