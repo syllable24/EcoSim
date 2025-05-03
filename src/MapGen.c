@@ -524,7 +524,7 @@ void generate_base_tiles(uint8_t map_hex_radius){
         hashmap_set(g_game_map, center_tile);
     }
     
-    // Spiraling States
+    // Spiraling States Test
     uint64_t curr_tile_id = 1;
     for (uint64_t curr_radius = 1; curr_radius <= map_hex_radius; curr_radius++){
         uint64_t hexes_in_ring = hex_count_in_ring(curr_radius);        
