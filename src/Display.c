@@ -296,6 +296,13 @@ int draw_hexagon(const TileState* curr_state, char* hex_def_name){
         curr_state->coord.pos_q, curr_state->coord.pos_r, curr_state->coord.pos_s
     );
 	*/
+
+    // Draw GREEN inner Hex for player owned tiles
+    if (curr_state->owned_by == OWNER_PLAYER){
+        get_hexagon_vertices(points, center.x, center.y, HEX_RADIUS - 5.0f);
+        SDL_SetRenderDrawColor(g_renderer, 0, 255, 0, 255); // GREEN outline
+        draw_hexagon_outline(points);
+    }
 		
     // Draw Red inner Hex for selected tiles
     if (g_tile_selected && is_same_coord(&curr_state->coord, &g_curr_selected_coords)){
