@@ -31,7 +31,7 @@ typedef struct {
 
 typedef struct {
 	uint32_t pop_id;
-	uint32_t pop_count;	
+	uint32_t pop_count;
 	Need* base_needs;
 	uint32_t need_count;
 	Need* luxury_needs;

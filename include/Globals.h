@@ -48,6 +48,9 @@
 #define BIOME_ALPINE_TUNDRA 10
 #define BIOME_MOUNTAIN 11
 
+#define OWNER_NONE 0
+#define OWNER_PLAYER 1
+
 // Common structs
 typedef struct {
     float r;
@@ -76,6 +79,7 @@ typedef struct {
     CubeCoord river_source;
     CubeCoord river_destination;
     PopulationUnit pop_unit;
+	uint8_t owned_by;
 } TileState;
 
 // Display

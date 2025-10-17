@@ -9,6 +9,7 @@
 #include "../include/Util.h"
 #include "../include/Display.h"
 #include "../include/Hashmap.h"
+#include "../include/GameLogic.h"
 
 uint32_t frame_last_time = 0;
 int frame_count = 0;
@@ -289,11 +290,13 @@ int draw_hexagon(const TileState* curr_state, char* hex_def_name){
     }
 
     // DEBUG INFO Coordinates
+	/*
     SDL_SetRenderDrawColor(g_renderer, 0, 0, 0, 255);
     SDL_RenderDebugTextFormat(g_renderer, center.x - (HEX_RADIUS/1.5f), center.y - 12, "[%d][%d][%d]", 
         curr_state->coord.pos_q, curr_state->coord.pos_r, curr_state->coord.pos_s
     );
-
+	*/
+		
     // Draw Red inner Hex for selected tiles
     if (g_tile_selected && is_same_coord(&curr_state->coord, &g_curr_selected_coords)){
         get_hexagon_vertices(points, center.x, center.y, HEX_RADIUS - 5.0f);
@@ -375,22 +378,14 @@ void handle_left_click(){
     if (clicked_menu){
         SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Menu X: %04.02f Y: %04.02f", click.x, click.y);
 
-        bool clicked_place_pop_button = click.x > place_pop_x_start 
+        bool clicked_claim_pop_button = click.x > place_pop_x_start 
                                     && click.x < place_pop_x_end
                                     && click.y > place_pop_y_start
                                     && click.y < place_pop_y_end;
 
-        if (g_tile_selected && clicked_place_pop_button){
-            SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Place pop button");
-            const TileState* selected_tile_state = hashmap_get(g_game_map, &(TileState){.coord = g_curr_selected_coords});
-            if (!selected_tile_state) {
-                SDL_LogError(LOG_CAT_DISPLAY, "No Tile State found for coords [%"PRId64"][%"PRId64"][%"PRId64"]", 
-                    g_curr_selected_coords.pos_q, g_curr_selected_coords.pos_r, g_curr_selected_coords.pos_s
-                );
-                return;
-            }
-
-
+        if (g_tile_selected && clicked_claim_pop_button){
+            SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Claim pop button");            
+			claim_tile(&g_curr_selected_coords, OWNER_PLAYER);
         }
         
     } else {
@@ -489,9 +484,9 @@ int draw_selected_tile_state_menu(const TileState* state){
         menu_x -= 12.0f; // Reset text indent
 
         SDL_RenderRect(g_renderer, &river_text_border);
-    }    
+    }
 
-    // Display Quality Levels    
+    // Display Quality Levels
     char air_quality_text[1024];
 	snprintf(air_quality_text, sizeof(air_quality_text),
 		"Air Quality: %.0f%%",
@@ -537,7 +532,16 @@ int draw_selected_tile_state_menu(const TileState* state){
         return SDL_APP_FAILURE;
     }
 
-    // Place Pop Button
+    char owner_text[1024];
+	snprintf(owner_text, sizeof(owner_text),
+		"Owned By: %d",
+        state->owned_by
+	);
+    if(draw_text(white, g_font_regular, owner_text, menu_x, menu_line_y += 24.0f) != SDL_APP_CONTINUE){
+        return SDL_APP_FAILURE;
+    }	
+
+    // Claim Pop Button
     menu_line_y += 36.0f;
     SDL_Color button_color = {255, 255, 255, SDL_ALPHA_OPAQUE };
     if(state->tile_biome == BIOME_MARINE || state->tile_biome == BIOME_FRESHWATER){
@@ -560,7 +564,7 @@ int draw_selected_tile_state_menu(const TileState* state){
 
     char place_pop_text[1024];
 	snprintf(place_pop_text, sizeof(place_pop_text),
-		"Place Pop"
+		"Claim Pop"
 	);
     if(draw_text(button_color, g_font_regular, place_pop_text, menu_x + 12.0f, menu_line_y) != SDL_APP_CONTINUE){
         return SDL_APP_FAILURE;

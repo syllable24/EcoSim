@@ -514,6 +514,7 @@ void generate_base_tiles(uint8_t map_hex_radius){
         center_tile->has_river = false;
         center_tile->river_source = (CubeCoord){0,0,0};
         center_tile->river_destination = (CubeCoord){0,0,0};
+		center_tile->owned_by = OWNER_NONE;
 
         PopulationUnit p;
         create_population_unit(&p);
@@ -524,7 +525,7 @@ void generate_base_tiles(uint8_t map_hex_radius){
         hashmap_set(g_game_map, center_tile);
     }
     
-    // Spiraling States Test 1
+    // Spiraling States
     uint64_t curr_tile_id = 1;
     for (uint64_t curr_radius = 1; curr_radius <= map_hex_radius; curr_radius++){
         uint64_t hexes_in_ring = hex_count_in_ring(curr_radius);        
@@ -540,6 +541,7 @@ void generate_base_tiles(uint8_t map_hex_radius){
                 new_tile->tile_biome = 0;
                 new_tile->has_river = false;
                 new_tile->river_destination = curr_coord;
+				new_tile->owned_by = OWNER_NONE;
 
                 PopulationUnit p;
                 create_population_unit(&p);

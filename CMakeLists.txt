@@ -18,6 +18,7 @@ PRIVATE
     src/MapGen.c
     src/Globals.c
     src/HexGridMath.c
+	src/GameLogic.c
 )
 
 target_include_directories(EcoSim
