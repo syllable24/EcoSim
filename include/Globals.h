@@ -14,6 +14,8 @@
 #define TARGET_FPS 60
 #define TARGET_FRAME_TIME_MS (1000 / TARGET_FPS)
 
+#define FRAMES_PER_GAME_DAY (TARGET_FPS * 5)
+
 #define HEX_GRID_RADIUS 20
 
 #define MAX_NAME_LENGTH 1024
@@ -103,6 +105,11 @@ extern float camera_offset_y;
 
 extern float g_mouse_pos_x;
 extern float g_mouse_pos_y;
+
+extern uint16_t g_game_day_frame_counter;
+extern uint8_t g_game_day;
+extern uint8_t g_game_month;
+extern uint16_t g_game_year;
 
 RgbColor get_biome_color(uint8_t curr_biome);
 char* get_biome_name(uint8_t b);

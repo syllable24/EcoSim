@@ -380,7 +380,7 @@ void handle_left_click(){
     };
 
 
-    bool clicked_menu = (click.x < g_vertical_menu.w || click.y < g_horizontal_menu.h);    
+    bool clicked_menu = (click.x < g_vertical_menu.w || click.y < g_horizontal_menu.h);
 
     if (clicked_menu){
         SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Menu X: %04.02f Y: %04.02f", click.x, click.y);
@@ -391,7 +391,7 @@ void handle_left_click(){
                                     && click.y < place_pop_y_end;
 
         if (g_tile_selected && clicked_claim_pop_button){
-            SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Claim pop button");            
+            SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Claim pop button");
 			claim_tile(&g_curr_selected_coords, OWNER_PLAYER);
         }
         
@@ -685,27 +685,7 @@ int frame_update(float delta_time) {
         SDL_LogError(LOG_CAT_DISPLAY, "Error while drawing menu: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
-    
-    /* Conditional display */
-    if(g_tile_selected){
-        const TileState* selected_tile_state = hashmap_get(g_game_map, &(TileState){.coord=g_curr_selected_coords});
-        if(!selected_tile_state){
-            SDL_LogError(LOG_CAT_DISPLAY, "Error while getting selected tile state: %s", SDL_GetError());
-            return SDL_APP_FAILURE;
-        }
-
-        if(draw_selected_tile_state_menu(selected_tile_state) != SDL_APP_CONTINUE){
-            SDL_LogError(LOG_CAT_DISPLAY, "Error while drawing tile_state_menu: %s", SDL_GetError());
-            return SDL_APP_FAILURE;
-        }
-    }
-
-    // DEBUG INFO
-    if(draw_debug_info() != SDL_APP_CONTINUE){
-        SDL_LogError(LOG_CAT_DISPLAY, "Error while drawing debug_info: %s", SDL_GetError());
-        return SDL_APP_FAILURE;
-    }
-
+	
     // Present
     SDL_RenderPresent(g_renderer);
 
@@ -728,12 +708,51 @@ int draw_debug_info(){
 }
 
 int draw_menu(SDL_FRect border){    
-    const TextureHashMapRecord* menu_background_rec = hashmap_get(g_texture_map, &(TextureHashMapRecord){.name="Menu Background"});       
+    const TextureHashMapRecord* menu_background_rec = hashmap_get(g_texture_map, &(TextureHashMapRecord){.name="Menu Background"});
     SDL_RenderTexture(g_renderer, menu_background_rec->texture, NULL, &g_horizontal_menu);
     SDL_RenderTexture(g_renderer, menu_background_rec->texture, NULL, &g_vertical_menu);
 
     SDL_SetRenderDrawColor(g_renderer, 0, 255, 0, 255); // GREEN
     SDL_RenderRect(g_renderer, &border);
+
+	// current game time         
+    SDL_Color text_color = {255, 255, 255, SDL_ALPHA_OPAQUE };
+    SDL_SetRenderDrawColor(g_renderer, text_color.r, text_color.g, text_color.b, text_color.a);
+
+	float time_text_x = WINDOW_WIDTH - (WINDOW_WIDTH / 8.0f);
+	float time_text_y = 16.0f;
+
+    char time_text[1024];
+	snprintf(time_text, sizeof(time_text),
+		"Year %u Month %u Day %u",
+		g_game_year,
+		g_game_month,
+		g_game_day
+	);
+	
+    if(draw_text(text_color, g_font_regular, time_text, time_text_x, time_text_y) != SDL_APP_CONTINUE){
+        return SDL_APP_FAILURE;
+    }
+    
+	/* Conditional display */
+    if(g_tile_selected){
+        const TileState* selected_tile_state = hashmap_get(g_game_map, &(TileState){.coord=g_curr_selected_coords});
+        if(!selected_tile_state){
+            SDL_LogError(LOG_CAT_DISPLAY, "Error while getting selected tile state: %s", SDL_GetError());
+            return SDL_APP_FAILURE;
+        }
+
+        if(draw_selected_tile_state_menu(selected_tile_state) != SDL_APP_CONTINUE){
+            SDL_LogError(LOG_CAT_DISPLAY, "Error while drawing tile_state_menu: %s", SDL_GetError());
+            return SDL_APP_FAILURE;
+        }
+    }
+
+    // DEBUG INFO
+    if(draw_debug_info() != SDL_APP_CONTINUE){
+        SDL_LogError(LOG_CAT_DISPLAY, "Error while drawing debug_info: %s", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
 
     return SDL_APP_CONTINUE;
 }

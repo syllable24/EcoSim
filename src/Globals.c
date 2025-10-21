@@ -17,7 +17,7 @@ RgbColor biome_colors[11] = {
     {51,51,255,255},   // [BIOME_MARINE]
     {0,204,102,255},   // [BIOME_TROPICAL_GRASSLAND]
     {135,169,54,255},  // [BIOME_TEMPERATE_GRASSLAND]
-    {65,129,0,255},   // [BIOME_TEMPERATE_RAINFOREST]
+    {65,129,0,255},    // [BIOME_TEMPERATE_RAINFOREST]
     {0,102,0,255},     // [BIOME_TROPICAL_RAINFOREST]
     {0,102,102,255},   // [BIOME_BOREAL_FOREST]
     {204,204,0,255},   // [BIOME_DESERT]
@@ -37,9 +37,13 @@ struct hashmap* g_game_map = NULL;
 float camera_offset_x = 0.0f;
 float camera_offset_y = 0.0f;
 
-
 float g_mouse_pos_x = 0.0f;
 float g_mouse_pos_y = 0.0f;
+
+uint16_t g_game_day_frame_counter = 0;
+uint8_t g_game_day = 0;
+uint8_t g_game_month = 0;
+uint16_t g_game_year = 0;
 
 void cleanup_globals(){
     free(g_arr_tile_definitions);    

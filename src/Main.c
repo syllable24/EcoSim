@@ -18,10 +18,6 @@
 #include "../include/MapGen.h"
 #include "../include/Globals.h"
 
-PopulationUnit p;
-
-char* message = "Hello EcoSim!";
-
 void setup_logging(){
     // Set Log Priorities
     SDL_SetLogPriority(LOG_CAT_MAIN, SDL_LOG_PRIORITY_DEBUG);
@@ -87,14 +83,6 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
         return SDL_APP_FAILURE;
     }
 
-    /* Create Population Unit */
-	if (create_population_unit(&p) != 0){
-		SDL_LogError(LOG_CAT_MAIN, "Error during create population.");
-		return SDL_APP_FAILURE;
-	}
-
-    log_pop_unit(&p);
-
     return SDL_APP_CONTINUE;
 }
 
@@ -142,7 +130,9 @@ SDL_AppResult SDL_AppIterate(void *appstate){
     uint32_t frame_start = SDL_GetTicks();
 
     static uint32_t last_time = 0;
-    if (last_time == 0) last_time = frame_start;
+    if (last_time == 0) { 
+		last_time = frame_start;
+	}
     float delta_time = (frame_start - last_time) / 1000.0f;
     last_time = frame_start;
     
@@ -154,6 +144,22 @@ SDL_AppResult SDL_AppIterate(void *appstate){
     if (frame_duration < TARGET_FRAME_TIME_MS){
         SDL_Delay(TARGET_FRAME_TIME_MS - frame_duration);
     }
+	
+	if (g_game_day_frame_counter == FRAMES_PER_GAME_DAY){
+		g_game_day_frame_counter = 0;
+		g_game_day++;
+		
+		if (g_game_day > 31) {
+			g_game_day = 0;
+			g_game_month++;
+			if (g_game_month > 12){
+				g_game_month = 0;
+				g_game_year++;
+			}
+		}
+	} else {
+		g_game_day_frame_counter++;
+	}
 
     return result;
 }
@@ -163,8 +169,7 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result){
     if (g_renderer) SDL_DestroyRenderer(g_renderer);
     if (g_window) SDL_DestroyWindow(g_window);
     
-    clear_display_state();    
-    free(p.base_needs);
+    clear_display_state();
     cleanup_globals();
     TTF_Quit();
 }
