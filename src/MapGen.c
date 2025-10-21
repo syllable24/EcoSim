@@ -262,8 +262,10 @@ void generate_marine_chain(){
         seed_valid = !any_neighbor_matches(tile_state->coord, is_marine_or_mountain, NULL);
     }
 
+	// Update Marine Seed Tile in game map
     TileState new_state = *tile_state;
     new_state.tile_biome = BIOME_MARINE;
+	new_state.pop_unit.pop_count = 0;
     hashmap_set(g_game_map, &new_state);
 
     // Set neighbors to Biome MARINE    
@@ -275,6 +277,7 @@ void generate_marine_chain(){
         const TileState* neighbor_state = hashmap_get(g_game_map, &(TileState){.coord=neighbor});
         TileState new_neighbor_state = *neighbor_state;
         new_neighbor_state.tile_biome = BIOME_MARINE;
+		new_neighbor_state.pop_unit.pop_count = 0;
         hashmap_set(g_game_map, &new_neighbor_state);
     }
     
@@ -315,6 +318,7 @@ void generate_marine_chain(){
         curr_coords = next_neighbor;
         TileState new_state = *tile_state;
         new_state.tile_biome = BIOME_MARINE;
+		new_state.pop_unit.pop_count = 0;
         hashmap_set(g_game_map, &new_state);        
 
         // Set neighbors to Biome MARINE
@@ -330,6 +334,7 @@ void generate_marine_chain(){
             
             TileState new_neighbor_state = *neighbor_state;
             new_neighbor_state.tile_biome = BIOME_MARINE;
+			new_neighbor_state.pop_unit.pop_count = 0;
             hashmap_set(g_game_map, &new_neighbor_state);
         }
 
@@ -371,7 +376,7 @@ int generate_map(uint8_t map_hex_radius){
     }
 
     // Place random river seeds on mountains
-    // Walk into random directions until the river length is hit (then form a lage) or a marine tile is found.
+    // Walk into random directions until the river length is hit (then form a lake) or a marine tile is found.
     uint8_t river_amount = determine_rand_val(RIVER_MIN_AMOUNT, RIVER_MAX_AMOUNT);    
     SDL_LogDebug(LOG_CAT_MAPGEN, "Start generating %d rivers", river_amount);
     for (int i = 0; i < river_amount; i++){

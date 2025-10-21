@@ -19,6 +19,10 @@ void claim_tile(CubeCoord* tile_to_claim, uint8_t player_id){
 		return;
 	}
 	
+	if (selected_tile_state->pop_unit.pop_count == 0){
+		return;
+	}
+	
 	TileState new_state = *selected_tile_state;
 	new_state.owned_by = OWNER_PLAYER;
 	hashmap_set(g_game_map, &new_state);
