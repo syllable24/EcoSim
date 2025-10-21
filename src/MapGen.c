@@ -505,7 +505,7 @@ void generate_base_tiles(uint8_t map_hex_radius){
     g_game_map = hashmap_new(sizeof(TileState), total_hex_count, 0, 0, game_map_hash_map_hash, game_map_hash_map_compare, NULL, NULL);    
     
     CubeCoord origin_coord = {0,0,0};
-    CubeCoord** spiral_coords = cube_sprial(origin_coord, map_hex_radius);
+    g_game_map_spiral_coords = cube_sprial(origin_coord, map_hex_radius);
 
     uint32_t rand_tile_def_id = determine_rand_val(0, g_arr_tile_definitions_size - 1);    
 
@@ -536,7 +536,7 @@ void generate_base_tiles(uint8_t map_hex_radius){
         uint64_t hexes_in_ring = hex_count_in_ring(curr_radius);        
 
         for (uint64_t curr_ring_pos = 0; curr_ring_pos < hexes_in_ring; curr_ring_pos++){
-            CubeCoord curr_coord = spiral_coords[curr_radius][curr_ring_pos];            
+            CubeCoord curr_coord = g_game_map_spiral_coords[curr_radius][curr_ring_pos];
 
             rand_tile_def_id = determine_rand_val(0, g_arr_tile_definitions_size - 1);            
             

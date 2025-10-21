@@ -45,8 +45,15 @@ uint8_t g_game_day = 0;
 uint8_t g_game_month = 0;
 uint16_t g_game_year = 0;
 
+CubeCoord** g_game_map_spiral_coords = NULL;
+
 void cleanup_globals(){
-    free(g_arr_tile_definitions);    
+    free(g_arr_tile_definitions);
+	
+	// TODO: Cleanup 
+	//for (int i = 0; i < HEX_GRID_RADIUS; i++){
+	//}
+	
     hashmap_free(g_game_map);
 }
 

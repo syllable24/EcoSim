@@ -111,6 +111,8 @@ extern uint8_t g_game_day;
 extern uint8_t g_game_month;
 extern uint16_t g_game_year;
 
+extern CubeCoord** g_game_map_spiral_coords;
+
 RgbColor get_biome_color(uint8_t curr_biome);
 char* get_biome_name(uint8_t b);
 void cleanup_globals();

@@ -10,13 +10,14 @@
 #include <SDL3/SDL_main.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
-#include "../include/Hashmap.h"
-#include "../include/cJSON.h"
-#include "../include/Population.h"
-#include "../include/Util.h"
-#include "../include/Display.h"
-#include "../include/MapGen.h"
-#include "../include/Globals.h"
+#include "Hashmap.h"
+#include "cJSON.h"
+#include "Population.h"
+#include "Util.h"
+#include "Display.h"
+#include "MapGen.h"
+#include "Globals.h"
+#include "GameLogic.h"
 
 void setup_logging(){
     // Set Log Priorities
@@ -157,6 +158,9 @@ SDL_AppResult SDL_AppIterate(void *appstate){
 				g_game_year++;
 			}
 		}
+		
+		update_game_state();
+		
 	} else {
 		g_game_day_frame_counter++;
 	}

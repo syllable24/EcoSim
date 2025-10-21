@@ -85,7 +85,6 @@ int add_base_needs(PopulationUnit* p){
 int add_need(PopulationUnit* p, Need* n) {
     SDL_LogTrace(LOG_CAT_POPULATION, "Start add_need().");
     
-    // Check for NULL pointers
     if (p == NULL || p->base_needs == NULL || n == NULL) {
         SDL_LogError(LOG_CAT_POPULATION, "Received NULL pointer in add_need().");
         return 1;
@@ -102,7 +101,7 @@ int add_need(PopulationUnit* p, Need* n) {
     p->need_count++;
     
     SDL_LogTrace(LOG_CAT_POPULATION, "End add_need().");
-    return 0; // Success
+    return 0;
 }
 
 int create_need(Need* n, char* name){
