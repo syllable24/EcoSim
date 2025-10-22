@@ -49,11 +49,12 @@ void update_game_state(){
 				return;
 			}
 
-			TileState new_state = *curr_tile_state;
-			new_state.pop_unit.pop_count++;
-			hashmap_set(g_game_map, &new_state);
-			
-			g_total_world_pop += new_state.pop_unit.pop_count;
+			if (curr_tile_state->tile_biome != BIOME_MARINE){
+				TileState new_state = *curr_tile_state;
+				new_state.pop_unit.pop_count++;
+				hashmap_set(g_game_map, &new_state);
+				g_total_world_pop += new_state.pop_unit.pop_count;
+			}			
         }
     }
 }
