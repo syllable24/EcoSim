@@ -738,8 +738,9 @@ int draw_menu(SDL_FRect border){
 	float pop_text_x = WINDOW_WIDTH - (WINDOW_WIDTH / 8.0f);
 	float pop_text_y = 36.0f;
 	
-    char pop_text[1024];
 	char* pop_formatted = format_large_number(g_total_world_pop);
+    char pop_text[1024];
+		
 	if (pop_formatted){
 		snprintf(pop_text, sizeof(pop_text),
 			"World Pop: %s",
