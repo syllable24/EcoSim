@@ -111,6 +111,8 @@ extern uint8_t g_game_day;
 extern uint8_t g_game_month;
 extern uint16_t g_game_year;
 
+extern uint32_t g_total_world_pop;
+
 extern CubeCoord** g_game_map_spiral_coords;
 
 RgbColor get_biome_color(uint8_t curr_biome);

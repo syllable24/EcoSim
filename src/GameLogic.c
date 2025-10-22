@@ -32,9 +32,10 @@ void claim_tile(CubeCoord* tile_to_claim, uint8_t player_id){
 void update_game_state(){
 	
 	// TODO calculate growth factor based on need fulfillment 
+	g_total_world_pop = 0;
 	
 	// Spiraling States
-	for (uint64_t curr_radius = 1; curr_radius <= HEX_GRID_RADIUS; curr_radius++){
+	for (uint64_t curr_radius = 0; curr_radius <= HEX_GRID_RADIUS; curr_radius++){
         uint64_t hexes_in_ring = hex_count_in_ring(curr_radius);
 
         for (uint64_t curr_ring_pos = 0; curr_ring_pos < hexes_in_ring; curr_ring_pos++){
@@ -51,6 +52,8 @@ void update_game_state(){
 			TileState new_state = *curr_tile_state;
 			new_state.pop_unit.pop_count++;
 			hashmap_set(g_game_map, &new_state);
+			
+			g_total_world_pop += new_state.pop_unit.pop_count;
         }
     }
 }

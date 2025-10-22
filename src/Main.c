@@ -83,6 +83,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
         SDL_LogError(LOG_CAT_MAIN, "Error while generating map: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
+	
+	update_game_state();
 
     return SDL_APP_CONTINUE;
 }
@@ -146,6 +148,7 @@ SDL_AppResult SDL_AppIterate(void *appstate){
         SDL_Delay(TARGET_FRAME_TIME_MS - frame_duration);
     }
 	
+	// In-Game-Timer 
 	if (g_game_day_frame_counter == FRAMES_PER_GAME_DAY){
 		g_game_day_frame_counter = 0;
 		g_game_day++;

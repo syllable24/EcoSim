@@ -40,4 +40,6 @@ bool is_same_coord(const CubeCoord* a, const CubeCoord* b);
 
 void shuffle_array(void* base, size_t n_items, size_t size) ;
 
+char* format_large_number(uint32_t number);
+
 #endif

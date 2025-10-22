@@ -49,7 +49,12 @@ CubeCoord cube_scale(CubeCoord orig, uint16_t factor){
 }
 
 uint64_t hex_count_in_ring(uint16_t radius){
-    return 6 * radius;
+	if (radius == 0){
+		return 1;
+	}
+	else {
+		return 6 * radius;	
+	}
 }
 
 CubeCoord* cube_ring(CubeCoord orig, uint16_t radius){

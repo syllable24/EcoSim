@@ -715,7 +715,7 @@ int draw_menu(SDL_FRect border){
     SDL_SetRenderDrawColor(g_renderer, 0, 255, 0, 255); // GREEN
     SDL_RenderRect(g_renderer, &border);
 
-	// current game time         
+	// current game time
     SDL_Color text_color = {255, 255, 255, SDL_ALPHA_OPAQUE };
     SDL_SetRenderDrawColor(g_renderer, text_color.r, text_color.g, text_color.b, text_color.a);
 
@@ -734,7 +734,25 @@ int draw_menu(SDL_FRect border){
         return SDL_APP_FAILURE;
     }
     
-	/* Conditional display */
+	// Current World Pop Count
+	float pop_text_x = WINDOW_WIDTH - (WINDOW_WIDTH / 8.0f);
+	float pop_text_y = 36.0f;
+	
+    char pop_text[1024];
+	char* pop_formatted = format_large_number(g_total_world_pop);
+	if (pop_formatted){
+		snprintf(pop_text, sizeof(pop_text),
+			"World Pop: %s",
+			pop_formatted
+		);
+		free(pop_formatted);	
+	}
+	
+    if(draw_text(text_color, g_font_regular, pop_text, pop_text_x, pop_text_y) != SDL_APP_CONTINUE){
+        return SDL_APP_FAILURE;
+    }
+	
+	// Conditional display
     if(g_tile_selected){
         const TileState* selected_tile_state = hashmap_get(g_game_map, &(TileState){.coord=g_curr_selected_coords});
         if(!selected_tile_state){

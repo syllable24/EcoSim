@@ -5,6 +5,7 @@
 #include <math.h>
 #include <sys/time.h>
 #include <SDL3/SDL.h>
+#include <locale.h>
 
 #include "../include/Globals.h"
 #include "../include/Util.h"
@@ -592,4 +593,30 @@ bool is_same_coord(const CubeCoord* a, const CubeCoord* b){
     return a->pos_q == b->pos_q 
         && a->pos_r == b->pos_r
         && a->pos_s == b->pos_s;
+}
+
+
+char* format_large_number(uint32_t number) {
+	char buf[32];
+	size_t bufsize = sizeof(buf);
+	
+    char temp[12];
+    snprintf(temp, sizeof(temp), "%u", number);
+
+    size_t len = strlen(temp);
+    size_t commas = (len > 3) ? (len - 1) / 3 : 0;
+    if (len + commas + 1 > bufsize) return NULL;
+
+    size_t src = len;
+    size_t dst = len + commas;
+    buf[dst] = '\0';
+
+    size_t digit_count = 0;
+    while (src > 0) {
+        buf[--dst] = temp[--src];
+        if (++digit_count % 3 == 0 && src > 0) {
+            buf[--dst] = '.';
+        }
+    }
+    return strdup(buf);
 }
