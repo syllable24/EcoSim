@@ -35,10 +35,10 @@ SDL_FRect g_vertical_menu = {
     .h = 0
 };
 
-float place_pop_x_start = 0;
-float place_pop_x_end = 0;
-float place_pop_y_start = 0;
-float place_pop_y_end = 0;
+float claim_pop_x_start = 0;
+float claim_pop_x_end = 0;
+float claim_pop_y_start = 0;
+float claim_pop_y_end = 0;
 
 struct hashmap* g_texture_map = NULL;
 
@@ -385,10 +385,10 @@ void handle_left_click(){
     if (clicked_menu){
         SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Menu X: %04.02f Y: %04.02f", click.x, click.y);
 
-        bool clicked_claim_pop_button = click.x > place_pop_x_start 
-                                    && click.x < place_pop_x_end
-                                    && click.y > place_pop_y_start
-                                    && click.y < place_pop_y_end;
+        bool clicked_claim_pop_button = click.x > claim_pop_x_start 
+                                    && click.x < claim_pop_x_end
+                                    && click.y > claim_pop_y_start
+                                    && click.y < claim_pop_y_end;
 
         if (g_tile_selected && clicked_claim_pop_button){
             SDL_LogDebug(LOG_CAT_DISPLAY, "Clicked Claim pop button");
@@ -493,7 +493,7 @@ int draw_selected_tile_state_menu(const TileState* state){
         SDL_RenderRect(g_renderer, &river_text_border);
     }
 
-    // Display Quality Levels
+    // Display Tile Quality Levels
     char air_quality_text[1024];
 	snprintf(air_quality_text, sizeof(air_quality_text),
 		"Air Quality: %.0f%%",
@@ -546,38 +546,60 @@ int draw_selected_tile_state_menu(const TileState* state){
 	);
     if(draw_text(white, g_font_regular, owner_text, menu_x, menu_line_y += 24.0f) != SDL_APP_CONTINUE){
         return SDL_APP_FAILURE;
-    }	
-
-    // Claim Pop Button
-    menu_line_y += 36.0f;
-    SDL_Color button_color = {255, 255, 255, SDL_ALPHA_OPAQUE };
-    if(state->tile_biome == BIOME_MARINE || state->tile_biome == BIOME_FRESHWATER){
-        button_color = (SDL_Color){96, 96, 96, SDL_ALPHA_OPAQUE };
     }
 
-    SDL_SetRenderDrawColor(g_renderer, button_color.r, button_color.g, button_color.b, button_color.a);
+	if (state->owned_by == OWNER_PLAYER){
+		// Display Population Base Needs		
+		for (int i = 0; i < state->pop_unit.need_count; i++){
+			
+			// need without name marks the end of the pop needs
+			if (state->pop_unit.base_needs[i].name[0] == '\0') {
+				SDL_LogDebug(LOG_CAT_DISPLAY, "End of needs array: %u.", i);
+				break;
+			}
+			
+			char need_text[1024];
+			snprintf(need_text, sizeof(need_text),
+				"%s",
+				state->pop_unit.base_needs[i]
+			);
+			if(draw_text(white, g_font_regular, need_text, menu_x, menu_line_y += 24.0f) != SDL_APP_CONTINUE){
+				return SDL_APP_FAILURE;
+			}			
+		}
+		
+	} else {
+		// Display Claim Pop Button
+		menu_line_y += 36.0f;
+		SDL_Color button_color = {255, 255, 255, SDL_ALPHA_OPAQUE };
+		if(state->tile_biome == BIOME_MARINE || state->tile_biome == BIOME_FRESHWATER){
+			button_color = (SDL_Color){ 96, 96, 96, SDL_ALPHA_OPAQUE };
+		}
 
-    SDL_FRect place_pop_button = {
-        .x = menu_x + 6.0f,
-        .y = menu_line_y,
-        .w = g_vertical_menu.w - 24.0f,
-        .h = 32.0f
-    };
+		SDL_SetRenderDrawColor(g_renderer, button_color.r, button_color.g, button_color.b, button_color.a);
 
-    place_pop_x_start = menu_x + 6.0f;
-    place_pop_x_end = menu_x + 6.0f + g_vertical_menu.w - 24.0f;
-    place_pop_y_start = menu_line_y;
-    place_pop_y_end = menu_line_y + 32.0f;
+		SDL_FRect claim_pop_button = {
+			.x = menu_x + 6.0f,
+			.y = menu_line_y,
+			.w = g_vertical_menu.w - 24.0f,
+			.h = 32.0f
+		};
 
-    char place_pop_text[1024];
-	snprintf(place_pop_text, sizeof(place_pop_text),
-		"Claim Pop"
-	);
-    if(draw_text(button_color, g_font_regular, place_pop_text, menu_x + 12.0f, menu_line_y) != SDL_APP_CONTINUE){
-        return SDL_APP_FAILURE;
-    }    
+		claim_pop_x_start = menu_x + 6.0f;
+		claim_pop_x_end = menu_x + 6.0f + g_vertical_menu.w - 24.0f;
+		claim_pop_y_start = menu_line_y;
+		claim_pop_y_end = menu_line_y + 32.0f;
 
-    SDL_RenderRect(g_renderer, &place_pop_button);
+		char claim_pop_text[1024];
+		snprintf(claim_pop_text, sizeof(claim_pop_text),
+			"Claim Pop"
+		);
+		if(draw_text(button_color, g_font_regular, claim_pop_text, menu_x + 12.0f, menu_line_y) != SDL_APP_CONTINUE){
+			return SDL_APP_FAILURE;
+		}
+
+		SDL_RenderRect(g_renderer, &claim_pop_button);		
+	}
 
     return SDL_APP_CONTINUE;
 }
@@ -715,7 +737,7 @@ int draw_menu(SDL_FRect border){
     SDL_SetRenderDrawColor(g_renderer, 0, 255, 0, 255); // GREEN
     SDL_RenderRect(g_renderer, &border);
 
-	// current game time
+	// current game time Display
     SDL_Color text_color = {255, 255, 255, SDL_ALPHA_OPAQUE };
     SDL_SetRenderDrawColor(g_renderer, text_color.r, text_color.g, text_color.b, text_color.a);
 
@@ -734,7 +756,7 @@ int draw_menu(SDL_FRect border){
         return SDL_APP_FAILURE;
     }
     
-	// Current World Pop Count
+	// Current World Pop Count Display
 	float pop_text_x = WINDOW_WIDTH - (WINDOW_WIDTH / 8.0f);
 	float pop_text_y = 36.0f;
 	

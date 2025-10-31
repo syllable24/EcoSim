@@ -39,7 +39,7 @@ int create_population_unit(PopulationUnit* p){
 	p->pop_id = g_next_pop_id++;
     p->pop_count = determine_rand_val(MIN_START_POP_COUNT, MAX_START_POP_COUNT);
     p->need_count = 0;
-    p->base_needs = needs;	
+    p->base_needs = needs;
 	p->luxury_needs = NULL;
 	
 	/* ADD BASE NEEDS */

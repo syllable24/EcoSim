@@ -30,11 +30,10 @@ void claim_tile(CubeCoord* tile_to_claim, uint8_t player_id){
 }
 
 void update_game_state(){
-	
-	// TODO calculate growth factor based on need fulfillment 
+		
+	// Population Growth
 	g_total_world_pop = 0;
 	
-	// Spiraling States
 	for (uint64_t curr_radius = 0; curr_radius <= HEX_GRID_RADIUS; curr_radius++){
         uint64_t hexes_in_ring = hex_count_in_ring(curr_radius);
 
@@ -58,3 +57,8 @@ void update_game_state(){
         }
     }
 }
+
+
+
+
+
