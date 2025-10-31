@@ -549,6 +549,7 @@ int draw_selected_tile_state_menu(const TileState* state){
     }
 
 	if (state->owned_by == OWNER_PLAYER){
+        SDL_LogDebug(LOG_CAT_DISPLAY, "Displaying player owned pop survival needs");
 		// Display Population Survival Needs		
 		for (int i = 0; i < state->pop_unit.survival_need_count; i++){
 			
