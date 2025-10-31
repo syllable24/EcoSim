@@ -50,7 +50,7 @@ void update_game_state(){
 
 			if (curr_tile_state->tile_biome != BIOME_MARINE){
 				TileState new_state = *curr_tile_state;
-				new_state.pop_unit.pop_count++;
+				//new_state.pop_unit.base_needs
 				hashmap_set(g_game_map, &new_state);
 				g_total_world_pop += new_state.pop_unit.pop_count;
 			}			

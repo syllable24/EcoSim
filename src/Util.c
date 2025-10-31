@@ -76,20 +76,20 @@ int read_definition_from_res_file(ResourceFiles file, char*** target, uint8_t* t
 		goto cleanup;
 	}
 	
-	const cJSON* all_base_needs = cJSON_GetObjectItemCaseSensitive(need_config, "BASE_NEEDS");
+	const cJSON* all_base_needs = cJSON_GetObjectItemCaseSensitive(need_config, "SURVIVAL_NEEDS");
 	if(!all_base_needs || !cJSON_IsArray(all_base_needs)){
-		SDL_LogError(LOG_CAT_UTIL, "Invalid need configuration content structure: Could not find element 'BASE_NEEDS'.");
+		SDL_LogError(LOG_CAT_UTIL, "Invalid need configuration content structure: Could not find element 'SURVIVAL_NEEDS'.");
 		goto cleanup;
 	}
 	
 	need_array_size = cJSON_GetArraySize(all_base_needs);
 	if (need_array_size <= 0){		
-		SDL_LogError(LOG_CAT_UTIL, "BASE_NEEDS array is empty.");
+		SDL_LogError(LOG_CAT_UTIL, "SURVIVAL_NEEDS array is empty.");
 		goto cleanup;
 	}
 
 	if (need_array_size > UINT8_MAX){
-		SDL_LogError(LOG_CAT_UTIL, "BASE_NEEDS array larger than UINT8_MAX.");
+		SDL_LogError(LOG_CAT_UTIL, "SURVIVAL_NEEDS array larger than UINT8_MAX.");
 		goto cleanup;
 	}
 

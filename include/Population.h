@@ -4,8 +4,8 @@
 #include <string.h>
 #include <stdint.h>
 
-#define MIN_START_POP_COUNT 2500
-#define MAX_START_POP_COUNT 5000
+#define MIN_START_POP_COUNT 250
+#define MAX_START_POP_COUNT 500
 #define MAX_NEEDS 1024
 #define BASE_NEED_COUNT 5
 #define POP_TEXT_LENGTH 2048
@@ -32,19 +32,21 @@ typedef struct {
 typedef struct {
 	uint32_t pop_id;
 	uint32_t pop_count;
+	Need* survival_needs;
+	uint32_t survival_need_count;	
 	Need* base_needs;
-	uint32_t need_count;
+	uint32_t base_need_count;
 	Need* luxury_needs;
 	uint32_t luxury_need_count;
 
 	ProductionSegment production_segment;
 } PopulationUnit;
 
-extern char** g_pop_base_needs;
+extern char** g_pop_survival_needs;
 
 int create_population_unit(PopulationUnit* p);
 
-int add_need(PopulationUnit* p, Need* n);
+int add_survival_need(PopulationUnit* p, Need* n);
 
 int create_need(Need* n, char* name);
 

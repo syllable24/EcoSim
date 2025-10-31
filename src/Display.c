@@ -549,11 +549,11 @@ int draw_selected_tile_state_menu(const TileState* state){
     }
 
 	if (state->owned_by == OWNER_PLAYER){
-		// Display Population Base Needs		
-		for (int i = 0; i < state->pop_unit.need_count; i++){
+		// Display Population Survival Needs		
+		for (int i = 0; i < state->pop_unit.survival_need_count; i++){
 			
 			// need without name marks the end of the pop needs
-			if (state->pop_unit.base_needs[i].name[0] == '\0') {
+			if (state->pop_unit.survival_needs[i].name[0] == '\0') {
 				SDL_LogDebug(LOG_CAT_DISPLAY, "End of needs array: %u.", i);
 				break;
 			}
@@ -561,7 +561,7 @@ int draw_selected_tile_state_menu(const TileState* state){
 			char need_text[1024];
 			snprintf(need_text, sizeof(need_text),
 				"%s",
-				state->pop_unit.base_needs[i]
+				state->pop_unit.survival_needs[i]
 			);
 			if(draw_text(white, g_font_regular, need_text, menu_x, menu_line_y += 24.0f) != SDL_APP_CONTINUE){
 				return SDL_APP_FAILURE;
