@@ -30,6 +30,8 @@ int frame_update(float delta_time);
 
 void handle_left_click();
 
+int handle_l_key();
+
 int texture_hash_map_compare(const void *a, const void *b, void *udata);
 
 bool texture_hash_map_iter(const void *item, void *udata);

@@ -76,13 +76,13 @@ int read_definition_from_res_file(ResourceFiles file, char*** target, uint8_t* t
 		goto cleanup;
 	}
 	
-	const cJSON* all_base_needs = cJSON_GetObjectItemCaseSensitive(need_config, "SURVIVAL_NEEDS");
-	if(!all_base_needs || !cJSON_IsArray(all_base_needs)){
+	const cJSON* all_survival_needs = cJSON_GetObjectItemCaseSensitive(need_config, "SURVIVAL_NEEDS");
+	if(!all_survival_needs || !cJSON_IsArray(all_survival_needs)){
 		SDL_LogError(LOG_CAT_UTIL, "Invalid need configuration content structure: Could not find element 'SURVIVAL_NEEDS'.");
 		goto cleanup;
 	}
 	
-	need_array_size = cJSON_GetArraySize(all_base_needs);
+	need_array_size = cJSON_GetArraySize(all_survival_needs);
 	if (need_array_size <= 0){		
 		SDL_LogError(LOG_CAT_UTIL, "SURVIVAL_NEEDS array is empty.");
 		goto cleanup;
@@ -106,7 +106,7 @@ int read_definition_from_res_file(ResourceFiles file, char*** target, uint8_t* t
 	}
 
 	for(int i = 0; i < need_array_size; i++){
-		cJSON* array_item = cJSON_GetArrayItem(all_base_needs, i);
+		cJSON* array_item = cJSON_GetArrayItem(all_survival_needs, i);
 		char* string_value = cJSON_GetStringValue(array_item);
 		if (!string_value || !cJSON_IsString(array_item)){
 			SDL_LogError(LOG_CAT_UTIL, "Invalid value in BASE_NEEDS array.");
@@ -305,12 +305,30 @@ void log_tile_state_string(const TileState* state){
 		state->tile_def->base_air_quality,
 		state->tile_def->base_water_quality,		
 		state->tile_def->base_soil_quality		
-	);	
+	);
+
+	char tile_pop_message[1024];
+	snprintf(tile_pop_message, sizeof(tile_pop_message), 
+		"tile_pop.survival_need_count: [%u]\n"
+		"tile_pop.base_need_count: [%u]\n"
+		"tile_pop.luxury_need_count: [%u]\n"
+		"tile_pop.pop_count: [%u]\n"
+		"tile_pop.pop_id: [%u]\n"
+		,
+		state->pop_unit->survival_need_count,
+		state->pop_unit->base_need_count,
+		state->pop_unit->luxury_need_count,
+		state->pop_unit->pop_count,
+		state->pop_unit->pop_id
+	);
 
 	// Output to console (stderr)
-	fputs(tile_def_message, stderr);
+	fputs(tile_pop_message, stderr);
 	fflush(stderr);
 }
+
+
+
 
 void log_tile_state_string_to_file(const TileState* state, char* file_name){
 	

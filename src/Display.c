@@ -533,7 +533,7 @@ int draw_selected_tile_state_menu(const TileState* state){
     char pop_text[1024];
 	snprintf(pop_text, sizeof(pop_text),
 		"Population: %d",
-        state->pop_unit.pop_count
+        state->pop_unit->pop_count
 	);
     if(draw_text(white, g_font_regular, pop_text, menu_x, menu_line_y += 24.0f) != SDL_APP_CONTINUE){
         return SDL_APP_FAILURE;
@@ -549,25 +549,46 @@ int draw_selected_tile_state_menu(const TileState* state){
     }
 
 	if (state->owned_by == OWNER_PLAYER){
-        SDL_LogDebug(LOG_CAT_DISPLAY, "Displaying player owned pop survival needs");
-		// Display Population Survival Needs		
-		for (int i = 0; i < state->pop_unit.survival_need_count; i++){
-			
+        float need_border_x = menu_x + 6.0f;
+        float need_border_y = menu_line_y + 32.0f;
+        float need_border_h_start = menu_line_y;
+        
+        menu_line_y += 12.0f; // Leading seperation for border
+        menu_x += 12.0f; // Set text indent
+
+		// Display Population Survival Needs
+		for (int i = 0; i < state->pop_unit->survival_need_count; i++){			
 			// need without name marks the end of the pop needs
-			if (state->pop_unit.survival_needs[i].name[0] == '\0') {
+			if (state->pop_unit->survival_needs[i].name[0] == '\0') {
 				SDL_LogDebug(LOG_CAT_DISPLAY, "End of needs array: %u.", i);
 				break;
 			}
 			
 			char need_text[1024];
 			snprintf(need_text, sizeof(need_text),
-				"%s",
-				state->pop_unit.survival_needs[i]
+				"%s: %u%%",
+				state->pop_unit->survival_needs[i],
+                state->pop_unit->survival_needs[i].satisfaction
 			);
 			if(draw_text(white, g_font_regular, need_text, menu_x, menu_line_y += 24.0f) != SDL_APP_CONTINUE){
 				return SDL_APP_FAILURE;
-			}			
+			}
 		}
+
+        SDL_FRect survival_needs_text_border = {
+            .x = need_border_x,
+            .y = need_border_y,
+            .w = g_vertical_menu.w - 24.0f,
+            .h = menu_line_y - need_border_h_start
+        };
+
+        menu_line_y += 12.0f; // Trailing seperation for border
+        menu_x -= 12.0f; // Reset text indent
+
+        SDL_RenderRect(g_renderer, &survival_needs_text_border);        
+
+        menu_line_y += 12.0f; // Trailing seperation for border
+        menu_x -= 12.0f; // Reset text indent
 		
 	} else {
 		// Display Claim Pop Button
@@ -763,7 +784,7 @@ int draw_menu(SDL_FRect border){
 	
 	char* pop_formatted = format_large_number(g_total_world_pop);
     char pop_text[1024];
-		
+
 	if (pop_formatted){
 		snprintf(pop_text, sizeof(pop_text),
 			"World Pop: %s",
@@ -817,4 +838,19 @@ uint64_t texture_hash_map_hash(const void *item, uint64_t seed0, uint64_t seed1)
 
 void clear_display_state(){
     hashmap_free(g_texture_map);
+}
+
+int handle_l_key(){
+	// Conditional display
+    if(g_tile_selected){
+        const TileState* selected_tile_state = hashmap_get(g_game_map, &(TileState){.coord=g_curr_selected_coords});
+        if(!selected_tile_state){
+            SDL_LogError(LOG_CAT_DISPLAY, "Error while getting selected tile state: %s", SDL_GetError());
+            return SDL_APP_FAILURE;
+        }
+
+        log_tile_state_string(selected_tile_state);
+    }
+    
+    return SDL_APP_CONTINUE;
 }

@@ -265,7 +265,7 @@ void generate_marine_chain(){
 	// Update Marine Seed Tile in game map
     TileState new_state = *tile_state;
     new_state.tile_biome = BIOME_MARINE;
-	new_state.pop_unit.pop_count = 0;
+	new_state.pop_unit->pop_count = 0;
     hashmap_set(g_game_map, &new_state);
 
     // Set neighbors to Biome MARINE    
@@ -277,7 +277,7 @@ void generate_marine_chain(){
         const TileState* neighbor_state = hashmap_get(g_game_map, &(TileState){.coord=neighbor});
         TileState new_neighbor_state = *neighbor_state;
         new_neighbor_state.tile_biome = BIOME_MARINE;
-		new_neighbor_state.pop_unit.pop_count = 0;
+		new_neighbor_state.pop_unit->pop_count = 0;
         hashmap_set(g_game_map, &new_neighbor_state);
     }
     
@@ -318,8 +318,8 @@ void generate_marine_chain(){
         curr_coords = next_neighbor;
         TileState new_state = *tile_state;
         new_state.tile_biome = BIOME_MARINE;
-		new_state.pop_unit.pop_count = 0;
-        hashmap_set(g_game_map, &new_state);        
+		new_state.pop_unit->pop_count = 0;
+        hashmap_set(g_game_map, &new_state);
 
         // Set neighbors to Biome MARINE
         for (int i = 0; i < 6; i++){
@@ -334,7 +334,7 @@ void generate_marine_chain(){
             
             TileState new_neighbor_state = *neighbor_state;
             new_neighbor_state.tile_biome = BIOME_MARINE;
-			new_neighbor_state.pop_unit.pop_count = 0;
+			new_neighbor_state.pop_unit->pop_count = 0;
             hashmap_set(g_game_map, &new_neighbor_state);
         }
 
@@ -520,10 +520,9 @@ void generate_base_tiles(uint8_t map_hex_radius){
         center_tile->river_source = (CubeCoord){0,0,0};
         center_tile->river_destination = (CubeCoord){0,0,0};
 		center_tile->owned_by = OWNER_NONE;
-
-        PopulationUnit p;
-        create_population_unit(&p);
-        center_tile->pop_unit = p;
+        
+        center_tile->pop_unit = malloc(sizeof(PopulationUnit));
+        create_population_unit(center_tile->pop_unit);
 
         assign_biome(center_tile);
         SDL_LogTrace(LOG_CAT_MAPGEN, "Placing tile at (%lld, %lld, %lld)", origin_coord.pos_q, origin_coord.pos_r, origin_coord.pos_s);        
@@ -531,6 +530,7 @@ void generate_base_tiles(uint8_t map_hex_radius){
     }
     
     // Spiraling States
+
     uint64_t curr_tile_id = 1;
     for (uint64_t curr_radius = 1; curr_radius <= map_hex_radius; curr_radius++){
         uint64_t hexes_in_ring = hex_count_in_ring(curr_radius);        
@@ -538,19 +538,18 @@ void generate_base_tiles(uint8_t map_hex_radius){
         for (uint64_t curr_ring_pos = 0; curr_ring_pos < hexes_in_ring; curr_ring_pos++){
             CubeCoord curr_coord = g_game_map_spiral_coords[curr_radius][curr_ring_pos];
 
-            rand_tile_def_id = determine_rand_val(0, g_arr_tile_definitions_size - 1);            
+            rand_tile_def_id = determine_rand_val(0, g_arr_tile_definitions_size - 1);
             
             TileState* new_tile = malloc(sizeof(TileState));
             if (new_tile != NULL) {                
-                new_tile->coord = curr_coord;                
+                new_tile->coord = curr_coord;
                 new_tile->tile_biome = 0;
                 new_tile->has_river = false;
                 new_tile->river_destination = curr_coord;
 				new_tile->owned_by = OWNER_NONE;
-
-                PopulationUnit p;
-                create_population_unit(&p);
-                new_tile->pop_unit = p;
+                
+                new_tile->pop_unit = malloc(sizeof(PopulationUnit));
+                create_population_unit(new_tile->pop_unit);
                 
                 new_tile->tile_def = malloc(sizeof (TileDefinition));
                 if (new_tile->tile_def != NULL) {
@@ -561,7 +560,7 @@ void generate_base_tiles(uint8_t map_hex_radius){
                 SDL_LogTrace(LOG_CAT_MAPGEN, "Placing tile at (%lld, %lld, %lld)", curr_coord.pos_q, curr_coord.pos_r, curr_coord.pos_s);
                 hashmap_set(g_game_map, new_tile);
             }
-            curr_tile_id++;            
+            curr_tile_id++;
         }
     }
 }

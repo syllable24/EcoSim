@@ -80,7 +80,7 @@ typedef struct {
     bool has_river;
     CubeCoord river_source;
     CubeCoord river_destination;
-    PopulationUnit pop_unit;
+    PopulationUnit* pop_unit;
 	uint8_t owned_by;
 } TileState;
 

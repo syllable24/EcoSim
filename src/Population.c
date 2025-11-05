@@ -9,6 +9,7 @@
 #include "Util.h"
 
 char** g_pop_survival_needs = NULL; // Read from File ./res/NeedDefinition.cfg
+uint8_t g_pop_survival_need_count = 0;
 
 uint32_t g_next_pop_id = 0;
 
@@ -21,36 +22,34 @@ int create_population_unit(PopulationUnit* p){
 		SDL_LogError(LOG_CAT_POPULATION, "Received null PopulationUnit pointer.");		
 		return 1;
 	}
-	
-	Need* needs = (Need*) malloc(MAX_NEEDS * sizeof(Need));
-	if (needs == NULL){
-		SDL_LogError(LOG_CAT_POPULATION, "Memory allocation for needs array failed (%d entries, %zu bytes).", MAX_NEEDS, MAX_NEEDS * sizeof(Need));
-		return 1;
-	}
-
-	// Initialize needs array to safe defaults
-    for (int i = 0; i < MAX_NEEDS; i++) {
-        needs[i].name[0] = '\0';
-        needs[i].affinity = 0;
-        needs[i].satisfaction = 0;
-    }
-
+		
 	SDL_LogDebug(LOG_CAT_POPULATION, "Init pop.");
 	p->pop_id = g_next_pop_id++;
     p->pop_count = determine_rand_val(MIN_START_POP_COUNT, MAX_START_POP_COUNT);    		
 	
-	p->survival_needs = needs;
+	p->survival_needs = calloc(MAX_NEEDS, sizeof(Need));
 	p->survival_need_count = 0;
     
-	p->base_needs = needs;
+	p->base_needs = calloc(MAX_NEEDS, sizeof(Need));;
 	p->base_need_count = 0;
 
-	p->luxury_needs = needs;
+	p->luxury_needs = calloc(MAX_NEEDS, sizeof(Need));
 	p->luxury_need_count = 0;
+	
+	if(!p->survival_needs || !p->base_needs || !p->luxury_needs){
+		SDL_LogError(LOG_CAT_POPULATION, "Error during malloc need arrays.");
+		free(p->survival_needs);
+		free(p->base_needs);
+		free(p->luxury_needs);
+		return 1;
+	}
 	
 	/* ADD SURVIVAL NEEDS */
 	if (add_survival_needs(p) != 0){
 		SDL_LogError(LOG_CAT_POPULATION, "Error during add_base_needs().");
+		free(p->survival_needs);
+		free(p->base_needs);
+		free(p->luxury_needs);		
 		return 1;
 	}
 	
@@ -59,18 +58,16 @@ int create_population_unit(PopulationUnit* p){
 }
  
 int add_survival_needs(PopulationUnit* p){
-	SDL_LogTrace(LOG_CAT_POPULATION, "Start add_base_needs().");
-	
-	uint8_t survival_need_count = 0;
+	SDL_LogTrace(LOG_CAT_POPULATION, "Start add_base_needs().");		
 
 	if (g_pop_survival_needs == NULL){
-		if (read_definition_from_res_file(NEED_DEFINITION, &g_pop_survival_needs, &survival_need_count) != 0){
+		if (read_definition_from_res_file(NEED_DEFINITION, &g_pop_survival_needs, &g_pop_survival_need_count) != 0){
 			SDL_LogError(LOG_CAT_POPULATION, "Error during read need definition.");
 			return 1;
 		}
 	}
 	
-	for (uint8_t i = 0; i < survival_need_count; i++){
+	for (uint8_t i = 0; i < g_pop_survival_need_count; i++){
 		Need n;
 		if (create_need(&n, g_pop_survival_needs[i]) != 0){
 			SDL_LogError(LOG_CAT_POPULATION, "Error during create_need().");
@@ -79,7 +76,7 @@ int add_survival_needs(PopulationUnit* p){
 
 		if(add_survival_need(p, &n) != 0){
 			SDL_LogError(LOG_CAT_POPULATION, "Error during add_survival_need().");
-			free(p->base_needs);
+			free(p->survival_needs);
 			return 1;
 		}
 	}
@@ -119,6 +116,7 @@ int create_need(Need* n, char* name){
 	}
 	
 	SDL_LogDebug(LOG_CAT_POPULATION, "Init Need: %s.", name);
+	memset(n->name, 0, POP_TEXT_LENGTH); // Properly init name string
 	strcpy(n->name, name);
 	n->affinity = determine_rand_percent();
 	n->satisfaction = determine_rand_percent();

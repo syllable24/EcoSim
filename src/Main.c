@@ -100,6 +100,10 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event){
             switch(event->key.key){
                 case SDLK_ESCAPE:
                     return SDL_APP_SUCCESS;
+                case SDLK_L:
+                    SDL_LogDebug(LOG_CAT_MAIN, "l-Key detected");
+                    handle_l_key();
+                    return SDL_APP_CONTINUE;
                 default:
                     return SDL_APP_CONTINUE;
             }
@@ -108,7 +112,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event){
             switch(event->button.button){
                 case 1: // Left-Click
                     SDL_LogDebug(LOG_CAT_MAIN, "Left-Click");
-                    handle_left_click(g_renderer);
+                    handle_left_click();
                     break;
                 case 2: // Middle-Click
                     SDL_LogDebug(LOG_CAT_MAIN, "Middle-Click");

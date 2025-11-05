@@ -20,7 +20,7 @@ void claim_tile(CubeCoord* tile_to_claim, uint8_t player_id){
 		return;
 	}
 	
-	if (selected_tile_state->pop_unit.pop_count == 0){
+	if (selected_tile_state->pop_unit->pop_count == 0){
 		return;
 	}
 	
@@ -52,7 +52,8 @@ void update_game_state(){
 				TileState new_state = *curr_tile_state;
 				//new_state.pop_unit.base_needs
 				hashmap_set(g_game_map, &new_state);
-				g_total_world_pop += new_state.pop_unit.pop_count;
+				g_total_world_pop += new_state.pop_unit->pop_count;
+
 			}			
         }
     }
